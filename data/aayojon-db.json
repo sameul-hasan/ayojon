@@ -1,0 +1,1412 @@
+{
+  "profiles": [
+    {
+      "id": "usr-attendee-rafiq",
+      "email": "rafiq@student.buet.ac.bd",
+      "display_name": "Rafiqul Islam",
+      "phone": "+8801711223344",
+      "platform_role": "ATTENDEE",
+      "organization_label": "CSE Undergraduate, BUET",
+      "mfa_enabled": false,
+      "interests": [
+        "tech-workshops",
+        "university-clubs",
+        "conferences"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-15T08:00:00Z"
+    },
+    {
+      "id": "usr-org-nusrat",
+      "email": "nusrat@buetcs.org",
+      "display_name": "Nusrat Jahan",
+      "phone": "+8801819556677",
+      "platform_role": "ORGANIZER_OWNER",
+      "organization_label": "BUET Computer Club & Dhaka Tech Collective",
+      "mfa_enabled": true,
+      "interests": [
+        "conferences",
+        "tech-workshops",
+        "university-clubs"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-01T09:00:00Z"
+    },
+    {
+      "id": "usr-org-tanvir",
+      "email": "tanvir@nsu-yes.org",
+      "display_name": "Tanvir Ahmed",
+      "phone": "+8801912334455",
+      "platform_role": "ORGANIZER_OWNER",
+      "organization_label": "NSU Young Entrepreneurs Society (YES!)",
+      "mfa_enabled": true,
+      "interests": [
+        "startup-business",
+        "university-clubs"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-05T10:00:00Z"
+    },
+    {
+      "id": "usr-staff-mehedi",
+      "email": "mehedi@staff.buetcs.org",
+      "display_name": "Mehedi Hasan",
+      "phone": "+8801611889900",
+      "platform_role": "CHECKIN_STAFF",
+      "organization_label": "Gate Check-In Lead (BUET Computer Club)",
+      "mfa_enabled": false,
+      "interests": [
+        "university-clubs"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-12T11:00:00Z"
+    },
+    {
+      "id": "usr-sponsor-farhana",
+      "email": "farhana@pathao-ventures.bd",
+      "display_name": "Farhana Rahman",
+      "phone": "+8801755667788",
+      "platform_role": "SPONSOR",
+      "organization_label": "Brand & Campus Partnerships, Pathao Ventures",
+      "mfa_enabled": false,
+      "interests": [
+        "conferences",
+        "startup-business",
+        "university-clubs"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-18T12:00:00Z"
+    },
+    {
+      "id": "usr-admin-tariq",
+      "email": "admin@aayojon.bd",
+      "display_name": "Tariq Mahmud",
+      "phone": "+8801700001122",
+      "platform_role": "ADMIN",
+      "organization_label": "Aayojon Platform Trust & Operations",
+      "mfa_enabled": true,
+      "interests": [
+        "conferences",
+        "tech-workshops",
+        "startup-business"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-09-25T06:00:00Z"
+    }
+  ],
+  "organizations": [
+    {
+      "id": "org-buet-cc",
+      "owner_id": "usr-org-nusrat",
+      "name": "BUET Computer Club & Dhaka Tech Collective",
+      "slug": "buet-tech-collective",
+      "description": "Premier engineering student community and professional technical chapter organizing national hackathons, AI workshops, and developer conferences across Bangladesh.",
+      "verified_badge": true,
+      "brand_color": "#0D9488",
+      "custom_domain": "events.buetcs.org",
+      "custom_domain_status": "VERIFIED",
+      "custom_domain_dns_target": "cname.aayojon.bd",
+      "status": "ACTIVE",
+      "created_at": "2026-10-01T09:30:00Z"
+    },
+    {
+      "id": "org-nsu-yes",
+      "owner_id": "usr-org-tanvir",
+      "name": "NSU Young Entrepreneurs Society (YES!)",
+      "slug": "nsu-yes-society",
+      "description": "North South University's flagship business, entrepreneurship, and national case competition organization.",
+      "verified_badge": true,
+      "brand_color": "#4F46E5",
+      "custom_domain": "summit.nsu-yes.org",
+      "custom_domain_status": "PENDING_DNS",
+      "custom_domain_dns_target": "cname.aayojon.bd",
+      "status": "ACTIVE",
+      "created_at": "2026-10-05T10:30:00Z"
+    }
+  ],
+  "organization_members": [
+    {
+      "id": "om-1",
+      "organization_id": "org-buet-cc",
+      "user_id": "usr-org-nusrat",
+      "role": "OWNER",
+      "status": "ACTIVE",
+      "created_at": "2026-10-01T09:30:00Z"
+    },
+    {
+      "id": "om-2",
+      "organization_id": "org-buet-cc",
+      "user_id": "usr-staff-mehedi",
+      "role": "CHECKIN_STAFF",
+      "status": "ACTIVE",
+      "created_at": "2026-10-12T11:30:00Z"
+    },
+    {
+      "id": "om-3",
+      "organization_id": "org-nsu-yes",
+      "user_id": "usr-org-tanvir",
+      "role": "OWNER",
+      "status": "ACTIVE",
+      "created_at": "2026-10-05T10:30:00Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-uni",
+      "name": "University & Campus Clubs",
+      "name_bn": "বিশ্ববিদ্যালয় ও ক্যাম্পাস ক্লাব",
+      "slug": "university-clubs",
+      "icon": "GraduationCap",
+      "active": true
+    },
+    {
+      "id": "cat-tech",
+      "name": "Tech & AI Workshops",
+      "name_bn": "প্রযুক্তি ও এআই ওয়ার্কশপ",
+      "slug": "tech-workshops",
+      "icon": "Cpu",
+      "active": true
+    },
+    {
+      "id": "cat-conf",
+      "name": "Conferences & Summits",
+      "name_bn": "কনফারেন্স ও সামিট",
+      "slug": "conferences",
+      "icon": "Presentation",
+      "active": true
+    },
+    {
+      "id": "cat-startup",
+      "name": "Startup & Business",
+      "name_bn": "স্টার্টআপ ও বিজনেস",
+      "slug": "startup-business",
+      "icon": "Rocket",
+      "active": true
+    },
+    {
+      "id": "cat-design",
+      "name": "Design & Creative",
+      "name_bn": "ডিজাইন ও সৃজনশীলতা",
+      "slug": "design-arts",
+      "icon": "Palette",
+      "active": true
+    },
+    {
+      "id": "cat-culture",
+      "name": "Cultural & Music Fest",
+      "name_bn": "সাংস্কৃতিক ও সংগীত উৎসব",
+      "slug": "cultural-festivals",
+      "icon": "Music",
+      "active": true
+    }
+  ],
+  "venues": [
+    {
+      "id": "ven-kib",
+      "organization_id": "org-buet-cc",
+      "name": "Krishibid Institution Bangladesh (KIB) Auditorium",
+      "address": "Khamarbari Rd, Farmgate, Dhaka 1215",
+      "city": "Dhaka",
+      "geo_lat": 23.7588,
+      "geo_lng": 90.3842
+    },
+    {
+      "id": "ven-buet",
+      "organization_id": "org-buet-cc",
+      "name": "BUET ECE Building Auditorium",
+      "address": "West Palashi Campus, BUET, Dhaka 1000",
+      "city": "Dhaka",
+      "geo_lat": 23.726,
+      "geo_lng": 90.3885
+    },
+    {
+      "id": "ven-emk",
+      "organization_id": "org-buet-cc",
+      "name": "EMK Center Innovation Hub",
+      "address": "CES(A) 1/A, Road 113, Gulshan-2, Dhaka 1212",
+      "city": "Dhaka",
+      "geo_lat": 23.7925,
+      "geo_lng": 90.4152
+    },
+    {
+      "id": "ven-nsu",
+      "organization_id": "org-nsu-yes",
+      "name": "NSU Main Auditorium, Plot 15",
+      "address": "Block B, Bashundhara R/A, Dhaka 1229",
+      "city": "Dhaka",
+      "geo_lat": 23.8151,
+      "geo_lng": 90.4255
+    },
+    {
+      "id": "ven-cuet",
+      "organization_id": "org-buet-cc",
+      "name": "Sheikh Kamal IT Business Incubator, CUET",
+      "address": "Kaptai Highway, Raozan, Chattogram 4349",
+      "city": "Chattogram",
+      "geo_lat": 22.4633,
+      "geo_lng": 91.9714
+    },
+    {
+      "id": "ven-sylhet",
+      "organization_id": "org-nsu-yes",
+      "name": "Kazi Nazrul Islam Auditorium",
+      "address": "Rikabi Bazar, Sylhet 3100",
+      "city": "Sylhet",
+      "geo_lat": 24.899,
+      "geo_lng": 91.861
+    }
+  ],
+  "packages": [
+    {
+      "id": "pkg-basic",
+      "code": "BASIC",
+      "name": "Basic",
+      "name_bn": "বেসিক",
+      "price_minor": 79900,
+      "currency": "BDT",
+      "summary": "Publish event, registration, attendee list, basic analytics",
+      "features": [
+        "Public event page & marketplace listing",
+        "Free registration & paid ticket inventory",
+        "QR code ticket generation & check-in scanner",
+        "Attendee directory & CSV export",
+        "Core views & sales summary"
+      ],
+      "active": true
+    },
+    {
+      "id": "pkg-promoted",
+      "code": "PROMOTED",
+      "name": "Promoted",
+      "name_bn": "প্রমোটেড",
+      "price_minor": 149900,
+      "currency": "BDT",
+      "summary": "Basic plus boosted listing and campaign tools",
+      "features": [
+        "Everything in Basic (৳799)",
+        "Boosted placement in category & search results",
+        "UTM Campaign Link Generator & attribution tracking",
+        "Automated reminder email scheduling"
+      ],
+      "active": true
+    },
+    {
+      "id": "pkg-plus",
+      "code": "PLUS",
+      "name": "Plus",
+      "name_bn": "প্লাস",
+      "price_minor": 269900,
+      "currency": "BDT",
+      "summary": "Promoted plus advanced analytics and custom branding",
+      "features": [
+        "Everything in Promoted (৳1,499)",
+        "Custom brand theme & custom domain DNS binding",
+        "Full conversion funnel & revenue attribution analytics",
+        "Multi-staff gate check-in management"
+      ],
+      "active": true
+    },
+    {
+      "id": "pkg-premium",
+      "code": "PREMIUM",
+      "name": "Premium",
+      "name_bn": "প্রিমিয়াম",
+      "price_minor": 499900,
+      "currency": "BDT",
+      "summary": "Plus plus premium promotion options and priority support",
+      "features": [
+        "Everything in Plus (৳2,699)",
+        "Homepage Hero Featured Spotlight included",
+        "Sponsor & Vendor interest matchmaking showcase",
+        "Dedicated event-day priority SLA (<1 hour response)"
+      ],
+      "active": true
+    },
+    {
+      "id": "pkg-featured-addon",
+      "code": "FEATURED_ADDON",
+      "name": "Featured Placement Add-on",
+      "name_bn": "ফিচার্ড প্লেসমেন্ট অ্যাড-অন",
+      "price_minor": 50000,
+      "currency": "BDT",
+      "summary": "Additional featured carousel placement for 14 days",
+      "features": [
+        "Featured badge on marketplace cards",
+        "Top horizontal Featured Carousel placement",
+        "Priority ranking boost in city & category feeds"
+      ],
+      "is_addon": true,
+      "active": true
+    }
+  ],
+  "events": [
+    {
+      "id": "evt-dhaka-ai-summit",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-conf",
+      "venue_id": "ven-kib",
+      "title": "Dhaka AI & Cloud Engineering Summit 2026",
+      "slug": "dhaka-ai-cloud-summit-2026",
+      "tagline": "Bangladesh's flagship engineering summit on LLMs, distributed systems & FinTech infrastructure.",
+      "description": "Join 500+ software engineers, AI researchers, CTOs, and university computer club leaders at KIB Complex, Dhaka. Featuring hands-on production case studies from Bangladesh's top engineering teams, Bangla LLM fine-tuning labs, and cloud architecture clinics.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-11-22T09:00:00Z",
+      "ends_at": "2026-11-22T18:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 400,
+      "is_online": false,
+      "cover_gradient": "from-teal-900 via-emerald-800 to-slate-900",
+      "brand_theme": "#0D9488",
+      "agenda": [
+        {
+          "time": "09:30 AM",
+          "title": "Registration, Badge Pickup & Morning Cha",
+          "speaker": "Aayojon QR Check-In Desk"
+        },
+        {
+          "time": "10:30 AM",
+          "title": "Keynote: Scaling FinTech Payments to 50M Users in Bangladesh",
+          "speaker": "Dr. Mahbubur Rahman"
+        },
+        {
+          "time": "01:00 PM",
+          "title": "Networking Lunch & Sponsor Expo Booths",
+          "speaker": "KIB Grand Hall"
+        },
+        {
+          "time": "02:30 PM",
+          "title": "Workshop: Production RAG & Bangla Voice Agents",
+          "speaker": "Nusrat Jahan & Team"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Dr. Mahbubur Rahman",
+          "role": "Principal Architect",
+          "org": "bKash Engineering"
+        },
+        {
+          "name": "Nusrat Jahan",
+          "role": "AI Lead",
+          "org": "BUET Tech Collective"
+        },
+        {
+          "name": "Sabbir Hossain",
+          "role": "VP of Infrastructure",
+          "org": "Chaldal Cloud"
+        }
+      ],
+      "tags": [
+        "AI",
+        "Cloud",
+        "System Design",
+        "Dhaka",
+        "Engineering"
+      ],
+      "package_code": "PREMIUM",
+      "is_featured": true,
+      "views_count": 1840,
+      "saves_count": 235,
+      "refund_policy": "Full refund up to 72 hours before event start; ticket transfer allowed anytime.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-10-10T10:00:00Z",
+      "updated_at": "2026-11-05T12:00:00Z"
+    },
+    {
+      "id": "evt-buet-cse-fest",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-uni",
+      "venue_id": "ven-buet",
+      "title": "BUET CSE Fest 2026 — National Hackathon & IUPC",
+      "slug": "buet-cse-fest-2026-hackathon",
+      "tagline": "36-hour inter-university hackathon, AI challenge, and robotics showcase at Palashi.",
+      "description": "Organized by BUET Computer Club, the annual CSE Fest brings together teams from 45+ universities across Bangladesh for competitive programming, 36-hour hackathon sprints, and industry mentorship.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-11-18T08:00:00Z",
+      "ends_at": "2026-11-19T20:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 250,
+      "is_online": false,
+      "cover_gradient": "from-cyan-900 via-teal-900 to-slate-950",
+      "brand_theme": "#0891B2",
+      "agenda": [
+        {
+          "time": "08:30 AM",
+          "title": "Team Check-In & Kit Distribution",
+          "speaker": "ECE Atrium"
+        },
+        {
+          "time": "10:00 AM",
+          "title": "Hackathon Problem Statement Reveal",
+          "speaker": "Prof. A. K. M. Ashikur Rahman"
+        },
+        {
+          "time": "04:00 PM",
+          "title": "Mentor Checkpoints & Judge Walkthrough",
+          "speaker": "Industry Jury Panel"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Prof. Dr. Saifur Rahman",
+          "role": "Faculty Advisor",
+          "org": "Dept. of CSE, BUET"
+        },
+        {
+          "name": "Nusrat Jahan",
+          "role": "General Secretary",
+          "org": "BUET Computer Club"
+        }
+      ],
+      "tags": [
+        "Hackathon",
+        "BUET",
+        "IUPC",
+        "University Club",
+        "Students"
+      ],
+      "package_code": "PLUS",
+      "is_featured": true,
+      "views_count": 1490,
+      "saves_count": 312,
+      "refund_policy": "Team registration fees are non-refundable after team shortlisting.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-10-12T10:00:00Z",
+      "updated_at": "2026-11-04T15:00:00Z"
+    },
+    {
+      "id": "evt-product-design-workshop",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-design",
+      "venue_id": "ven-emk",
+      "title": "Product Design & Accessible Design Systems Workshop",
+      "slug": "product-design-workshop-gulshan",
+      "tagline": "Hands-on Figma component tokens, WCAG accessibility, and design-to-code handoff.",
+      "description": "A practical Saturday afternoon workshop at EMK Center, Gulshan-2 for UI/UX designers, frontend developers, and university design enthusiasts. Free community registration with strictly capped seating.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-11-14T14:00:00Z",
+      "ends_at": "2026-11-14T18:30:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 80,
+      "is_online": false,
+      "cover_gradient": "from-amber-900 via-orange-800 to-stone-900",
+      "brand_theme": "#D97706",
+      "agenda": [
+        {
+          "time": "02:00 PM",
+          "title": "Doors Open & QR Pass Scan",
+          "speaker": "EMK Gallery"
+        },
+        {
+          "time": "02:30 PM",
+          "title": "Building Multi-Brand Tokens in Figma",
+          "speaker": "Tasnim Zara"
+        },
+        {
+          "time": "04:30 PM",
+          "title": "Live Design Critique & Portfolio Review",
+          "speaker": "Community Mentors"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Tasnim Zara",
+          "role": "Staff Product Designer",
+          "org": "ShopUp Design"
+        }
+      ],
+      "tags": [
+        "UI/UX",
+        "Figma",
+        "Free Workshop",
+        "Gulshan",
+        "Design"
+      ],
+      "package_code": "PROMOTED",
+      "is_featured": false,
+      "views_count": 920,
+      "saves_count": 145,
+      "refund_policy": "Free community event. Please cancel at least 24 hours prior if unable to attend.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-10-20T09:00:00Z",
+      "updated_at": "2026-11-02T09:00:00Z"
+    },
+    {
+      "id": "evt-nsu-startup-pitch",
+      "organization_id": "org-nsu-yes",
+      "category_id": "cat-startup",
+      "venue_id": "ven-nsu",
+      "title": "NSU National Startup Pitch & Venture Day 2026",
+      "slug": "nsu-startup-pitch-venture-day",
+      "tagline": "Bangladesh university founders pitch live to angel investors and VC funds.",
+      "description": "Hosted by NSU Young Entrepreneurs Society (YES!), Venture Day connects top student-led startups with local and regional venture capital partners, angel syndicates, and ecosystem builders.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-11-28T10:00:00Z",
+      "ends_at": "2026-11-28T17:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 300,
+      "is_online": false,
+      "cover_gradient": "from-indigo-900 via-violet-900 to-slate-950",
+      "brand_theme": "#4F46E5",
+      "agenda": [
+        {
+          "time": "10:00 AM",
+          "title": "Founder & Investor Networking Breakfast",
+          "speaker": "NSU Plaza"
+        },
+        {
+          "time": "11:30 AM",
+          "title": "Top 10 Startup Live Pitch Finals",
+          "speaker": "Main Auditorium"
+        },
+        {
+          "time": "03:30 PM",
+          "title": "Seed Funding Panel & Award Ceremony",
+          "speaker": "Investment Jury"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Tanvir Ahmed",
+          "role": "President",
+          "org": "NSU YES!"
+        },
+        {
+          "name": "Farhana Rahman",
+          "role": "Partner",
+          "org": "Pathao Ventures"
+        }
+      ],
+      "tags": [
+        "Startups",
+        "Venture Capital",
+        "NSU",
+        "Entrepreneurship"
+      ],
+      "package_code": "PROMOTED",
+      "is_featured": true,
+      "views_count": 1120,
+      "saves_count": 188,
+      "refund_policy": "Refundable up to 5 days prior to the event.",
+      "contact_email": "tanvir@nsu-yes.org",
+      "created_at": "2026-10-19T14:00:00Z",
+      "updated_at": "2026-11-06T10:00:00Z"
+    },
+    {
+      "id": "evt-chattogram-devops",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-tech",
+      "venue_id": "ven-cuet",
+      "title": "Chattogram Cloud Native & Kubernetes Day",
+      "slug": "chattogram-cloud-native-day",
+      "tagline": "Container orchestration, observability, and zero-downtime deployments at CUET IT Incubator.",
+      "description": "Bringing hands-on cloud-native engineering workshops to Chattogram's growing developer and university community at Sheikh Kamal IT Business Incubator, CUET.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-12-05T09:30:00Z",
+      "ends_at": "2026-12-05T16:30:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 120,
+      "is_online": false,
+      "cover_gradient": "from-sky-900 via-blue-900 to-slate-900",
+      "brand_theme": "#0284C7",
+      "agenda": [
+        {
+          "time": "09:30 AM",
+          "title": "Check-In & Lab Environment Setup",
+          "speaker": "Incubator Hall"
+        },
+        {
+          "time": "11:00 AM",
+          "title": "Kubernetes Zero-to-Production Lab",
+          "speaker": "Imran Hossain"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Imran Hossain",
+          "role": "Lead DevOps Engineer",
+          "org": "CloudNative BD"
+        }
+      ],
+      "tags": [
+        "DevOps",
+        "Kubernetes",
+        "Chattogram",
+        "CUET"
+      ],
+      "package_code": "BASIC",
+      "is_featured": false,
+      "views_count": 540,
+      "saves_count": 72,
+      "refund_policy": "Full refund available up to 48 hours before event.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-10-25T11:00:00Z",
+      "updated_at": "2026-11-01T11:00:00Z"
+    },
+    {
+      "id": "evt-online-nextjs-clinic",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-tech",
+      "venue_id": null,
+      "title": "Full-Stack Next.js & PostgreSQL Architecture Clinic (Online)",
+      "slug": "online-nextjs-postgresql-clinic",
+      "tagline": "Live interactive code-along on modular monoliths, Row-Level Security, and payment webhooks.",
+      "description": "Join from anywhere in Bangladesh! We walk through building resilient modular monoliths with Next.js, TypeScript, and PostgreSQL transactions.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-11-12T19:00:00Z",
+      "ends_at": "2026-11-12T21:30:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 500,
+      "is_online": true,
+      "online_url": "https://meet.aayojon.bd/nextjs-architecture-clinic",
+      "cover_gradient": "from-emerald-900 via-teal-800 to-zinc-900",
+      "brand_theme": "#10B981",
+      "agenda": [
+        {
+          "time": "07:00 PM",
+          "title": "Architecture Deep-Dive: Why Modular Monoliths Win",
+          "speaker": "Nusrat Jahan"
+        },
+        {
+          "time": "08:00 PM",
+          "title": "Idempotent Payment Webhooks & Atomic Inventory Locks",
+          "speaker": "Live Coding"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Nusrat Jahan",
+          "role": "Lead Engineer",
+          "org": "BUET Tech Collective"
+        }
+      ],
+      "tags": [
+        "Next.js",
+        "PostgreSQL",
+        "Online",
+        "Free"
+      ],
+      "package_code": "BASIC",
+      "is_featured": false,
+      "views_count": 780,
+      "saves_count": 164,
+      "refund_policy": "Free online workshop.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-10-28T10:00:00Z",
+      "updated_at": "2026-11-03T10:00:00Z"
+    },
+    {
+      "id": "evt-draft-cyber-ctf",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-uni",
+      "venue_id": "ven-buet",
+      "title": "Bangladesh Inter-University Cyber Security CTF 2027",
+      "slug": "bd-cyber-security-ctf-2027",
+      "tagline": "Capture The Flag security competition & binary exploitation workshop (Draft — Unpaid Package).",
+      "description": "This event is currently saved as an organizer DRAFT. To publish it to the public marketplace, select a package (Basic ৳799, Promoted ৳1,499, Plus ৳2,699, or Premium ৳4,999) and complete verified payment.",
+      "status": "DRAFT",
+      "visibility": "PUBLIC",
+      "starts_at": "2027-01-15T09:00:00Z",
+      "ends_at": "2027-01-15T18:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 150,
+      "is_online": false,
+      "cover_gradient": "from-slate-900 via-teal-950 to-zinc-900",
+      "brand_theme": "#0D9488",
+      "agenda": [
+        {
+          "time": "09:00 AM",
+          "title": "CTF Server Credentials & Rules Briefing",
+          "speaker": "BUET Security Lab"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Rafsan Jani",
+          "role": "Security Researcher",
+          "org": "RedTeam BD"
+        }
+      ],
+      "tags": [
+        "CyberSecurity",
+        "CTF",
+        "BUET",
+        "Draft"
+      ],
+      "package_code": null,
+      "is_featured": false,
+      "views_count": 0,
+      "saves_count": 0,
+      "refund_policy": "Standard organizer terms apply upon publication.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-11-09T16:00:00Z",
+      "updated_at": "2026-11-09T16:00:00Z"
+    }
+  ],
+  "event_media": [
+    {
+      "id": "med-1",
+      "event_id": "evt-dhaka-ai-summit",
+      "storage_key": "events/evt-dhaka-ai-summit/cover-banner.webp",
+      "filename": "cover-banner.webp",
+      "mime_type": "image/webp",
+      "size_bytes": 412000,
+      "media_type": "COVER",
+      "sort_order": 1
+    }
+  ],
+  "package_purchases": [
+    {
+      "id": "pp-ai-summit",
+      "event_id": "evt-dhaka-ai-summit",
+      "package_id": "pkg-premium",
+      "package_code": "PREMIUM",
+      "order_id": "ord-pkg-ai-summit",
+      "status": "ACTIVE",
+      "activated_at": "2026-10-10T10:15:00Z",
+      "expires_at": "2027-10-10T10:15:00Z"
+    },
+    {
+      "id": "pp-cse-fest",
+      "event_id": "evt-buet-cse-fest",
+      "package_id": "pkg-plus",
+      "package_code": "PLUS",
+      "order_id": "ord-pkg-cse-fest",
+      "status": "ACTIVE",
+      "activated_at": "2026-10-12T10:15:00Z",
+      "expires_at": "2027-10-12T10:15:00Z"
+    },
+    {
+      "id": "pp-design-ws",
+      "event_id": "evt-product-design-workshop",
+      "package_id": "pkg-promoted",
+      "package_code": "PROMOTED",
+      "order_id": "ord-pkg-design-ws",
+      "status": "ACTIVE",
+      "activated_at": "2026-10-20T09:15:00Z",
+      "expires_at": "2027-10-20T09:15:00Z"
+    },
+    {
+      "id": "pp-nsu-pitch",
+      "event_id": "evt-nsu-startup-pitch",
+      "package_id": "pkg-promoted",
+      "package_code": "PROMOTED",
+      "order_id": "ord-pkg-nsu-pitch",
+      "status": "ACTIVE",
+      "activated_at": "2026-10-19T14:15:00Z",
+      "expires_at": "2027-10-19T14:15:00Z"
+    },
+    {
+      "id": "pp-ctg-devops",
+      "event_id": "evt-chattogram-devops",
+      "package_id": "pkg-basic",
+      "package_code": "BASIC",
+      "order_id": "ord-pkg-ctg-devops",
+      "status": "ACTIVE",
+      "activated_at": "2026-10-25T11:15:00Z",
+      "expires_at": "2027-10-25T11:15:00Z"
+    },
+    {
+      "id": "pp-online-nextjs",
+      "event_id": "evt-online-nextjs-clinic",
+      "package_id": "pkg-basic",
+      "package_code": "BASIC",
+      "order_id": "ord-pkg-online-nextjs",
+      "status": "ACTIVE",
+      "activated_at": "2026-10-28T10:15:00Z",
+      "expires_at": "2027-10-28T10:15:00Z"
+    }
+  ],
+  "subscriptions_or_entitlements": [
+    {
+      "id": "ent-1",
+      "organization_id": "org-buet-cc",
+      "event_id": "evt-dhaka-ai-summit",
+      "feature_code": "EVENT_PUBLISH_PREMIUM",
+      "package_code": "PREMIUM",
+      "valid_from": "2026-10-10T10:15:00Z",
+      "valid_until": "2027-10-10T10:15:00Z",
+      "source_purchase_id": "pp-ai-summit"
+    },
+    {
+      "id": "ent-2",
+      "organization_id": "org-buet-cc",
+      "event_id": "evt-buet-cse-fest",
+      "feature_code": "EVENT_PUBLISH_PLUS",
+      "package_code": "PLUS",
+      "valid_from": "2026-10-12T10:15:00Z",
+      "valid_until": "2027-10-12T10:15:00Z",
+      "source_purchase_id": "pp-cse-fest"
+    },
+    {
+      "id": "ent-3",
+      "organization_id": "org-buet-cc",
+      "event_id": "evt-product-design-workshop",
+      "feature_code": "EVENT_PUBLISH_PROMOTED",
+      "package_code": "PROMOTED",
+      "valid_from": "2026-10-20T09:15:00Z",
+      "valid_until": "2027-10-20T09:15:00Z",
+      "source_purchase_id": "pp-design-ws"
+    },
+    {
+      "id": "ent-4",
+      "organization_id": "org-nsu-yes",
+      "event_id": "evt-nsu-startup-pitch",
+      "feature_code": "EVENT_PUBLISH_PROMOTED",
+      "package_code": "PROMOTED",
+      "valid_from": "2026-10-19T14:15:00Z",
+      "valid_until": "2027-10-19T14:15:00Z",
+      "source_purchase_id": "pp-nsu-pitch"
+    },
+    {
+      "id": "ent-5",
+      "organization_id": "org-buet-cc",
+      "event_id": "evt-chattogram-devops",
+      "feature_code": "EVENT_PUBLISH_BASIC",
+      "package_code": "BASIC",
+      "valid_from": "2026-10-25T11:15:00Z",
+      "valid_until": "2027-10-25T11:15:00Z",
+      "source_purchase_id": "pp-ctg-devops"
+    },
+    {
+      "id": "ent-6",
+      "organization_id": "org-buet-cc",
+      "event_id": "evt-online-nextjs-clinic",
+      "feature_code": "EVENT_PUBLISH_BASIC",
+      "package_code": "BASIC",
+      "valid_from": "2026-10-28T10:15:00Z",
+      "valid_until": "2027-10-28T10:15:00Z",
+      "source_purchase_id": "pp-online-nextjs"
+    }
+  ],
+  "ticket_types": [
+    {
+      "id": "tt-ai-student",
+      "event_id": "evt-dhaka-ai-summit",
+      "name": "Student Early-Bird Pass (ID Required)",
+      "description": "Full summit access, workshop materials, lunch & certificate for university students.",
+      "price_minor": 50000,
+      "currency": "BDT",
+      "capacity": 200,
+      "sold_count": 142,
+      "sales_start": "2026-10-10T00:00:00Z",
+      "sales_end": "2026-11-21T23:59:59Z"
+    },
+    {
+      "id": "tt-ai-pro",
+      "event_id": "evt-dhaka-ai-summit",
+      "name": "Professional Engineer Pass",
+      "description": "Priority seating, speaker lounge access, lunch, swag kit & certificate.",
+      "price_minor": 150000,
+      "currency": "BDT",
+      "capacity": 200,
+      "sold_count": 88,
+      "sales_start": "2026-10-10T00:00:00Z",
+      "sales_end": "2026-11-21T23:59:59Z"
+    },
+    {
+      "id": "tt-cse-team",
+      "event_id": "evt-buet-cse-fest",
+      "name": "Hackathon Challenger Pass",
+      "description": "36-hour venue access, meals, T-shirt, and hardware kit.",
+      "price_minor": 60000,
+      "currency": "BDT",
+      "capacity": 250,
+      "sold_count": 196,
+      "sales_start": "2026-10-12T00:00:00Z",
+      "sales_end": "2026-11-17T23:59:59Z"
+    },
+    {
+      "id": "tt-design-free",
+      "event_id": "evt-product-design-workshop",
+      "name": "Community Free Seat",
+      "description": "Free RSVP seat at EMK Center Innovation Hub.",
+      "price_minor": 0,
+      "currency": "BDT",
+      "capacity": 80,
+      "sold_count": 64,
+      "sales_start": "2026-10-20T00:00:00Z",
+      "sales_end": "2026-11-14T12:00:00Z"
+    },
+    {
+      "id": "tt-nsu-general",
+      "event_id": "evt-nsu-startup-pitch",
+      "name": "Founder & Attendee Pass",
+      "description": "Access to live startup pitches, investor panels & networking.",
+      "price_minor": 35000,
+      "currency": "BDT",
+      "capacity": 300,
+      "sold_count": 115,
+      "sales_start": "2026-10-19T00:00:00Z",
+      "sales_end": "2026-11-28T09:00:00Z"
+    },
+    {
+      "id": "tt-ctg-pass",
+      "event_id": "evt-chattogram-devops",
+      "name": "Bootcamp Lab Pass",
+      "description": "Full-day lab seat + lunch at CUET IT Business Incubator.",
+      "price_minor": 40000,
+      "currency": "BDT",
+      "capacity": 120,
+      "sold_count": 52,
+      "sales_start": "2026-10-25T00:00:00Z",
+      "sales_end": "2026-12-04T23:59:59Z"
+    },
+    {
+      "id": "tt-online-free",
+      "event_id": "evt-online-nextjs-clinic",
+      "name": "Free Livestream & Code-Along Pass",
+      "description": "Instant access link & GitHub starter repository.",
+      "price_minor": 0,
+      "currency": "BDT",
+      "capacity": 500,
+      "sold_count": 210,
+      "sales_start": "2026-10-28T00:00:00Z",
+      "sales_end": "2026-11-12T18:30:00Z"
+    },
+    {
+      "id": "tt-ctf-student",
+      "event_id": "evt-draft-cyber-ctf",
+      "name": "CTF Contestant Pass",
+      "description": "Individual entry to 8-hour Capture The Flag finals.",
+      "price_minor": 30000,
+      "currency": "BDT",
+      "capacity": 150,
+      "sold_count": 0,
+      "sales_start": "2026-11-15T00:00:00Z",
+      "sales_end": "2027-01-14T23:59:59Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-pkg-ai-summit",
+      "buyer_user_id": "usr-org-nusrat",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_type": "PACKAGE",
+      "status": "PAID",
+      "subtotal_minor": 499900,
+      "fee_minor": 0,
+      "total_minor": 499900,
+      "currency": "BDT",
+      "idempotency_key": "idem-pkg-ai-summit",
+      "attendee_name": "Nusrat Jahan",
+      "attendee_email": "nusrat@buetcs.org",
+      "created_at": "2026-10-10T10:14:00Z"
+    },
+    {
+      "id": "ord-tkt-rafiq-1",
+      "buyer_user_id": "usr-attendee-rafiq",
+      "event_id": "evt-buet-cse-fest",
+      "order_type": "TICKET",
+      "status": "PAID",
+      "subtotal_minor": 60000,
+      "fee_minor": 1500,
+      "total_minor": 61500,
+      "currency": "BDT",
+      "idempotency_key": "idem-tkt-rafiq-1",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "attendee_phone": "+8801711223344",
+      "institute_or_company": "BUET CSE '22",
+      "campaign_code": "FB-BUET-CAMPUS",
+      "created_at": "2026-11-01T14:20:00Z"
+    },
+    {
+      "id": "ord-tkt-rafiq-2",
+      "buyer_user_id": "usr-attendee-rafiq",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_type": "TICKET",
+      "status": "PAID",
+      "subtotal_minor": 50000,
+      "fee_minor": 1250,
+      "total_minor": 51250,
+      "currency": "BDT",
+      "idempotency_key": "idem-tkt-rafiq-2",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "attendee_phone": "+8801711223344",
+      "institute_or_company": "BUET CSE '22",
+      "campaign_code": "LN-AI-COMMUNITY",
+      "created_at": "2026-11-03T16:10:00Z"
+    }
+  ],
+  "order_items": [
+    {
+      "id": "oi-1",
+      "order_id": "ord-pkg-ai-summit",
+      "ticket_type_id": null,
+      "package_id": "pkg-premium",
+      "description": "Premium Event Package (৳4,999)",
+      "quantity": 1,
+      "unit_price_minor": 499900,
+      "line_total_minor": 499900
+    },
+    {
+      "id": "oi-2",
+      "order_id": "ord-tkt-rafiq-1",
+      "ticket_type_id": "tt-cse-team",
+      "package_id": null,
+      "description": "Hackathon Challenger Pass",
+      "quantity": 1,
+      "unit_price_minor": 60000,
+      "line_total_minor": 60000
+    },
+    {
+      "id": "oi-3",
+      "order_id": "ord-tkt-rafiq-2",
+      "ticket_type_id": "tt-ai-student",
+      "package_id": null,
+      "description": "Student Early-Bird Pass (ID Required)",
+      "quantity": 1,
+      "unit_price_minor": 50000,
+      "line_total_minor": 50000
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay-1",
+      "order_id": "ord-pkg-ai-summit",
+      "provider": "SSLCOMMERZ_SANDBOX",
+      "provider_reference": "SSLCZ-BD-20261010-001",
+      "webhook_event_id": "wh-evt-ssl-001",
+      "amount_minor": 499900,
+      "currency": "BDT",
+      "status": "VERIFIED",
+      "verified_at": "2026-10-10T10:15:00Z",
+      "created_at": "2026-10-10T10:14:30Z"
+    },
+    {
+      "id": "pay-2",
+      "order_id": "ord-tkt-rafiq-1",
+      "provider": "BKASH_SANDBOX",
+      "provider_reference": "BKASH-TRX-99A81B2C",
+      "webhook_event_id": "wh-evt-bkash-001",
+      "amount_minor": 61500,
+      "currency": "BDT",
+      "status": "VERIFIED",
+      "verified_at": "2026-11-01T14:21:00Z",
+      "created_at": "2026-11-01T14:20:30Z"
+    },
+    {
+      "id": "pay-3",
+      "order_id": "ord-tkt-rafiq-2",
+      "provider": "SSLCOMMERZ_SANDBOX",
+      "provider_reference": "SSLCZ-BD-20261103-042",
+      "webhook_event_id": "wh-evt-ssl-002",
+      "amount_minor": 51250,
+      "currency": "BDT",
+      "status": "VERIFIED",
+      "verified_at": "2026-11-03T16:11:00Z",
+      "created_at": "2026-11-03T16:10:30Z"
+    }
+  ],
+  "registrations": [
+    {
+      "id": "reg-rafiq-cse",
+      "event_id": "evt-buet-cse-fest",
+      "user_id": "usr-attendee-rafiq",
+      "order_id": "ord-tkt-rafiq-1",
+      "ticket_type_id": "tt-cse-team",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "attendee_phone": "+8801711223344",
+      "institute_or_company": "BUET CSE '22",
+      "marketing_consent": true,
+      "status": "CONFIRMED",
+      "campaign_code": "FB-BUET-CAMPUS",
+      "created_at": "2026-11-01T14:21:00Z"
+    },
+    {
+      "id": "reg-rafiq-ai",
+      "event_id": "evt-dhaka-ai-summit",
+      "user_id": "usr-attendee-rafiq",
+      "order_id": "ord-tkt-rafiq-2",
+      "ticket_type_id": "tt-ai-student",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "attendee_phone": "+8801711223344",
+      "institute_or_company": "BUET CSE '22",
+      "marketing_consent": true,
+      "status": "CONFIRMED",
+      "campaign_code": "LN-AI-COMMUNITY",
+      "created_at": "2026-11-03T16:11:00Z"
+    },
+    {
+      "id": "reg-rafiq-design",
+      "event_id": "evt-product-design-workshop",
+      "user_id": "usr-attendee-rafiq",
+      "order_id": null,
+      "ticket_type_id": "tt-design-free",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "attendee_phone": "+8801711223344",
+      "institute_or_company": "BUET CSE '22",
+      "marketing_consent": false,
+      "status": "CONFIRMED",
+      "created_at": "2026-11-05T09:30:00Z"
+    },
+    {
+      "id": "reg-nsu-sample",
+      "event_id": "evt-nsu-startup-pitch",
+      "user_id": null,
+      "order_id": null,
+      "ticket_type_id": "tt-nsu-general",
+      "attendee_name": "Samira Kabir",
+      "attendee_email": "samira@northsouth.edu",
+      "attendee_phone": "+8801799887766",
+      "institute_or_company": "NSU BBA",
+      "marketing_consent": true,
+      "status": "CONFIRMED",
+      "created_at": "2026-11-06T11:00:00Z"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "tkt-1",
+      "registration_id": "reg-rafiq-cse",
+      "event_id": "evt-buet-cse-fest",
+      "ticket_type_id": "tt-cse-team",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "ticket_type_name": "Hackathon Challenger Pass",
+      "qr_token": "AAYOJON-TKT-2026-BUET-9F4A2C8E1B",
+      "token_hash": "3af44315fe2e629f68a340b32875709c8271520990787947858f65314c2cdced",
+      "status": "VALID",
+      "issued_at": "2026-11-01T14:21:00Z"
+    },
+    {
+      "id": "tkt-2",
+      "registration_id": "reg-rafiq-ai",
+      "event_id": "evt-dhaka-ai-summit",
+      "ticket_type_id": "tt-ai-student",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "ticket_type_name": "Student Early-Bird Pass (ID Required)",
+      "qr_token": "AAYOJON-TKT-2026-KIB-7D3E1A5C9F",
+      "token_hash": "2c1337c1c3fdfddf1eba5624921d42206a4fa5c34a3967c55d2398eebe8623d0",
+      "status": "VALID",
+      "issued_at": "2026-11-03T16:11:00Z"
+    },
+    {
+      "id": "tkt-3",
+      "registration_id": "reg-rafiq-design",
+      "event_id": "evt-product-design-workshop",
+      "ticket_type_id": "tt-design-free",
+      "attendee_name": "Rafiqul Islam",
+      "attendee_email": "rafiq@student.buet.ac.bd",
+      "ticket_type_name": "Community Free Seat",
+      "qr_token": "AAYOJON-TKT-2026-EMK-4B8C2D6F0A",
+      "token_hash": "a58f9084c56c8096ac3a576b464e1f35f1be8c06af8c65bdc35615ed5cbb3a65",
+      "status": "USED",
+      "issued_at": "2026-11-05T09:30:00Z"
+    }
+  ],
+  "check_ins": [
+    {
+      "id": "chk-1",
+      "ticket_id": "tkt-3",
+      "event_id": "evt-product-design-workshop",
+      "staff_user_id": "usr-staff-mehedi",
+      "staff_name": "Mehedi Hasan",
+      "checked_in_at": "2026-11-09T14:05:12Z"
+    }
+  ],
+  "promotions": [
+    {
+      "id": "promo-1",
+      "event_id": "evt-dhaka-ai-summit",
+      "type": "HERO_SPOTLIGHT",
+      "starts_at": "2026-11-01T00:00:00Z",
+      "ends_at": "2026-11-22T23:59:59Z",
+      "purchase_id": "pp-ai-summit",
+      "status": "ACTIVE"
+    }
+  ],
+  "campaign_links": [
+    {
+      "id": "cmp-1",
+      "event_id": "evt-buet-cse-fest",
+      "code": "FB-BUET-CAMPUS",
+      "source": "facebook",
+      "medium": "social_group",
+      "campaign": "buet_campus_ambassadors",
+      "clicks": 418,
+      "conversions": 64,
+      "revenue_minor": 3840000,
+      "created_by": "usr-org-nusrat",
+      "created_at": "2026-10-15T10:00:00Z"
+    },
+    {
+      "id": "cmp-2",
+      "event_id": "evt-dhaka-ai-summit",
+      "code": "LN-AI-COMMUNITY",
+      "source": "linkedin",
+      "medium": "organic_post",
+      "campaign": "dhaka_ai_engineers",
+      "clicks": 625,
+      "conversions": 92,
+      "revenue_minor": 8450000,
+      "created_by": "usr-org-nusrat",
+      "created_at": "2026-10-16T12:00:00Z"
+    }
+  ],
+  "attributions": [
+    {
+      "id": "attr-1",
+      "campaign_link_id": "cmp-1",
+      "registration_id": "reg-rafiq-cse",
+      "order_id": "ord-tkt-rafiq-1",
+      "attributed_at": "2026-11-01T14:21:00Z",
+      "model": "LAST_TOUCH"
+    },
+    {
+      "id": "attr-2",
+      "campaign_link_id": "cmp-2",
+      "registration_id": "reg-rafiq-ai",
+      "order_id": "ord-tkt-rafiq-2",
+      "attributed_at": "2026-11-03T16:11:00Z",
+      "model": "LAST_TOUCH"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "user_id": "usr-attendee-rafiq",
+      "destination": "rafiq@student.buet.ac.bd",
+      "channel": "EMAIL",
+      "template": "TICKET_ISSUED_CONFIRMATION",
+      "subject": "Your QR Ticket for BUET CSE Fest 2026 — National Hackathon & IUPC",
+      "status": "SENT",
+      "retry_count": 0,
+      "idempotency_key": "notif-ord-tkt-rafiq-1",
+      "sent_at": "2026-11-01T14:21:02Z",
+      "created_at": "2026-11-01T14:21:00Z"
+    },
+    {
+      "id": "notif-2",
+      "user_id": "usr-attendee-rafiq",
+      "destination": "rafiq@student.buet.ac.bd",
+      "channel": "EMAIL",
+      "template": "TICKET_ISSUED_CONFIRMATION",
+      "subject": "Your QR Ticket for Dhaka AI & Cloud Engineering Summit 2026",
+      "status": "SENT",
+      "retry_count": 0,
+      "idempotency_key": "notif-ord-tkt-rafiq-2",
+      "sent_at": "2026-11-03T16:11:03Z",
+      "created_at": "2026-11-03T16:11:00Z"
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": "aud-1",
+      "actor_id": "usr-org-nusrat",
+      "actor_name": "Nusrat Jahan",
+      "actor_role": "ORGANIZER_OWNER",
+      "action": "EVENT_PUBLISHED",
+      "resource_type": "events",
+      "resource_id": "evt-dhaka-ai-summit",
+      "metadata": {
+        "package": "PREMIUM",
+        "verified_payment": "SSLCZ-BD-20261010-001"
+      },
+      "created_at": "2026-10-10T10:16:00Z"
+    },
+    {
+      "id": "aud-2",
+      "actor_id": "usr-admin-tariq",
+      "actor_name": "Tariq Mahmud",
+      "actor_role": "ADMIN",
+      "action": "ORGANIZATION_DOMAIN_VERIFIED",
+      "resource_type": "organizations",
+      "resource_id": "org-buet-cc",
+      "metadata": {
+        "custom_domain": "events.buetcs.org",
+        "cname": "cname.aayojon.bd"
+      },
+      "created_at": "2026-10-14T09:00:00Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "rep-1",
+      "reporter_id": "usr-attendee-rafiq",
+      "reporter_email": "rafiq@student.buet.ac.bd",
+      "event_id": "evt-nsu-startup-pitch",
+      "reason": "Venue schedule clarification requested",
+      "details": "Please confirm if Gate 3 or Gate 1 is open for external university participants on Saturday morning.",
+      "status": "OPEN",
+      "created_at": "2026-11-08T15:30:00Z"
+    }
+  ],
+  "sponsor_inquiries": [
+    {
+      "id": "spn-1",
+      "sponsor_user_id": "usr-sponsor-farhana",
+      "sponsor_name": "Farhana Rahman",
+      "company_name": "Pathao Ventures",
+      "contact_email": "farhana@pathao-ventures.bd",
+      "event_id": "evt-dhaka-ai-summit",
+      "budget_minor": 15000000,
+      "placement_tier": "TITLE_SPONSOR",
+      "message": "We would love to sponsor the AI Engineering keynote track and host a recruitment booth at KIB.",
+      "status": "APPROVED",
+      "created_at": "2026-10-22T11:00:00Z"
+    },
+    {
+      "id": "spn-2",
+      "sponsor_user_id": "usr-sponsor-farhana",
+      "sponsor_name": "Farhana Rahman",
+      "company_name": "Pathao Ventures",
+      "contact_email": "farhana@pathao-ventures.bd",
+      "event_id": "evt-buet-cse-fest",
+      "budget_minor": 8000000,
+      "placement_tier": "GOLD_BOOTH",
+      "message": "Interested in sponsoring the 36-hour Hackathon midnight snacks and prize pool.",
+      "status": "PENDING",
+      "created_at": "2026-11-04T13:20:00Z"
+    }
+  ],
+  "analytics_events": [
+    {
+      "id": "ae-1",
+      "event_name": "event_viewed",
+      "event_id": "evt-dhaka-ai-summit",
+      "session_id": "sess-seed-1",
+      "properties": {
+        "referrer": "linkedin",
+        "city": "Dhaka"
+      },
+      "timestamp": "2026-11-03T16:08:00Z"
+    },
+    {
+      "id": "ae-2",
+      "event_name": "payment_succeeded",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_id": "ord-tkt-rafiq-2",
+      "session_id": "sess-seed-1",
+      "properties": {
+        "provider": "SSLCOMMERZ_SANDBOX",
+        "amount_minor": 51250,
+        "currency": "BDT"
+      },
+      "timestamp": "2026-11-03T16:11:00Z"
+    },
+    {
+      "id": "ae-3",
+      "event_name": "ticket_checked_in",
+      "event_id": "evt-product-design-workshop",
+      "ticket_id": "tkt-3",
+      "session_id": "sess-staff-1",
+      "properties": {
+        "staff_role": "CHECKIN_STAFF"
+      },
+      "timestamp": "2026-11-09T14:05:12Z"
+    }
+  ]
+}
