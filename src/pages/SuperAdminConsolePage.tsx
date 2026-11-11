@@ -24,6 +24,8 @@ import { PublicFooter } from "@/components/layout/PublicFooter";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { fetchDatabaseState } from "@/lib/client-api";
+import { createInitialSeed } from "@/lib/seed";
 import type { RoleDefinition, DatabaseState } from "@/lib/types";
 
 const ALL_SYSTEM_PERMISSIONS = [
@@ -79,21 +81,29 @@ export function SuperAdminConsolePage() {
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [dbState, setDbState] = useState<DatabaseState | null>(null);
 
-  // Load database state & roles
+  // Load database state & roles directly from Firestore / client-api
   useEffect(() => {
-    fetch("/api/v1/state")
-      .then((res) => res.json())
+    fetchDatabaseState()
       .then((data) => {
         setDbState(data);
-        if (data.roles) {
-          setRoles(data.roles);
-          if (data.roles.length > 0) {
-            setSelectedRole(data.roles[0]);
-            setRolePermissions(data.roles[0].permissions || []);
-          }
+        const rolesList =
+          data.roles && data.roles.length > 0 ? data.roles : createInitialSeed().roles;
+        setRoles(rolesList);
+        if (rolesList.length > 0) {
+          setSelectedRole(rolesList[0]);
+          setRolePermissions(rolesList[0].permissions || []);
         }
       })
-      .catch((err) => console.error("Error loading admin state:", err));
+      .catch((err) => {
+        console.error("Error loading admin state:", err);
+        const initial = createInitialSeed();
+        setDbState(initial);
+        setRoles(initial.roles);
+        if (initial.roles.length > 0) {
+          setSelectedRole(initial.roles[0]);
+          setRolePermissions(initial.roles[0].permissions || []);
+        }
+      });
   }, []);
 
   const handleSelectRole = (r: RoleDefinition) => {
@@ -154,7 +164,7 @@ export function SuperAdminConsolePage() {
   );
 
   return (
-    <ProtectedRoute allowedRoles={["admin"]}>
+    <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
       <div className="flex min-h-screen flex-col bg-canvas text-ink">
         <PublicNavbar activeHref="/admin" />
 
@@ -172,7 +182,7 @@ export function SuperAdminConsolePage() {
                     <span>Database-Defined Dynamic RBAC & Platform Core</span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                    Super Admin Console (সর্বোচ্চ নিয়ন্ত্রণ কেন্দ্র)
+                    Super Admin Console
                   </h1>
                   <p className="mt-1 text-sm text-purple-200 max-w-2xl">
                     Configure database roles, dynamically modify granular permission assignments, audit security events, and inspect system invariants in real-time.

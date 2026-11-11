@@ -276,12 +276,14 @@ export function isSuperAdmin(
   if (!user) return false;
   const role = (user.role || "").toLowerCase();
   const pRole = (user.platform_role || "").toLowerCase();
+  const email = (user.email || "").toLowerCase();
   return (
     role === "super_admin" ||
     role === "superadmin" ||
     pRole === "super_admin" ||
     pRole === "superadmin" ||
-    user.email === "superadmin@aayojon.bd"
+    email === "superadmin@aayojon.bd" ||
+    email === "bfos.info@gmail.com"
   );
 }
 

@@ -27,7 +27,9 @@ service cloud.firestore {
         request.auth.token.role == 'admin' ||
         request.auth.token.role == 'super_admin' ||
         getUserData().platform_role == 'ADMIN' ||
-        getUserData().platform_role == 'SUPER_ADMIN'
+        getUserData().platform_role == 'SUPER_ADMIN' ||
+        request.auth.token.email == 'superadmin@aayojon.bd' ||
+        request.auth.token.email == 'bfos.info@gmail.com'
       );
     }
 

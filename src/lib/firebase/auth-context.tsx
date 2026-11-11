@@ -462,6 +462,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Ignore parse errors
             }
 
+            const normEmail = (fbUser.email || "").toLowerCase();
+            if (normEmail === "bfos.info@gmail.com" || normEmail === "superadmin@aayojon.bd") {
+              savedRole = "super_admin";
+            }
+
             const displayName =
               fbUser.displayName ||
               liveProfile?.display_name ||
@@ -607,6 +612,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       // Ignore
+    }
+
+    const normEmail = (user.email || "").toLowerCase();
+    if (normEmail === "bfos.info@gmail.com" || normEmail === "superadmin@aayojon.bd") {
+      assignedRole = "super_admin";
     }
 
     const displayName =

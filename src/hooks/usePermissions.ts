@@ -10,6 +10,7 @@ import {
   type Permission,
 } from "@/lib/permissions/rbac";
 import type { RoleDefinition } from "@/lib/types";
+import { createInitialSeed } from "@/lib/seed";
 
 export function usePermissions() {
   const { currentUser, firebaseUser, loading } = useAuth();
@@ -25,14 +26,19 @@ export function usePermissions() {
         const res = await fetch("/api/v1/roles");
         if (res.ok) {
           const data = await res.json();
-          if (isMounted && data.roles) {
+          if (isMounted && data.roles && data.roles.length > 0) {
             setDbRoles(data.roles);
+            return;
           }
         }
       } catch (err) {
-        // Fallback: silently retain static permissions matrix
+        // Fallback
       } finally {
         if (isMounted) setLoadingRoles(false);
+      }
+      // Ensure dbRoles is never empty on production / static domains
+      if (isMounted) {
+        setDbRoles(createInitialSeed().roles);
       }
     }
     fetchRoles();
