@@ -224,16 +224,24 @@ export const ROUTE_RULES: RouteRule[] = [
   { pathPattern: /^\/design(\/.*)?$/, allowedRoles: ["guest", "attendee", "organizer", "sponsor", "staff", "venue_owner", "vendor", "admin"], requireAuth: false },
 
   // Tickets Pass (Requires authentication - checked per ticket ownership)
-  { pathPattern: /^\/tickets\/[^/]+$/, allowedRoles: ["attendee", "organizer", "staff", "admin"], requireAuth: true },
+  { pathPattern: /^\/tickets\/[^/]+$/, allowedRoles: ["attendee", "organizer", "staff", "admin", "super_admin"], requireAuth: true },
 
-  // Portal Subtabs
-  { pathPattern: /^\/portal\?.*tab=wallet.*$/, allowedRoles: ["attendee", "organizer", "admin"], requireAuth: true },
-  { pathPattern: /^\/portal\?.*tab=organizer.*$/, allowedRoles: ["organizer", "admin"], requireAuth: true },
-  { pathPattern: /^\/portal\?.*tab=scanner.*$/, allowedRoles: ["staff", "admin"], requireAuth: true },
-  { pathPattern: /^\/portal\?.*tab=sponsor.*$/, allowedRoles: ["sponsor", "admin"], requireAuth: true },
-  { pathPattern: /^\/portal\?.*tab=provider.*$/, allowedRoles: ["venue_owner", "vendor", "admin"], requireAuth: true },
-  { pathPattern: /^\/portal\?.*tab=admin.*$/, allowedRoles: ["admin"], requireAuth: true },
-  { pathPattern: /^\/portal(\/.*)?$/, allowedRoles: ["attendee", "organizer", "sponsor", "staff", "venue_owner", "vendor", "admin"], requireAuth: true },
+  // Dedicated Role-Based Access Pages
+  { pathPattern: /^\/wallet(\/.*)?$/, allowedRoles: ["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/organizer(\/.*)?$/, allowedRoles: ["organizer", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/scanner(\/.*)?$/, allowedRoles: ["staff", "organizer", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/sponsor(\/.*)?$/, allowedRoles: ["sponsor", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/provider(\/.*)?$/, allowedRoles: ["venue_owner", "vendor", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/admin(\/.*)?$/, allowedRoles: ["admin", "super_admin"], requireAuth: true },
+
+  // Portal Redirects
+  { pathPattern: /^\/portal\?.*tab=wallet.*$/, allowedRoles: ["attendee", "organizer", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/portal\?.*tab=organizer.*$/, allowedRoles: ["organizer", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/portal\?.*tab=scanner.*$/, allowedRoles: ["staff", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/portal\?.*tab=sponsor.*$/, allowedRoles: ["sponsor", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/portal\?.*tab=provider.*$/, allowedRoles: ["venue_owner", "vendor", "admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/portal\?.*tab=admin.*$/, allowedRoles: ["admin", "super_admin"], requireAuth: true },
+  { pathPattern: /^\/portal(\/.*)?$/, allowedRoles: ["attendee", "organizer", "sponsor", "staff", "venue_owner", "vendor", "admin", "super_admin"], requireAuth: true },
 ];
 
 // ---------------------------------------------------------------------------

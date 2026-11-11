@@ -13,7 +13,7 @@ import {
   KeyRound,
   ShieldAlert,
 } from "lucide-react";
-import { useAuth, DEMO_PERSONAS_LIST } from "@/lib/firebase/auth-context";
+import { useAuth, DEMO_PERSONAS, DEMO_PERSONAS_LIST } from "@/lib/firebase/auth-context";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { Button } from "@/components/ui/Button";
@@ -25,7 +25,26 @@ import { Logo } from "@/components/layout/Logo";
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl") || "/portal";
+  const returnUrl = searchParams.get("returnUrl");
+
+  const getRoleDestination = (roleStr?: string) => {
+    switch (roleStr?.toLowerCase()) {
+      case "organizer":
+        return "/organizer";
+      case "staff":
+        return "/scanner";
+      case "venue_owner":
+      case "vendor":
+        return "/provider";
+      case "sponsor":
+        return "/sponsor";
+      case "admin":
+      case "super_admin":
+        return "/admin";
+      default:
+        return "/wallet";
+    }
+  };
 
   const { signInWithEmail, signUpWithEmail, switchPersona, currentUser } = useAuth();
 
@@ -48,7 +67,7 @@ export function LoginPage() {
       } else {
         await signUpWithEmail(email, password, name, role);
       }
-      navigate(returnUrl);
+      navigate(returnUrl || getRoleDestination(role));
     } catch (err: any) {
       setErrorMsg(err?.message || "Authentication failed. Please verify credentials.");
     } finally {
@@ -61,10 +80,13 @@ export function LoginPage() {
     setLoading(true);
     try {
       await switchPersona(personaId);
+      const persona = DEMO_PERSONAS[personaId];
       if (personaId === "usr-superadmin" || personaId === "usr-admin-tariq") {
         navigate("/admin");
-      } else {
+      } else if (returnUrl) {
         navigate(returnUrl);
+      } else {
+        navigate(getRoleDestination(persona?.role));
       }
     } catch (err: any) {
       setErrorMsg(err?.message || "Failed to switch persona");

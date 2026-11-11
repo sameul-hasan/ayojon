@@ -69,7 +69,7 @@ export function DesktopNavigation({ activeHref, role, isSuperAdmin }: DesktopNav
     const list: NavDropdownItem[] = [
       {
         label: "Host an Event",
-        href: "/portal?tab=organizer",
+        href: "/organizer",
         description: "Publish your event & sell tickets in BDT",
         icon: Sparkles,
         badge: "Create",
@@ -79,7 +79,7 @@ export function DesktopNavigation({ activeHref, role, isSuperAdmin }: DesktopNav
     if (role === "organizer") {
       list.push({
         label: "Organizer Dashboard",
-        href: "/portal?tab=organizer",
+        href: "/organizer",
         description: "Your active events, revenue & tickets sold",
         icon: Calendar,
       });
@@ -88,7 +88,7 @@ export function DesktopNavigation({ activeHref, role, isSuperAdmin }: DesktopNav
     list.push(
       {
         label: "Event Management",
-        href: "/portal",
+        href: "/organizer",
         description: "Manage registrations, check-ins & payouts",
         icon: Layers,
       },
@@ -120,7 +120,7 @@ export function DesktopNavigation({ activeHref, role, isSuperAdmin }: DesktopNav
     },
     {
       label: "Become a Provider",
-      href: "/portal?tab=provider",
+      href: "/provider",
       description: "List your space or services for event RFQs",
       icon: Handshake,
       badge: "Partner",

@@ -24,7 +24,7 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!loading && role === "guest" && redirectUnauthenticated) {
-      navigate(`/login?returnUrl=${encodeURIComponent(pathname || "/portal")}`);
+      navigate(`/login?returnUrl=${encodeURIComponent(pathname || "/")}`);
     }
   }, [loading, role, redirectUnauthenticated, navigate, pathname]);
 
@@ -44,7 +44,7 @@ export function ProtectedRoute({
     return (
       <AccessDeniedView
         type="401"
-        returnUrl={pathname || "/portal"}
+        returnUrl={pathname || "/"}
       />
     );
   }

@@ -213,7 +213,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       } catch (e) {
         // ignore
       }
-      navigate("/portal?tab=organizer&rfq=new");
+      navigate("/organizer?rfq=new");
     }
   };
 

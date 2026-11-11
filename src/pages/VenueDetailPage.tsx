@@ -60,7 +60,7 @@ export function VenueDetailPage() {
           ]}
           activeHref="/venues"
           signInHref="/login"
-          hostHref="/portal"
+          hostHref="/organizer"
         />
         <main className="flex-1 flex items-center justify-center p-6 text-center">
           <div className="max-w-md rounded-card border border-line bg-surface p-8 shadow-card">
@@ -105,7 +105,7 @@ export function VenueDetailPage() {
         ]}
         activeHref="/venues"
         signInHref="/login"
-        hostHref="/portal"
+        hostHref="/organizer"
       />
 
       <main className="flex-1 pb-16">
@@ -356,7 +356,7 @@ export function VenueDetailPage() {
                   >
                     Request Quotation & Date Hold
                   </Button>
-                  <Link href="/portal?tab=organizer" className="block w-full">
+                  <Link href="/organizer" className="block w-full">
                     <Button variant="outline" size="sm" className="w-full">
                       Open in Organizer Studio
                     </Button>

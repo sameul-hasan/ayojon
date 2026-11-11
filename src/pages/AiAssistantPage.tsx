@@ -33,7 +33,7 @@ export function AiAssistantPage() {
                 <Building2 className="size-3.5" /> Browse Venues
               </Button>
             </Link>
-            <Link to="/portal?tab=organizer">
+            <Link to="/organizer">
               <Button variant="primary" size="sm" className="gap-1.5">
                 <LayoutDashboard className="size-3.5" /> Organizer Studio
               </Button>

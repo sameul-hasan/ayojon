@@ -47,7 +47,7 @@ interface NavItem {
 export function Navbar({
   activeHref,
   signInHref = "/login",
-  hostHref = "/portal?tab=organizer",
+  hostHref = "/organizer",
 }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -144,7 +144,8 @@ export function Navbar({
           badge: "Root",
           highlight: true,
         },
-        { label: "Portal Hub", href: "/portal", icon: Layers },
+        { label: "Organizer Studio", href: "/organizer", icon: Calendar },
+        { label: "Ticket Scanner", href: "/scanner", icon: ScanLine },
         ...baseItems,
         { label: "AI Assistant", href: "/ai-event-assistant", icon: Sparkles },
       ];
@@ -153,8 +154,8 @@ export function Navbar({
     if (role === "organizer") {
       return [
         {
-          label: "Organizer Dashboard",
-          href: "/portal?tab=organizer",
+          label: "Organizer Studio",
+          href: "/organizer",
           icon: Calendar,
           badge: "Manage",
         },
@@ -166,8 +167,8 @@ export function Navbar({
     if (role === "staff") {
       return [
         {
-          label: "Ticket Scanner",
-          href: "/portal?tab=scanner",
+          label: "Gate Check-In",
+          href: "/scanner",
           icon: ScanLine,
           badge: "Active Gate",
           highlight: true,
@@ -179,8 +180,8 @@ export function Navbar({
     if (role === "venue_owner" || role === "vendor") {
       return [
         {
-          label: "Provider Dashboard",
-          href: "/portal?tab=provider",
+          label: "Provider Studio",
+          href: "/provider",
           icon: Building2,
           badge: "RFQs",
         },
@@ -193,7 +194,7 @@ export function Navbar({
       return [
         {
           label: "Sponsor Hub",
-          href: "/portal?tab=sponsor",
+          href: "/sponsor",
           icon: Briefcase,
           badge: "Bids",
         },
@@ -205,7 +206,7 @@ export function Navbar({
     return [
       {
         label: "My Ticket Wallet",
-        href: "/portal?tab=wallet",
+        href: "/wallet",
         icon: Ticket,
         badge: "Tickets",
       },
@@ -404,7 +405,7 @@ export function Navbar({
                       )}
 
                       <Link
-                        to="/portal?tab=wallet"
+                        to="/wallet"
                         onClick={() => setAccountMenuOpen(false)}
                         className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
                       >
@@ -413,21 +414,39 @@ export function Navbar({
                       </Link>
 
                       <Link
-                        to="/portal?tab=organizer"
+                        to="/organizer"
                         onClick={() => setAccountMenuOpen(false)}
                         className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
                       >
                         <Calendar className="size-3.5 text-ink-muted" />
-                        <span>Organizer Dashboard</span>
+                        <span>Organizer Studio</span>
                       </Link>
 
                       <Link
-                        to="/portal?tab=scanner"
+                        to="/scanner"
                         onClick={() => setAccountMenuOpen(false)}
                         className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
                       >
                         <ScanLine className="size-3.5 text-ink-muted" />
                         <span>Gate Check-in Scanner</span>
+                      </Link>
+
+                      <Link
+                        to="/provider"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
+                      >
+                        <Building2 className="size-3.5 text-ink-muted" />
+                        <span>Provider Studio</span>
+                      </Link>
+
+                      <Link
+                        to="/sponsor"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
+                      >
+                        <Briefcase className="size-3.5 text-ink-muted" />
+                        <span>Sponsor Hub</span>
                       </Link>
                     </div>
 
@@ -681,3 +700,4 @@ export function Navbar({
 }
 
 export default Navbar;
+

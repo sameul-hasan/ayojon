@@ -34,7 +34,7 @@ export function AboutCTA() {
             <span>Explore Events</span>
           </Link>
           <Link
-            href="/portal?tab=organizer"
+            href="/organizer"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-btn border border-brand-400/40 bg-brand-800/80 px-6 text-sm font-semibold text-white hover:bg-brand-700 transition"
           >
             <Sparkles className="size-4 text-pink" />

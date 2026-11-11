@@ -150,7 +150,7 @@ export function UserAccountMenu({
           <div className="space-y-0.5">
             {/* Primary role dashboard */}
             <Link
-              href={`/portal?tab=${currentRoleConfig.tab}`}
+              href={`/${currentRoleConfig.tab}`}
               onClick={onClose}
               role="menuitem"
               className="flex items-center gap-2.5 rounded-btn px-3 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt hover:text-brand-700 transition"
@@ -167,7 +167,7 @@ export function UserAccountMenu({
             {/* If organizer/staff/admin, also provide attendee wallet link */}
             {role !== "attendee" && (
               <Link
-                href="/portal?tab=wallet"
+                href="/wallet"
                 onClick={onClose}
                 role="menuitem"
                 className="flex items-center gap-2.5 rounded-btn px-3 py-2 text-xs font-medium text-ink hover:bg-canvas-alt hover:text-brand-700 transition"

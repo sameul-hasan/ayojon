@@ -26,11 +26,11 @@ const FOOTER_SECTIONS = [
   {
     title: "Platform",
     links: [
-      { label: "Host an Event", href: "/portal?tab=organizer" },
+      { label: "Host an Event", href: "/organizer" },
       { label: "Find Venues", href: "/venues" },
       { label: "Find Event Services", href: "/venues?tab=services" },
       { label: "AI Event Planner", href: "/ai-event-assistant" },
-      { label: "Organizer Studio", href: "/portal" },
+      { label: "Organizer Studio", href: "/organizer" },
     ],
   },
   {
@@ -47,9 +47,9 @@ const FOOTER_SECTIONS = [
     title: "Legal & Trust",
     links: [
       { label: "Design System", href: "/design" },
-      { label: "Platform Roles & RBAC", href: "/portal" },
-      { label: "Attendee Wallet", href: "/portal?tab=wallet" },
-      { label: "Gate Verification", href: "/portal?tab=scanner" },
+      { label: "Platform Roles & RBAC", href: "/admin" },
+      { label: "Attendee Wallet", href: "/wallet" },
+      { label: "Gate Verification", href: "/scanner" },
     ],
   },
 ];

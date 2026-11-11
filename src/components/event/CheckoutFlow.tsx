@@ -865,7 +865,7 @@ export function CheckoutFlow({
             {/* CTAs */}
             <div className="flex flex-wrap justify-center gap-3 border-t border-line/80 pt-6">
               <Link
-                href="/portal?tab=wallet"
+                href="/wallet"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-95"
               >
                 <Ticket className="size-4" /> Go to My Tickets

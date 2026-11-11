@@ -164,14 +164,14 @@ export function AccessDeniedView({
         )}
 
         <div className="pt-2 flex flex-col gap-2">
-          <Link href="/portal">
+          <Link href="/">
             <Button variant="primary" className="w-full">
-              Open Your Authorized Portal
+              Return to Homepage
             </Button>
           </Link>
-          <Link href="/">
+          <Link href="/login">
             <Button variant="outline" size="sm" className="w-full">
-              Return to Homepage
+              Sign In with Authorized Account
             </Button>
           </Link>
         </div>
