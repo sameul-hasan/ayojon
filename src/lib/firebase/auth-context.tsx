@@ -14,6 +14,7 @@ import {
   isFirebaseConfigured,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithGoogle as clientSignInWithGoogle,
   signOut,
   onAuthStateChanged,
   updateProfile,
@@ -58,6 +59,7 @@ export interface AuthContextValue {
   activeRole: UserRole;
   loading: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (
     email: string,
     pass: string,
@@ -542,6 +544,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [persistUserState]
   );
 
+  // Sign In with Google
+  const signInWithGoogle = useCallback(async (): Promise<void> => {
+    const authInstance = getFirebaseAuth();
+    const { user } = await clientSignInWithGoogle(authInstance);
+
+    let assignedRole: UserRole = toUserRole(user.role);
+    try {
+      const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.uid === user.uid && parsed.role) {
+          assignedRole = parsed.role;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+
+    const displayName = user.displayName || user.email?.split("@")[0] || "User";
+    const authUser = createDefaultAuthUser({
+      uid: user.uid,
+      email: user.email || "",
+      displayName,
+      role: assignedRole,
+      tenantId: user.tenantId,
+      photoURL: user.photoURL,
+      isAnonymous: user.isAnonymous,
+    });
+
+    setCurrentUser(authUser);
+    setActiveRole(assignedRole);
+    setFirebaseUser(user);
+    persistUserState(authUser);
+  }, [persistUserState]);
+
   // Sign Up with Email
   const signUpWithEmail = useCallback(
     async (
@@ -604,6 +641,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeRole,
       loading,
       signInWithEmail,
+      signInWithGoogle,
       signUpWithEmail,
       signOutUser,
       switchPersona,
@@ -614,6 +652,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeRole,
       loading,
       signInWithEmail,
+      signInWithGoogle,
       signUpWithEmail,
       signOutUser,
       switchPersona,

@@ -19,6 +19,8 @@ import {
   onAuthStateChanged as fbOnAuthStateChanged,
   updateProfile as fbUpdateProfile,
   connectAuthEmulator as fbConnectAuthEmulator,
+  GoogleAuthProvider,
+  signInWithPopup as fbSignInWithPopup,
   type Auth as FirebaseSdkAuth,
   type User as FirebaseSdkUser,
 } from "firebase/auth";
@@ -434,6 +436,42 @@ export async function signInWithEmailAndPassword(
     );
   }
 
+  const user = storedToFirebaseUser(stored);
+  authInstance.currentUser = user;
+  notifyListeners(user);
+  return { user };
+}
+
+export async function signInWithGoogle(
+  authInstance: Auth
+): Promise<{ user: FirebaseUser }> {
+  if (authInstance._sdkAuth) {
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const cred = await fbSignInWithPopup(authInstance._sdkAuth, provider);
+      const user = sdkUserToFirebaseUser(cred.user);
+      authInstance.currentUser = user;
+      notifyListeners(user);
+      return { user };
+    } catch (err: any) {
+      throw new FirebaseAuthError(err?.code || "auth/google-sign-in-failed", err?.message);
+    }
+  }
+
+  // Local / Offline Fallback Engine:
+  const mockUid = `usr-google-${Date.now().toString(36)}`;
+  const stored: StoredUserCredential = {
+    uid: mockUid,
+    email: "user@gmail.com",
+    passwordHash: "google-auth",
+    displayName: "Google User",
+    photoURL: null,
+    role: "attendee",
+    emailVerified: true,
+    createdAt: new Date().toISOString(),
+  };
+  userStore.set("user@gmail.com", stored);
   const user = storedToFirebaseUser(stored);
   authInstance.currentUser = user;
   notifyListeners(user);
