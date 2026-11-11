@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useNavigate, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AccessDeniedView } from "./AccessDeniedView";
 import type { UserRole } from "@/lib/firebase/auth-context";
@@ -17,15 +17,16 @@ export function ProtectedRoute({
   allowedRoles,
   redirectUnauthenticated = false,
 }: ProtectedRouteProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
   const { role, isSuspended, hasRole, loading } = usePermissions();
 
   useEffect(() => {
     if (!loading && role === "guest" && redirectUnauthenticated) {
-      router.push(`/login?returnUrl=${encodeURIComponent(pathname || "/portal")}`);
+      navigate(`/login?returnUrl=${encodeURIComponent(pathname || "/portal")}`);
     }
-  }, [loading, role, redirectUnauthenticated, router, pathname]);
+  }, [loading, role, redirectUnauthenticated, navigate, pathname]);
 
   if (loading) {
     return (

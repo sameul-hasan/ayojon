@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import { Clock, RefreshCw, AlertCircle } from "lucide-react";
 import type { DatabaseState, Order } from "@/lib/types";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";

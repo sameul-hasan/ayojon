@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import { CalendarDays, MapPin, BadgeCheck } from "lucide-react";
 import type { PublicCategory, PublicEvent } from "@/lib/public-events-shared";
 import { eventHref } from "@/lib/public-events-shared";

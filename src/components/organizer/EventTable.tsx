@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import { PlusCircle, ExternalLink, Sparkles, Check, ShoppingBag } from "lucide-react";
 import type { DatabaseState, EventRecord, PackageCode } from "@/lib/types";
 import { Badge } from "@/components/ui/Badge";

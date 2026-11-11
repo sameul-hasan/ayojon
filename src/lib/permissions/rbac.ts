@@ -4,7 +4,7 @@
  * Location: src/lib/permissions/rbac.ts
  */
 
-import type { DatabaseState, PlatformRole, Profile } from "../types";
+import type { DatabaseState, PlatformRole, Profile, RoleDefinition } from "../types";
 import type { UserRole, AuthUser } from "../firebase/auth-context";
 
 // ---------------------------------------------------------------------------
@@ -212,13 +212,31 @@ export function normalizeUserRole(role: string | null | undefined): NormalizedRo
   if (!role) return "guest";
   const r = role.toLowerCase().trim();
   if (r === "guest") return "guest";
-  if (r === "admin") return "admin";
+  if (r === "super_admin" || r === "superadmin" || r === "admin") return "admin";
   if (r === "organizer" || r === "organizer_owner" || r === "event_manager") return "organizer";
   if (r === "staff" || r === "checkin_staff") return "staff";
   if (r === "sponsor") return "sponsor";
   if (r === "venue_owner") return "venue_owner";
   if (r === "vendor") return "vendor";
   return "attendee";
+}
+
+/**
+ * Checks if user is Super Administrator
+ */
+export function isSuperAdmin(
+  user: { role?: string; platform_role?: string; email?: string } | null | undefined
+): boolean {
+  if (!user) return false;
+  const role = (user.role || "").toLowerCase();
+  const pRole = (user.platform_role || "").toLowerCase();
+  return (
+    role === "super_admin" ||
+    role === "superadmin" ||
+    pRole === "super_admin" ||
+    pRole === "superadmin" ||
+    user.email === "superadmin@aayojon.bd"
+  );
 }
 
 /**
@@ -241,6 +259,34 @@ export function hasPermission(
 ): boolean {
   const perms = ROLE_PERMISSIONS[role] || [];
   return perms.includes(permission);
+}
+
+/**
+ * Resolves permissions dynamically from the database roles collection
+ */
+export function hasDbPermission(
+  role: string | null | undefined,
+  permission: string,
+  dbRoles?: RoleDefinition[]
+): boolean {
+  const normRole = normalizeUserRole(role);
+  if (normRole === "admin") return true;
+
+  if (dbRoles && Array.isArray(dbRoles)) {
+    const dbRole = dbRoles.find(
+      (r) =>
+        r.code.toLowerCase() === (role || "").toLowerCase() ||
+        r.code.toLowerCase() === normRole
+    );
+    if (dbRole) {
+      if (dbRole.permissions.includes("*") || dbRole.permissions.includes(permission)) {
+        return true;
+      }
+    }
+  }
+
+  const perms = ROLE_PERMISSIONS[normRole] || [];
+  return perms.includes(permission as Permission);
 }
 
 /**

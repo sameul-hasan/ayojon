@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import { ArrowRight, Compass, Sparkles, Mail, MapPin } from "lucide-react";
 
 export function AboutCTA() {

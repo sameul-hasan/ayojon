@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/ui/Link";
+import { useNavigate } from "react-router-dom";
 import {
   Sparkles,
   Send,
@@ -83,7 +83,7 @@ interface AIAssistantWidgetProps {
 }
 
 export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAssistantWidgetProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<AIMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -213,7 +213,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       } catch (e) {
         // ignore
       }
-      router.push("/portal?tab=organizer&rfq=new");
+      navigate("/portal?tab=organizer&rfq=new");
     }
   };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import type { PublicCategory } from "@/lib/public-events-shared";
 import { categoryIcon, categoryTile } from "./categoryStyle";
 import { cn } from "@/lib/ui/cn";

@@ -5,10 +5,10 @@
   "description": "Aayojon (আয়োজন) — All-in-One Event Discovery, Management, Promotion & Ticketing Platform for Bangladesh",
   "scripts": {
     "predev": "node scripts/build-css.cjs",
-    "dev": "next dev --webpack",
+    "dev": "vite",
     "prebuild": "node scripts/build-css.cjs",
-    "build": "next build --webpack",
-    "start": "next start",
+    "build": "vite build",
+    "preview": "vite preview",
     "test:qa": "tsc --skipLibCheck --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/qa-suite.test.ts && node .test-dist/tests/qa-suite.test.js",
     "test:auth": "tsc --skipLibCheck --jsx react-jsx --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/firebase-auth.test.ts && node .test-dist/tests/firebase-auth.test.js",
     "test": "tsc --skipLibCheck --jsx react-jsx --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/qa-suite.test.ts tests/firebase-auth.test.ts tests/marketplace-rfq.test.ts tests/rbac.test.ts tests/test-runner.ts && node .test-dist/tests/test-runner.js"
@@ -19,16 +19,18 @@
     "firebase": "^11.0.0",
     "lucide-react": "1.43.0",
     "motion": "^14.12.0",
-    "next": "16.2.9",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.1",
     "@types/node": "20.19.43",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "^4.7.0",
     "tailwindcss": "4.3.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite": "^6.4.3"
   }
 }

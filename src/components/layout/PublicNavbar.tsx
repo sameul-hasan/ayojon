@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import {
   Menu,
   Search,
@@ -15,7 +15,7 @@ import { MobileNavigation } from "./MobileNavigation";
 import { UserAccountMenu } from "./UserAccountMenu";
 import { cn } from "@/lib/ui/cn";
 import { useAuth } from "@/lib/firebase/auth-context";
-import { normalizeUserRole } from "@/lib/permissions/rbac";
+import { normalizeUserRole, isSuperAdmin as checkIsSuperAdmin } from "@/lib/permissions/rbac";
 
 export interface PublicNavbarProps {
   items?: Array<{ label: string; href: string }>;
@@ -40,6 +40,10 @@ export function PublicNavbar({
 
   const role = useMemo(() => {
     return normalizeUserRole(currentUser?.role || currentUser?.platform_role);
+  }, [currentUser]);
+
+  const isUserSuperAdmin = useMemo(() => {
+    return checkIsSuperAdmin(currentUser);
   }, [currentUser]);
 
   // Track scroll position for subtle sticky elevation
@@ -88,7 +92,7 @@ export function PublicNavbar({
           </div>
 
           {/* CENTER: DESKTOP MULTI-GROUP NAVIGATION */}
-          <DesktopNavigation activeHref={activeHref} role={role} />
+          <DesktopNavigation activeHref={activeHref} role={role} isSuperAdmin={isUserSuperAdmin} />
 
           {/* RIGHT: SEARCH, ACTIONS & USER MENU */}
           <div className="flex items-center gap-2">

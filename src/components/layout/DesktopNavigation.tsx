@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import {
   Compass,
   Calendar,
@@ -12,16 +12,19 @@ import {
   Info,
   Heart,
   Mail,
+  ShieldAlert,
 } from "lucide-react";
 import { NavigationDropdown, type NavDropdownItem } from "./NavigationDropdown";
 import type { NormalizedRole } from "@/lib/permissions/rbac";
+import { cn } from "@/lib/ui/cn";
 
 export interface DesktopNavigationProps {
   activeHref?: string;
   role: NormalizedRole;
+  isSuperAdmin?: boolean;
 }
 
-export function DesktopNavigation({ activeHref, role }: DesktopNavigationProps) {
+export function DesktopNavigation({ activeHref, role, isSuperAdmin }: DesktopNavigationProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const toggle = (id: string) => {
@@ -186,6 +189,21 @@ export function DesktopNavigation({ activeHref, role }: DesktopNavigationProps) 
         onClose={close}
         activeHref={activeHref}
       />
+
+      {(isSuperAdmin || role === "admin") && (
+        <Link
+          to="/admin"
+          className={cn(
+            "ml-1 inline-flex items-center gap-1.5 rounded-btn px-3 py-1.5 text-xs font-bold transition shadow-xs",
+            activeHref === "/admin"
+              ? "bg-purple-700 text-white"
+              : "bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100"
+          )}
+        >
+          <ShieldAlert className="size-3.5 text-purple-600" />
+          <span>👑 Super Admin</span>
+        </Link>
+      )}
     </nav>
   );
 }

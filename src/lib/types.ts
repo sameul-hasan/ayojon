@@ -1,4 +1,18 @@
-export type PlatformRole = "ATTENDEE" | "ORGANIZER_OWNER" | "EVENT_MANAGER" | "CHECKIN_STAFF" | "SPONSOR" | "ADMIN" | "VENUE_OWNER" | "VENDOR";
+export type PlatformRole = "ATTENDEE" | "ORGANIZER_OWNER" | "EVENT_MANAGER" | "CHECKIN_STAFF" | "SPONSOR" | "ADMIN" | "SUPER_ADMIN" | "VENUE_OWNER" | "VENDOR";
+
+export interface RoleDefinition {
+  id: string;
+  code: string;
+  name: string;
+  name_bn?: string;
+  description: string;
+  permissions: string[];
+  is_system_role: boolean;
+  color_badge: string;
+  icon_name: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export type OrgMemberRole = "OWNER" | "EVENT_MANAGER" | "CHECKIN_STAFF";
 
@@ -667,5 +681,6 @@ export interface DatabaseState {
   rfq_messages: RFQMessage[];
   venue_bookings: VenueBooking[];
   ai_sessions: AIAssistantSession[];
+  roles: RoleDefinition[];
 }
 

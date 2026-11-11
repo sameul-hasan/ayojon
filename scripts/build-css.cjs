@@ -23,10 +23,10 @@ async function buildTailwindCss() {
   const candidates = scanner.scan();
   const twCss = compiler.build(candidates);
 
-  // Generated output only. Hand-written global styles live in src/app/brand.css.
-  const outPath = path.join(process.cwd(), "src", "app", "globals.css");
+  // Generated output only. Hand-written global styles live in src/styles/brand.css.
+  const outPath = path.join(process.cwd(), "src", "styles", "globals.css");
   fs.writeFileSync(outPath, twCss + "\n", "utf8");
-  console.log(`✅ Compiled Tailwind CSS (${twCss.length} bytes, ${candidates.length} candidates) -> src/app/globals.css`);
+  console.log(`✅ Compiled Tailwind CSS (${twCss.length} bytes, ${candidates.length} candidates) -> src/styles/globals.css`);
 }
 
 buildTailwindCss().catch((err) => {

@@ -60,7 +60,17 @@ export function loadDb(): DatabaseState {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
-      return JSON.parse(raw) as DatabaseState;
+      const parsed = JSON.parse(raw) as DatabaseState;
+      if (!parsed.roles || parsed.roles.length === 0) {
+        const seed = createInitialSeed();
+        parsed.roles = seed.roles;
+        if (!parsed.profiles.find((p) => p.id === "usr-superadmin")) {
+          const sa = seed.profiles.find((p) => p.id === "usr-superadmin");
+          if (sa) parsed.profiles.unshift(sa);
+        }
+        saveDb(parsed);
+      }
+      return parsed;
     }
   } catch {
     // Fallback to initial seed

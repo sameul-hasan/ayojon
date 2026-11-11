@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import { ArrowRight, CheckCircle2, CreditCard, Minus, Plus, ShieldCheck, Ticket } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";

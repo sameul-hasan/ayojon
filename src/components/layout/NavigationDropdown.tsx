@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/Link";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/ui/cn";
 
