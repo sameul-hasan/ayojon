@@ -21,7 +21,9 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         request.auth.token.role == 'admin' ||
-        getUserData().platform_role == 'ADMIN'
+        request.auth.token.role == 'super_admin' ||
+        getUserData().platform_role == 'ADMIN' ||
+        getUserData().platform_role == 'SUPER_ADMIN'
       );
     }
 
