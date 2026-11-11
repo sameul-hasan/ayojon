@@ -401,6 +401,7 @@ export interface VenueProfile {
   organization_id?: string;
   name: string;
   slug: string;
+  description?: string;
   category: VenueCategory;
   address: string;
   city: "Dhaka" | "Chattogram" | "Sylhet" | "Rajshahi" | "Khulna";

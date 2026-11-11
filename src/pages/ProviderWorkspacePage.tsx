@@ -6,7 +6,7 @@ import { Building2 } from "lucide-react";
 
 export function ProviderWorkspacePage() {
   return (
-    <ProtectedRoute allowedRoles={["venue_owner", "vendor", "admin", "super_admin"]}>
+    <ProtectedRoute allowedRoles={["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"]}>
       <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
         <Navbar activeHref="/provider" />
 

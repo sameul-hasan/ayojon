@@ -30,6 +30,8 @@ service cloud.firestore {
         getUserData().platform_role == 'SUPER_ADMIN' ||
         request.auth.token.email == 'superadmin@ayojon.select' ||
         request.auth.token.email == 'superadmin@aayojon.bd' ||
+        request.auth.token.email == 'admin@ayojon.select' ||
+        request.auth.token.email == 'admin@aayojon.bd' ||
         request.auth.token.email == 'bfos.info@gmail.com'
       );
     }

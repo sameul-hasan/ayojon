@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "@/components/ui/Link";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PARTNER_VENUES, type PartnerVenue } from "@/lib/venues-catalog";
 import { formatBDT } from "@/lib/public-events-shared";
+import { fetchDatabaseState } from "@/lib/client-api";
 import { VenueBookingModal } from "@/components/venue/VenueBookingModal";
 
 export function VenueDetailPage() {
@@ -41,9 +42,51 @@ export function VenueDetailPage() {
   const navigate = useNavigate();
   const slug = params?.slug as string;
 
-  const venue = useMemo(() => {
-    return PARTNER_VENUES.find((v) => v.slug === slug || v.id === slug) || null;
+  const [dbVenue, setDbVenue] = useState<PartnerVenue | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchDatabaseState().then((db) => {
+      if (!active) return;
+      if (db.venue_profiles && db.venue_profiles.length > 0) {
+        const vp = db.venue_profiles.find((v) => v.slug === slug || v.id === slug);
+        if (vp) {
+          setDbVenue({
+            id: vp.id,
+            name: vp.name,
+            slug: vp.slug || vp.id,
+            address: vp.address || "Dhaka, Bangladesh",
+            city: vp.city || "Dhaka",
+            capacity: vp.capacity?.max || 500,
+            type: "Auditorium",
+            hourlyRateBDT: vp.indicative_pricing?.hourly_rate_bdt || 10000,
+            dailyRateBDT: vp.indicative_pricing?.daily_rate_bdt || 70000,
+            imageUrl:
+              vp.media?.[0]?.url ||
+              "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80",
+            amenities: [
+              vp.amenities?.has_ac ? "Air Conditioned" : "",
+              vp.amenities?.has_generator ? "Standby Generator" : "",
+              vp.amenities?.has_parking ? "Parking Facility" : "",
+              vp.amenities?.has_wifi ? "High-Speed WiFi" : "",
+              vp.amenities?.sound_system ? "Acoustic Sound System" : "",
+            ].filter(Boolean),
+            description: vp.description || `${vp.name} is a premier event space in ${vp.city}.`,
+            contactPhone: "+880 1700-000000",
+            contactEmail: "venues@ayojon.select",
+            verified: vp.verification_status === "VERIFIED",
+          });
+        }
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [slug]);
+
+  const venue = useMemo(() => {
+    return PARTNER_VENUES.find((v) => v.slug === slug || v.id === slug) || dbVenue || null;
+  }, [slug, dbVenue]);
 
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);

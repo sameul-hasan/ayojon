@@ -2087,6 +2087,7 @@ export function OrganizerWorkspaceView({
               }}
               onSubmitSuccess={(newRfq) => {
                 setRfqList((prev) => [newRfq, ...prev]);
+                onAction("SUBMIT_VENUE_RFQ", newRfq as unknown as Record<string, unknown>, currentUser?.id);
                 setIsCreatingRfq(false);
                 setPrefilledRfqData(undefined);
               }}

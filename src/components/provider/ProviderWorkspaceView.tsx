@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "@/components/ui/Link";
 import {
   Building2,
@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { formatBDT } from "@/lib/public-events-shared";
+import { fetchDatabaseState, dispatchStateAction } from "@/lib/client-api";
 import type {
   Quotation,
   QuotationLineItem,
@@ -170,6 +171,26 @@ export function ProviderWorkspaceView() {
   const [quotations, setQuotations] = useState<Quotation[]>(SEED_QUOTATIONS);
   const [selectedRfqForQuote, setSelectedRfqForQuote] = useState<VenueRequest | null>(SEED_RFQS[0]);
 
+  useEffect(() => {
+    let active = true;
+    fetchDatabaseState().then((db) => {
+      if (!active) return;
+      if (db.venue_requests && db.venue_requests.length > 0) {
+        setRfqs(db.venue_requests);
+        setSelectedRfqForQuote(db.venue_requests[0]);
+      }
+      if (db.quotations && db.quotations.length > 0) {
+        setQuotations(db.quotations);
+      }
+      if (db.venue_bookings && db.venue_bookings.length > 0) {
+        setBookings(db.venue_bookings);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Quotation Builder Form State
   const [quoteItems, setQuoteItems] = useState<QuotationLineItem[]>([
     {
@@ -298,6 +319,7 @@ export function ProviderWorkspaceView() {
     };
 
     setQuotations((prev) => [newQuote, ...prev]);
+    dispatchStateAction("SUBMIT_PROVIDER_QUOTATION", newQuote as unknown as Record<string, unknown>);
     toast({
       title: "Itemized Quotation Transmitted!",
       description: `Quotation ${newQuote.id} sent to organizer for ${formatBDT(grandTotalBDT)}.`,

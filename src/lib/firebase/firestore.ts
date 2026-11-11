@@ -23,10 +23,14 @@ import type {
   TicketType,
   Profile,
   Venue,
+  VenueProfile,
   Category,
   TicketRecord,
   Order,
   Registration,
+  VenueRequest,
+  Quotation,
+  VenueBooking,
 } from "../types";
 import { createInitialSeed } from "../seed";
 
@@ -177,6 +181,74 @@ export async function loadFirestoreState(): Promise<DatabaseState | null> {
         seed.registrations.forEach((r) => regMap.set(r.id, r));
         liveRegs.forEach((r) => regMap.set(r.id, r));
         seed.registrations = Array.from(regMap.values());
+      }
+    } catch {
+      // Use fallback
+    }
+
+    // 9. Venue Profiles from Firestore
+    try {
+      const vpSnapshot = await getDocs(collection(fs, "venue_profiles"));
+      const liveVps: VenueProfile[] = [];
+      vpSnapshot.forEach((d) => {
+        liveVps.push(d.data() as VenueProfile);
+      });
+      if (liveVps.length > 0) {
+        const vpMap = new Map<string, VenueProfile>();
+        seed.venue_profiles.forEach((v) => vpMap.set(v.id, v));
+        liveVps.forEach((v) => vpMap.set(v.id, v));
+        seed.venue_profiles = Array.from(vpMap.values());
+      }
+    } catch {
+      // Use fallback
+    }
+
+    // 10. Venue Requests (RFQs) from Firestore
+    try {
+      const rfqSnapshot = await getDocs(collection(fs, "venue_requests"));
+      const liveRfqs: VenueRequest[] = [];
+      rfqSnapshot.forEach((d) => {
+        liveRfqs.push(d.data() as VenueRequest);
+      });
+      if (liveRfqs.length > 0) {
+        const rfqMap = new Map<string, VenueRequest>();
+        seed.venue_requests.forEach((r) => rfqMap.set(r.id, r));
+        liveRfqs.forEach((r) => rfqMap.set(r.id, r));
+        seed.venue_requests = Array.from(rfqMap.values());
+      }
+    } catch {
+      // Use fallback
+    }
+
+    // 11. Quotations from Firestore
+    try {
+      const quotesSnapshot = await getDocs(collection(fs, "quotations"));
+      const liveQuotes: Quotation[] = [];
+      quotesSnapshot.forEach((d) => {
+        liveQuotes.push(d.data() as Quotation);
+      });
+      if (liveQuotes.length > 0) {
+        const quoteMap = new Map<string, Quotation>();
+        seed.quotations.forEach((q) => quoteMap.set(q.id, q));
+        liveQuotes.forEach((q) => quoteMap.set(q.id, q));
+        seed.quotations = Array.from(quoteMap.values());
+      }
+    } catch {
+      // Use fallback
+    }
+
+    // 12. Venue Bookings from Firestore
+    try {
+      const bookingsSnapshot = await getDocs(collection(fs, "venue_bookings"));
+      const liveBookings: VenueBooking[] = [];
+      bookingsSnapshot.forEach((d) => {
+        liveBookings.push(d.data() as VenueBooking);
+      });
+      if (liveBookings.length > 0) {
+        const bookingMap = new Map<string, VenueBooking>();
+        seed.venue_bookings.forEach((b) => bookingMap.set(b.id, b));
+        liveBookings.forEach((b) => bookingMap.set(b.id, b));
+        seed.venue_bookings = Array.from(bookingMap.values());
       }
     } catch {
       // Use fallback
@@ -342,6 +414,66 @@ export async function saveRegistrationToFirestore(reg: Registration): Promise<vo
 }
 
 /**
+ * Saves a venue profile directly to Cloud Firestore.
+ */
+export async function saveVenueProfileToFirestore(vp: VenueProfile): Promise<void> {
+  const fs = getFirestoreDb();
+  if (!fs) return;
+
+  try {
+    await setDoc(doc(fs, "venue_profiles", vp.id), vp, { merge: true });
+    console.info(`[Firestore] VenueProfile ${vp.id} saved to Firestore.`);
+  } catch (err: any) {
+    console.warn("[Firestore] Failed to save venue profile to Firestore:", err?.message);
+  }
+}
+
+/**
+ * Saves a venue request (RFQ) directly to Cloud Firestore.
+ */
+export async function saveVenueRequestToFirestore(rfq: VenueRequest): Promise<void> {
+  const fs = getFirestoreDb();
+  if (!fs) return;
+
+  try {
+    await setDoc(doc(fs, "venue_requests", rfq.id), rfq, { merge: true });
+    console.info(`[Firestore] VenueRequest ${rfq.id} saved to Firestore.`);
+  } catch (err: any) {
+    console.warn("[Firestore] Failed to save venue request to Firestore:", err?.message);
+  }
+}
+
+/**
+ * Saves a quotation directly to Cloud Firestore.
+ */
+export async function saveQuotationToFirestore(quote: Quotation): Promise<void> {
+  const fs = getFirestoreDb();
+  if (!fs) return;
+
+  try {
+    await setDoc(doc(fs, "quotations", quote.id), quote, { merge: true });
+    console.info(`[Firestore] Quotation ${quote.id} saved to Firestore.`);
+  } catch (err: any) {
+    console.warn("[Firestore] Failed to save quotation to Firestore:", err?.message);
+  }
+}
+
+/**
+ * Saves a venue booking directly to Cloud Firestore.
+ */
+export async function saveVenueBookingToFirestore(booking: VenueBooking): Promise<void> {
+  const fs = getFirestoreDb();
+  if (!fs) return;
+
+  try {
+    await setDoc(doc(fs, "venue_bookings", booking.id), booking, { merge: true });
+    console.info(`[Firestore] VenueBooking ${booking.id} saved to Firestore.`);
+  } catch (err: any) {
+    console.warn("[Firestore] Failed to save venue booking to Firestore:", err?.message);
+  }
+}
+
+/**
  * Seeds initial demo data into Firestore collections so that fresh databases
  * immediately have all partner venues, categories, and published events.
  */
@@ -365,6 +497,27 @@ export async function seedFirestore(fs: Firestore, seed: DatabaseState): Promise
     // 4. Seed categories
     for (const cat of seed.categories) {
       await setDoc(doc(fs, "categories", cat.id), cat);
+    }
+
+    // 5. Seed venue profiles
+    if (seed.venue_profiles && seed.venue_profiles.length > 0) {
+      for (const vp of seed.venue_profiles) {
+        await setDoc(doc(fs, "venue_profiles", vp.id), vp);
+      }
+    }
+
+    // 6. Seed venue requests
+    if (seed.venue_requests && seed.venue_requests.length > 0) {
+      for (const rfq of seed.venue_requests) {
+        await setDoc(doc(fs, "venue_requests", rfq.id), rfq);
+      }
+    }
+
+    // 7. Seed quotations
+    if (seed.quotations && seed.quotations.length > 0) {
+      for (const q of seed.quotations) {
+        await setDoc(doc(fs, "quotations", q.id), q);
+      }
     }
 
     console.info("[Firestore] Seed data written to Cloud Firestore successfully.");

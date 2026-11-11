@@ -13,6 +13,11 @@ import {
   updateEventStatusInFirestore,
   saveOrderToFirestore,
   saveTicketToFirestore,
+  saveRegistrationToFirestore,
+  saveVenueProfileToFirestore,
+  saveVenueRequestToFirestore,
+  saveQuotationToFirestore,
+  saveVenueBookingToFirestore,
 } from "./firebase/firestore";
 
 let cachedDb: DatabaseState | null = null;
@@ -227,6 +232,184 @@ export async function dispatchStateAction(
           }
         }
       }
+    } else if (action === "REGISTER_FREE") {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = createInitialSeed();
+      const ticketType =
+        cachedDb.ticket_types.find((t) => t.id === p.ticketTypeId) ||
+        cachedDb.ticket_types.find((t) => t.event_id === p.eventId);
+      const regId = `reg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const orderId = `ord-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const ticketId = `tkt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const qrToken = `AAYOJON-TKT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+      const newReg: any = {
+        id: regId,
+        order_id: orderId,
+        event_id: p.eventId,
+        ticket_type_id: ticketType?.id || "tt-free",
+        attendee_user_id: actorUserId || "usr-attendee-current",
+        attendee_name: p.attendeeName || "Attendee",
+        attendee_email: p.attendeeEmail || "attendee@ayojon.select",
+        attendee_phone: p.phone || "",
+        created_at: new Date().toISOString(),
+      };
+
+      const newTicket: any = {
+        id: ticketId,
+        registration_id: regId,
+        qr_token: qrToken,
+        status: "ISSUED",
+        created_at: new Date().toISOString(),
+      };
+
+      cachedDb.registrations = [newReg, ...cachedDb.registrations];
+      cachedDb.tickets = [newTicket, ...cachedDb.tickets];
+      if (ticketType) {
+        ticketType.sold_count = (ticketType.sold_count || 0) + 1;
+      }
+
+      await saveRegistrationToFirestore(newReg);
+      await saveTicketToFirestore(newTicket);
+
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: { registration: newReg, ticket: newTicket },
+      };
+    } else if (action === "BUY_TICKET") {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = createInitialSeed();
+      const ticketType =
+        cachedDb.ticket_types.find((t) => t.id === p.ticketTypeId) ||
+        cachedDb.ticket_types.find((t) => t.event_id === p.eventId);
+      const orderId = `ord-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const regId = `reg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const ticketId = `tkt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const qrToken = `AAYOJON-TKT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+      const newOrder: any = {
+        id: orderId,
+        user_id: actorUserId || "usr-attendee-current",
+        total_minor: ticketType ? ticketType.price_minor : 0,
+        currency: "BDT",
+        status: "PAID",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const newReg: any = {
+        id: regId,
+        order_id: orderId,
+        event_id: p.eventId,
+        ticket_type_id: ticketType?.id || "tt-gen",
+        attendee_user_id: actorUserId || "usr-attendee-current",
+        attendee_name: p.attendeeName || "Attendee",
+        attendee_email: p.attendeeEmail || "attendee@ayojon.select",
+        attendee_phone: p.phone || "",
+        created_at: new Date().toISOString(),
+      };
+
+      const newTicket: any = {
+        id: ticketId,
+        registration_id: regId,
+        qr_token: qrToken,
+        status: "ISSUED",
+        created_at: new Date().toISOString(),
+      };
+
+      cachedDb.orders = [newOrder, ...cachedDb.orders];
+      cachedDb.registrations = [newReg, ...cachedDb.registrations];
+      cachedDb.tickets = [newTicket, ...cachedDb.tickets];
+      if (ticketType) {
+        ticketType.sold_count = (ticketType.sold_count || 0) + 1;
+      }
+
+      await saveOrderToFirestore(newOrder);
+      await saveRegistrationToFirestore(newReg);
+      await saveTicketToFirestore(newTicket);
+
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: { order: newOrder, registration: newReg, ticket: newTicket },
+      };
+    } else if (action === "SUBMIT_VENUE_RFQ" || action === "CREATE_VENUE_RFQ") {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = createInitialSeed();
+      const rfqId = p.id || `rfq-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const newRfq: any = {
+        ...p,
+        id: rfqId,
+        organizer_user_id: p.organizer_user_id || actorUserId || "usr-org-current",
+        status: "SUBMITTED",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      cachedDb.venue_requests = cachedDb.venue_requests || [];
+      cachedDb.venue_requests = [newRfq, ...cachedDb.venue_requests.filter((r) => r.id !== rfqId)];
+      await saveVenueRequestToFirestore(newRfq);
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: newRfq,
+      };
+    } else if (action === "SUBMIT_PROVIDER_QUOTATION") {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = createInitialSeed();
+      const quoteId = p.id || `qt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const newQuote: any = {
+        ...p,
+        id: quoteId,
+        provider_user_id: p.provider_user_id || actorUserId || "usr-venue-kamal",
+        status: "SUBMITTED",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      cachedDb.quotations = cachedDb.quotations || [];
+      cachedDb.quotations = [newQuote, ...cachedDb.quotations.filter((q) => q.id !== quoteId)];
+      await saveQuotationToFirestore(newQuote);
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: newQuote,
+      };
+    } else if (action === "BOOK_VENUE_ESCROW" || action === "CREATE_VENUE_BOOKING") {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = createInitialSeed();
+      const bookingId = p.id || `vb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const newBooking: any = {
+        ...p,
+        id: bookingId,
+        status: "CONFIRMED",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      cachedDb.venue_bookings = cachedDb.venue_bookings || [];
+      cachedDb.venue_bookings = [newBooking, ...cachedDb.venue_bookings.filter((b) => b.id !== bookingId)];
+      await saveVenueBookingToFirestore(newBooking);
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: newBooking,
+      };
+    } else if (action === "SAVE_VENUE_PROFILE") {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = createInitialSeed();
+      const venueId = p.id || `vp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const newVp: any = {
+        ...p,
+        id: venueId,
+        updated_at: new Date().toISOString(),
+      };
+      cachedDb.venue_profiles = cachedDb.venue_profiles || [];
+      cachedDb.venue_profiles = [newVp, ...cachedDb.venue_profiles.filter((v) => v.id !== venueId)];
+      await saveVenueProfileToFirestore(newVp);
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: newVp,
+      };
     }
   } catch (err: any) {
     console.warn("[Firestore] Action sync notice:", err?.message);
@@ -254,9 +437,9 @@ export function transformDbToCatalog(db: DatabaseState): PublicCatalog {
         categoryName: db.categories.find((c) => c.id === e.category_id)?.name ?? "Event",
         startsAt: e.starts_at,
         endsAt: e.ends_at,
-        city: venue?.city || "Dhaka",
-        venueName: venue?.name || "Online event",
-        isOnline: !venue,
+        city: venue?.city || (e.is_online ? "Online" : "Dhaka"),
+        venueName: venue?.name || (e.is_online ? "Online Event" : ((e as any).venue_name || "Dhaka, Bangladesh")),
+        isOnline: Boolean(e.is_online),
         lat: venue?.geo_lat ?? null,
         lng: venue?.geo_lng ?? null,
         minPriceMinor: prices.length ? Math.min(...prices) : null,
@@ -290,7 +473,9 @@ export function transformDbToCatalog(db: DatabaseState): PublicCatalog {
 }
 
 export function usePublicCatalog() {
-  const [catalog, setCatalog] = useState<PublicCatalog>(() => transformDbToCatalog(createInitialSeed()));
+  const [catalog, setCatalog] = useState<PublicCatalog>(() =>
+    transformDbToCatalog(cachedDb || createInitialSeed())
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -348,9 +533,9 @@ export function useEventDetail(slug: string) {
           categoryName: db.categories.find((c) => c.id === event.category_id)?.name ?? "Event",
           startsAt: event.starts_at,
           endsAt: event.ends_at,
-          city: venue?.city || "Dhaka",
-          venueName: venue?.name || "Online event",
-          isOnline: !venue,
+          city: venue?.city || (event.is_online ? "Online" : "Dhaka"),
+          venueName: venue?.name || (event.is_online ? "Online Event" : ((event as any).venue_name || "Dhaka, Bangladesh")),
+          isOnline: Boolean(event.is_online),
           lat: venue?.geo_lat ?? null,
           lng: venue?.geo_lng ?? null,
           minPriceMinor: prices.length ? Math.min(...prices) : null,
@@ -365,7 +550,7 @@ export function useEventDetail(slug: string) {
           sponsors: [],
           tags: event.tags || [],
           refundPolicy: "Full refund up to 48 hours before the event starts.",
-          contactEmail: org ? `contact@${org.slug}.bd` : "support@aayojon.bd",
+          contactEmail: event.contact_email || "support@ayojon.select",
           organizerDescription: org?.description || "Verified Organizer on Aayojon",
           tickets: ticketTypes.map((tt) => ({
             id: tt.id,
