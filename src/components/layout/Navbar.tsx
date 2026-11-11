@@ -261,13 +261,13 @@ export function Navbar({
           {/* 1. BRAND LOGO */}
           <div className="flex items-center gap-3 shrink-0">
             <Link to="/" className="flex items-center gap-2 group transition-transform duration-200 active:scale-95">
-              {/* Desktop / Tablet: Logo with text */}
+              {/* Desktop / Tablet: Big Logo with text */}
               <div className="hidden sm:block">
-                <Logo size="md" showText={true} />
+                <Logo size="lg" showText={true} />
               </div>
-              {/* Mobile: ONLY LOGO ICON (NO TEXT) */}
+              {/* Mobile: Big ONLY LOGO ICON (NO TEXT) */}
               <div className="block sm:hidden">
-                <Logo size="md" variant="icon" showText={false} />
+                <Logo size="lg" variant="icon" showText={false} />
               </div>
             </Link>
           </div>
@@ -405,6 +405,24 @@ export function Navbar({
 
                     {/* Dynamic Role Quick Links */}
                     <div className="space-y-0.5 mb-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt transition"
+                      >
+                        <User className="size-3.5 text-brand-600" />
+                        <span>My Profile</span>
+                      </Link>
+
+                      <Link
+                        to="/wallet"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt transition"
+                      >
+                        <Ticket className="size-3.5 text-teal-600" />
+                        <span>My Ticket Wallet</span>
+                      </Link>
+
                       {isUserSuperAdmin && (
                         <Link
                           to="/admin"
@@ -416,50 +434,49 @@ export function Navbar({
                         </Link>
                       )}
 
-                      <Link
-                        to="/wallet"
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
-                      >
-                        <Ticket className="size-3.5 text-ink-muted" />
-                        <span>My Ticket Wallet</span>
-                      </Link>
+                      {(role === "organizer" || isUserSuperAdmin) && (
+                        <Link
+                          to="/organizer"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt transition"
+                        >
+                          <Calendar className="size-3.5 text-blue-600" />
+                          <span>Organizer Studio</span>
+                        </Link>
+                      )}
 
-                      <Link
-                        to="/organizer"
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
-                      >
-                        <Calendar className="size-3.5 text-ink-muted" />
-                        <span>Organizer Studio</span>
-                      </Link>
+                      {(role === "staff" || isUserSuperAdmin) && (
+                        <Link
+                          to="/scanner"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt transition"
+                        >
+                          <ScanLine className="size-3.5 text-emerald-600" />
+                          <span>Gate Check-in Scanner</span>
+                        </Link>
+                      )}
 
-                      <Link
-                        to="/scanner"
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
-                      >
-                        <ScanLine className="size-3.5 text-ink-muted" />
-                        <span>Gate Check-in Scanner</span>
-                      </Link>
+                      {(role === "venue_owner" || role === "vendor" || isUserSuperAdmin) && (
+                        <Link
+                          to="/provider"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt transition"
+                        >
+                          <Building2 className="size-3.5 text-amber-600" />
+                          <span>Provider Studio</span>
+                        </Link>
+                      )}
 
-                      <Link
-                        to="/provider"
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
-                      >
-                        <Building2 className="size-3.5 text-ink-muted" />
-                        <span>Provider Studio</span>
-                      </Link>
-
-                      <Link
-                        to="/sponsor"
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-ink hover:bg-canvas-alt transition"
-                      >
-                        <Briefcase className="size-3.5 text-ink-muted" />
-                        <span>Sponsor Hub</span>
-                      </Link>
+                      {(role === "sponsor" || isUserSuperAdmin) && (
+                        <Link
+                          to="/sponsor"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold text-ink hover:bg-canvas-alt transition"
+                        >
+                          <Briefcase className="size-3.5 text-violet-600" />
+                          <span>Sponsor Hub</span>
+                        </Link>
+                      )}
                     </div>
 
                     {/* Sign Out */}
@@ -516,7 +533,7 @@ export function Navbar({
         <div className="fixed inset-0 z-50 flex flex-col bg-canvas/98 backdrop-blur-xl lg:hidden animate-in slide-in-from-right duration-300 ease-out">
           {/* Mobile Drawer Header */}
           <div className="flex h-16 items-center justify-between border-b border-line px-4 sm:px-6">
-            <Logo size="md" variant="icon" showText={false} />
+            <Logo size="lg" variant="icon" showText={false} />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
@@ -542,17 +559,17 @@ export function Navbar({
 
             {/* User Profile Card (if signed in) */}
             {currentUser && role !== "guest" && (
-              <div className="rounded-2xl border border-line bg-surface p-4 space-y-2">
+              <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
                     {currentUser.photoURL ? (
                       <img
                         src={currentUser.photoURL}
                         alt={currentUser.displayName || "User"}
-                        className="size-8 rounded-full object-cover shrink-0 border border-line"
+                        className="size-9 rounded-full object-cover shrink-0 border border-line"
                       />
                     ) : (
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
                         {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
                       </div>
                     )}
@@ -569,6 +586,16 @@ export function Navbar({
                   >
                     {roleBadgeConfig.icon} {roleBadgeConfig.label}
                   </span>
+                </div>
+                <div className="border-t border-line/60 pt-2 flex items-center gap-2">
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-line bg-canvas-alt py-2 text-xs font-semibold text-ink hover:bg-surface transition"
+                  >
+                    <User className="size-3.5 text-brand-600" />
+                    <span>My Profile & Settings</span>
+                  </Link>
                 </div>
               </div>
             )}

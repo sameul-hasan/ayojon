@@ -23,7 +23,7 @@ export function Logo({
     xs: { full: "h-6", icon: "size-6" },
     sm: { full: "h-7", icon: "size-7" },
     md: { full: "h-9", icon: "size-9" },
-    lg: { full: "h-11", icon: "size-11" },
+    lg: { full: "h-11 sm:h-12", icon: "size-10 sm:size-11" },
     xl: { full: "h-14", icon: "size-14" },
   };
 
@@ -31,7 +31,7 @@ export function Logo({
   const sizeCls = sizeClasses[size][variant];
 
   const content = (
-    <span className={cn("inline-flex items-center gap-2.5 transition-opacity hover:opacity-90 select-none", className)}>
+    <span className={cn("inline-flex items-center gap-3 transition-opacity hover:opacity-95 select-none", className)}>
       <img
         src={imageSrc}
         alt="Aayojon"
@@ -40,7 +40,10 @@ export function Logo({
       {(showText || subtitle) && (
         <span className="flex flex-col text-left">
           {showText && (
-            <span className="text-base font-bold tracking-tight text-ink leading-tight">
+            <span className={cn(
+              "tracking-tight text-ink leading-tight",
+              size === "lg" || size === "xl" ? "text-xl sm:text-2xl font-black" : "text-base font-bold"
+            )}>
               Aayojon
             </span>
           )}

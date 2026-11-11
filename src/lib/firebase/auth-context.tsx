@@ -72,6 +72,7 @@ export interface AuthContextValue {
   ) => Promise<void>;
   signOutUser: () => Promise<void>;
   switchPersona: (personaUserId: string) => Promise<void>;
+  updateUserProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -696,6 +697,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persistUserState(null);
   }, [persistUserState]);
 
+  // Update Profile
+  const updateUserProfile = useCallback(
+    async (updates: Partial<Profile>): Promise<void> => {
+      if (!currentUser) return;
+
+      const updatedUser: AuthUser = {
+        ...currentUser,
+        ...updates,
+        displayName: updates.display_name !== undefined ? updates.display_name : currentUser.displayName,
+        display_name: updates.display_name !== undefined ? updates.display_name : currentUser.display_name,
+        photoURL: updates.avatar_url !== undefined ? updates.avatar_url : currentUser.photoURL,
+        avatar_url: updates.avatar_url !== undefined ? updates.avatar_url : currentUser.avatar_url,
+      };
+
+      setCurrentUser(updatedUser);
+      persistUserState(updatedUser);
+
+      // Sync directly to Cloud Firestore (/profiles/{uid})
+      await syncUserProfileToFirestore(updatedUser);
+    },
+    [currentUser, persistUserState]
+  );
+
   const contextValue = useMemo<AuthContextValue>(
     () => ({
       currentUser,
@@ -707,6 +731,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUpWithEmail,
       signOutUser,
       switchPersona,
+      updateUserProfile,
     }),
     [
       currentUser,
@@ -718,6 +743,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUpWithEmail,
       signOutUser,
       switchPersona,
+      updateUserProfile,
     ]
   );
 

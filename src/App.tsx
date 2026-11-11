@@ -12,6 +12,7 @@ import { CheckInScannerPage } from "@/pages/CheckInScannerPage";
 import { ProviderWorkspacePage } from "@/pages/ProviderWorkspacePage";
 import { SponsorMarketplacePage } from "@/pages/SponsorMarketplacePage";
 import { SuperAdminConsolePage } from "@/pages/SuperAdminConsolePage";
+import { ProfilePage } from "@/pages/ProfilePage";
 import { AboutPage } from "@/pages/AboutPage";
 import { AiAssistantPage } from "@/pages/AiAssistantPage";
 import { LoginPage } from "@/pages/LoginPage";
@@ -63,6 +64,7 @@ export function App() {
       <Route path="/tickets/:id" element={<TicketDetailPage />} />
 
       {/* DEDICATED ROLE-BASED ACCESS PAGES */}
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/wallet" element={<AttendeeWalletPage />} />
       <Route path="/organizer" element={<OrganizerWorkspacePage />} />
       <Route path="/scanner" element={<CheckInScannerPage />} />

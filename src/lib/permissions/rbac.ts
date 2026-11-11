@@ -227,6 +227,7 @@ export const ROUTE_RULES: RouteRule[] = [
   { pathPattern: /^\/tickets\/[^/]+$/, allowedRoles: ["attendee", "organizer", "staff", "admin", "super_admin"], requireAuth: true },
 
   // Dedicated Role-Based Access Pages
+  { pathPattern: /^\/profile(\/.*)?$/, allowedRoles: ["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"], requireAuth: true },
   { pathPattern: /^\/wallet(\/.*)?$/, allowedRoles: ["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"], requireAuth: true },
   { pathPattern: /^\/organizer(\/.*)?$/, allowedRoles: ["organizer", "admin", "super_admin"], requireAuth: true },
   { pathPattern: /^\/scanner(\/.*)?$/, allowedRoles: ["staff", "organizer", "admin", "super_admin"], requireAuth: true },
