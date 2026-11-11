@@ -176,8 +176,13 @@ export function OrganizerWorkspaceView({
   const activeOrg =
     db.organizations.find((o) => o.id === selectedOrgId) || db.organizations[0];
   const orgEvents = useMemo(
-    () => db.events.filter((e) => e.organization_id === activeOrg.id),
-    [db.events, activeOrg.id]
+    () =>
+      db.events.filter(
+        (e) =>
+          e.organization_id === activeOrg.id ||
+          (e as any).organizer_user_id === currentUser.id
+      ),
+    [db.events, activeOrg.id, currentUser.id]
   );
 
   const [selectedEventId, setSelectedEventId] = useState<string>(
@@ -267,7 +272,8 @@ export function OrganizerWorkspaceView({
   const activeEventsCount = orgEvents.filter((e) => e.status === "PUBLISHED").length;
 
   const actorForOrg =
-    activeOrg.id === "org-nsu-yes" ? "usr-org-tanvir" : "usr-org-nusrat";
+    currentUser?.id ||
+    (activeOrg.id === "org-nsu-yes" ? "usr-org-tanvir" : "usr-org-nusrat");
 
   const handleUnpaidPublishAttempt = async (eventId: string) => {
     setStatusBanner(null);
@@ -332,6 +338,7 @@ export function OrganizerWorkspaceView({
         "CREATE_EVENT_DRAFT",
         {
           organizationId: activeOrg.id,
+          organizerUserId: currentUser.id,
           categoryId: wizCategory,
           title: wizTitle,
           description: wizDescription,
@@ -355,6 +362,9 @@ export function OrganizerWorkspaceView({
       )) as { result?: { id: string; title: string } };
 
       const createdEventId = res?.result?.id;
+      if (createdEventId) {
+        setSelectedEventId(createdEventId);
+      }
 
       if (wizPackageChoice !== "DRAFT_ONLY" && createdEventId) {
         await onAction(
@@ -1468,7 +1478,7 @@ export function OrganizerWorkspaceView({
                       disabled
                       value={
                         activeOrg.custom_domain ||
-                        `aayojon.bd/org/${activeOrg.slug}`
+                        `ayojon.select/org/${activeOrg.slug}`
                       }
                       className="w-full rounded-btn border border-line bg-canvas-alt px-3.5 py-2.5 text-ink-muted font-mono"
                     />
@@ -1885,7 +1895,7 @@ export function OrganizerWorkspaceView({
                     );
                     setStatusBanner({
                       type: "success",
-                      text: `Created tracking link: https://aayojon.bd/e/${selectedEventId}?ref=${cmpCode}`,
+                      text: `Created tracking link: https://ayojon.select/e/${selectedEventId}?ref=${cmpCode}`,
                     });
                   }}
                   className="w-full rounded-btn bg-brand-600 py-2.5 font-bold text-white hover:bg-brand-700 transition shadow-sm cursor-pointer"
@@ -2551,7 +2561,7 @@ export function OrganizerWorkspaceView({
                     setDnsCnameInput("broken-dns.invalid.org");
                     setStatusBanner({
                       type: "warning",
-                      text: `QA-013 Verified: DNS CNAME mismatch flagged as ERROR. Default URL https://aayojon.bd/org/${activeOrg.slug} remains active!`,
+                      text: `QA-013 Verified: DNS CNAME mismatch flagged as ERROR. Default URL https://ayojon.select/org/${activeOrg.slug} remains active!`,
                     });
                   }}
                   className="rounded-btn border border-amber-300 bg-amber-50 px-4 py-2 font-bold text-amber-800 hover:bg-amber-100 transition shadow-sm cursor-pointer"

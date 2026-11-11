@@ -5,6 +5,7 @@ import { AboutHero } from "@/components/about/AboutHero";
 import { AboutMissionSection } from "@/components/about/AboutMissionSection";
 import { AboutFeaturesSection } from "@/components/about/AboutFeaturesSection";
 import { AboutHowItWorksSection, AboutWhySection } from "@/components/about/AboutHowItWorksSection";
+import { AboutBookingDetailsSection, AboutPackagesSection } from "@/components/about/AboutPackagesSection";
 import { AboutCTA, AboutContactSection } from "@/components/about/AboutCTA";
 
 export function AboutPage() {
@@ -15,6 +16,8 @@ export function AboutPage() {
         <AboutHero />
         <AboutMissionSection />
         <AboutFeaturesSection />
+        <AboutBookingDetailsSection />
+        <AboutPackagesSection />
         <AboutHowItWorksSection />
         <AboutWhySection />
         <AboutCTA />

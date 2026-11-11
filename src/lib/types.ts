@@ -102,6 +102,7 @@ export interface SpeakerItem {
 export interface EventRecord {
   id: string;
   organization_id: string;
+  organizer_user_id?: string;
   category_id: string;
   venue_id: string | null;
   title: string;

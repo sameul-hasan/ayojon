@@ -463,8 +463,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             const normEmail = (fbUser.email || "").toLowerCase();
-            if (normEmail === "bfos.info@gmail.com" || normEmail === "superadmin@aayojon.bd") {
+            if (normEmail === "bfos.info@gmail.com" || normEmail === "superadmin@ayojon.select" || normEmail === "superadmin@aayojon.bd") {
               savedRole = "super_admin";
+            } else if (normEmail === "admin@ayojon.select" || normEmail === "admin@aayojon.bd") {
+              savedRole = "admin";
             }
 
             const displayName =
@@ -615,8 +617,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const normEmail = (user.email || "").toLowerCase();
-    if (normEmail === "bfos.info@gmail.com" || normEmail === "superadmin@aayojon.bd") {
+    if (normEmail === "bfos.info@gmail.com" || normEmail === "superadmin@ayojon.select" || normEmail === "superadmin@aayojon.bd") {
       assignedRole = "super_admin";
+    } else if (normEmail === "admin@ayojon.select" || normEmail === "admin@aayojon.bd") {
+      assignedRole = "admin";
     }
 
     const displayName =

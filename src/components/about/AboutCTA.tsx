@@ -68,8 +68,8 @@ export function AboutContactSection() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-ink">General & Partnerships</h4>
-                <p className="text-xs text-ink-muted mt-1">support@aayojon.com.bd</p>
-                <p className="text-xs text-ink-muted mt-0.5">partners@aayojon.com.bd</p>
+                <p className="text-xs text-ink-muted mt-1">support@ayojon.select</p>
+                <p className="text-xs text-ink-muted mt-0.5">partners@ayojon.select</p>
               </div>
             </div>
 

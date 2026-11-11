@@ -195,7 +195,7 @@ export function TicketDetailPage() {
                 <div>
                   <div className="text-ink-muted font-medium">Attendee</div>
                   <div className="text-sm font-bold text-ink mt-0.5">{reg?.attendee_name || currentUser?.displayName || "Attendee"}</div>
-                  <div className="text-ink-muted font-mono">{reg?.attendee_email || "attendee@aayojon.bd"}</div>
+                  <div className="text-ink-muted font-mono">{reg?.attendee_email || currentUser?.email || "attendee@ayojon.select"}</div>
                 </div>
                 <div>
                   <div className="text-ink-muted font-medium">Ticket Type</div>

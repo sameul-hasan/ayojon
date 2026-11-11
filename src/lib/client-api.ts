@@ -134,6 +134,7 @@ export async function dispatchStateAction(
       const newEvent: EventRecord = {
         id: eventId,
         organization_id: p.organizationId || "org-buet-cc",
+        organizer_user_id: p.organizerUserId || actorUserId,
         category_id: p.categoryId || "cat-tech",
         venue_id: null,
         title: p.title || "Untitled Event",
@@ -157,7 +158,7 @@ export async function dispatchStateAction(
         views_count: 0,
         saves_count: 0,
         refund_policy: "Standard 7-day refund policy",
-        contact_email: "organizer@aayojon.bd",
+        contact_email: "organizer@ayojon.select",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -177,17 +178,19 @@ export async function dispatchStateAction(
 
       await saveEventToFirestore(newEvent, ticketTypes);
 
-      if (!resultData) {
-        if (cachedDb) {
-          cachedDb.events.push(newEvent);
-          if (ticketTypes.length > 0) cachedDb.ticket_types.push(...ticketTypes);
-        }
-        resultData = {
-          success: true,
-          data: cachedDb,
-          result: { id: eventId, title: newEvent.title, slug: newEvent.slug },
-        };
+      if (!cachedDb) {
+        cachedDb = createInitialSeed();
       }
+      cachedDb.events = [newEvent, ...cachedDb.events.filter((e) => e.id !== eventId)];
+      if (ticketTypes.length > 0) {
+        cachedDb.ticket_types = [...ticketTypes, ...cachedDb.ticket_types];
+      }
+
+      resultData = {
+        success: true,
+        data: { ...cachedDb },
+        result: { id: eventId, title: newEvent.title, slug: newEvent.slug },
+      };
     } else if (action === "PUBLISH_EVENT" || action === "PURCHASE_PACKAGE_AND_VERIFY") {
       const p = payload as any;
       if (p.eventId) {
@@ -196,13 +199,19 @@ export async function dispatchStateAction(
           package_code: p.packageCode || "BASIC",
           updated_at: new Date().toISOString(),
         });
-        if (cachedDb) {
-          const ev = cachedDb.events.find((e) => e.id === p.eventId);
-          if (ev) {
-            ev.status = "PUBLISHED";
-            ev.package_code = p.packageCode || "BASIC";
-          }
+        if (!cachedDb) {
+          cachedDb = createInitialSeed();
         }
+        const ev = cachedDb.events.find((e) => e.id === p.eventId);
+        if (ev) {
+          ev.status = "PUBLISHED";
+          ev.package_code = p.packageCode || "BASIC";
+        }
+        resultData = {
+          success: true,
+          data: { ...cachedDb },
+          result: { id: p.eventId, status: "PUBLISHED" },
+        };
       }
     } else if (action === "VERIFY_PENDING_ORDER_WEBHOOK" || action === "PURCHASE_TICKET") {
       const p = payload as any;
@@ -223,7 +232,9 @@ export async function dispatchStateAction(
     console.warn("[Firestore] Action sync notice:", err?.message);
   }
 
-  invalidateDbCache();
+  if (resultData?.data) {
+    cachedDb = resultData.data;
+  }
   return resultData || { success: true };
 }
 

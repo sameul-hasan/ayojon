@@ -53,7 +53,7 @@ export function OrganizerWorkspacePage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["organizer", "admin", "super_admin"]}>
+    <ProtectedRoute allowedRoles={["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"]}>
       <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
         <Navbar activeHref="/organizer" />
 
