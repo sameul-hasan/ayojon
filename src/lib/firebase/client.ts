@@ -455,6 +455,18 @@ export async function signInWithGoogle(
       notifyListeners(user);
       return { user };
     } catch (err: any) {
+      if (err?.code === "auth/unauthorized-domain") {
+        throw new FirebaseAuthError(
+          "auth/unauthorized-domain",
+          `Domain "${window.location.hostname}" is not authorized in Firebase Console. Go to Firebase Console > Authentication > Settings > Authorized domains and add "${window.location.hostname}".`
+        );
+      }
+      if (err?.code === "auth/popup-blocked") {
+        throw new FirebaseAuthError(
+          "auth/popup-blocked",
+          "Google sign-in popup was blocked by your browser. Please allow popups for this site and try again."
+        );
+      }
       throw new FirebaseAuthError(err?.code || "auth/google-sign-in-failed", err?.message);
     }
   }
