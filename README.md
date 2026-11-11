@@ -1,4 +1,4 @@
-# Aayojon — All-in-One Event Discovery, Management, Promotion & Ticketing Platform
+# Eventora — All-in-One Event Discovery, Management, Promotion & Ticketing Platform
 
 **Aayojon** (`aayojon.bd`) is a modular-monolith full-stack web platform built from the 11-document specification pack (`Event_Management_Platform_Complete_Documentation_Pack`).
 
