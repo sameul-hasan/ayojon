@@ -21,7 +21,7 @@ import {
   type FirebaseUser,
 } from "./client";
 
-export type UserRole = "attendee" | "organizer" | "staff" | "sponsor" | "admin" | "venue_owner" | "vendor";
+export type UserRole = "attendee" | "organizer" | "staff" | "sponsor" | "admin" | "venue_owner" | "vendor" | "super_admin";
 
 /**
  * Authenticated user interface.
@@ -74,6 +74,7 @@ export interface AuthContextValue {
 
 export function toUserRole(role: string | null | undefined): UserRole {
   const norm = (role || "").toLowerCase().trim();
+  if (norm === "super_admin" || norm === "superadmin" || norm === "platform_super_admin") return "super_admin";
   if (norm === "attendee") return "attendee";
   if (
     norm === "organizer" ||
@@ -91,6 +92,8 @@ export function toUserRole(role: string | null | undefined): UserRole {
 
 export function toPlatformRole(role: UserRole | string): PlatformRole {
   switch (toUserRole(role)) {
+    case "super_admin":
+      return "SUPER_ADMIN";
     case "attendee":
       return "ATTENDEE";
     case "organizer":
@@ -116,6 +119,25 @@ export function toPlatformRole(role: UserRole | string): PlatformRole {
 // ---------------------------------------------------------------------------
 
 export const DEMO_PERSONAS: Record<string, AuthUser & { defaultPortal: string }> = {
+  "usr-superadmin": {
+    uid: "usr-superadmin",
+    id: "usr-superadmin",
+    email: "superadmin@aayojon.bd",
+    displayName: "Platform SuperAdmin",
+    display_name: "Platform SuperAdmin",
+    role: "super_admin",
+    platform_role: "SUPER_ADMIN",
+    phone: "+8801700000001",
+    organization_label: "Aayojon Core Foundation & Platform Governance",
+    tenantId: "aayojon-root",
+    interests: ["System Operations", "RBAC Policies", "Security Auditing", "Platform Trust"],
+    preferred_city: "Dhaka",
+    mfa_enabled: true,
+    created_at: "2026-09-01T00:00:00Z",
+    photoURL: null,
+    isAnonymous: false,
+    defaultPortal: "ADMIN",
+  },
   "usr-attendee-rafiq": {
     uid: "usr-attendee-rafiq",
     id: "usr-attendee-rafiq",

@@ -11,12 +11,17 @@ import {
 let cachedDb: DatabaseState | null = null;
 let dbFetchPromise: Promise<DatabaseState> | null = null;
 
+export function invalidateDbCache() {
+  cachedDb = null;
+  dbFetchPromise = null;
+}
+
 export async function fetchDatabaseState(): Promise<DatabaseState> {
   if (cachedDb) return cachedDb;
   if (!dbFetchPromise) {
     dbFetchPromise = fetch("/api/v1/state")
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to load database state");
+        if (!res.ok) throw new Error("Failed to load database state from API");
         return res.json();
       })
       .then((db) => {
@@ -26,10 +31,38 @@ export async function fetchDatabaseState(): Promise<DatabaseState> {
       })
       .catch((err) => {
         dbFetchPromise = null;
-        throw err;
+        console.warn("fetchDatabaseState fallback to initial seed:", err.message);
+        const fallback = createInitialSeed();
+        cachedDb = fallback;
+        return fallback;
       });
   }
   return dbFetchPromise;
+}
+
+export async function dispatchStateAction(
+  action: string,
+  payload: Record<string, unknown> = {},
+  actorUserId?: string
+): Promise<any> {
+  const res = await fetch("/api/v1/state", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(actorUserId ? { "X-Actor-User-Id": actorUserId } : {}),
+    },
+    body: JSON.stringify({ action, actorUserId, payload }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || `Action ${action} failed`);
+  }
+  if (data.data) {
+    cachedDb = data.data;
+  } else {
+    invalidateDbCache();
+  }
+  return data;
 }
 
 export function transformDbToCatalog(db: DatabaseState): PublicCatalog {

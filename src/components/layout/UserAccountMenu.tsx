@@ -88,6 +88,7 @@ export function UserAccountMenu({
     venue_owner: { tab: "provider", label: "Provider Studio", icon: Building },
     vendor: { tab: "provider", label: "Provider Studio", icon: Building },
     admin: { tab: "admin", label: "Admin Console", icon: ShieldAlert },
+    super_admin: { tab: "admin", label: "👑 Super Admin", icon: ShieldAlert },
   };
 
   const currentRoleConfig = roleConfig[role] || roleConfig.attendee;
