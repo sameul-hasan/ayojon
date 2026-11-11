@@ -260,8 +260,15 @@ export function Navbar({
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           {/* 1. BRAND LOGO */}
           <div className="flex items-center gap-3 shrink-0">
-            <Link to="/" className="flex items-center gap-2 group">
-              <Logo size="md" showText={true} />
+            <Link to="/" className="flex items-center gap-2 group transition-transform duration-200 active:scale-95">
+              {/* Desktop / Tablet: Logo with text */}
+              <div className="hidden sm:block">
+                <Logo size="md" showText={true} />
+              </div>
+              {/* Mobile: ONLY LOGO ICON (NO TEXT) */}
+              <div className="block sm:hidden">
+                <Logo size="md" variant="icon" showText={false} />
+              </div>
             </Link>
           </div>
 
@@ -498,14 +505,14 @@ export function Navbar({
 
       {/* 4. FULLSCREEN MOBILE NAVIGATION DRAWER */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-canvas lg:hidden animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex flex-col bg-canvas/98 backdrop-blur-xl lg:hidden animate-in slide-in-from-right duration-300 ease-out">
           {/* Mobile Drawer Header */}
           <div className="flex h-16 items-center justify-between border-b border-line px-4 sm:px-6">
-            <Logo size="md" showText={true} />
+            <Logo size="md" variant="icon" showText={false} />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex size-10 items-center justify-center rounded-btn hover:bg-canvas-alt text-ink"
+              className="flex size-10 items-center justify-center rounded-btn hover:bg-canvas-alt text-ink transition-transform duration-200 active:scale-90"
             >
               <X className="size-5" />
             </button>

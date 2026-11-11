@@ -693,7 +693,7 @@ export function CheckoutFlow({
                         className="size-4 accent-pink-600"
                       />
                       <div>
-                        <p className="text-sm font-bold text-ink">bKash (বিকাশ)</p>
+                        <p className="text-sm font-bold text-ink">bKash</p>
                         <p className="text-xs text-ink-muted">Direct Mobile Financial Service (Sandbox)</p>
                       </div>
                     </div>
@@ -719,7 +719,7 @@ export function CheckoutFlow({
                         className="size-4 accent-orange-600"
                       />
                       <div>
-                        <p className="text-sm font-bold text-ink">Nagad (নগদ)</p>
+                        <p className="text-sm font-bold text-ink">Nagad</p>
                         <p className="text-xs text-ink-muted">Post Office Digital Financial Service (Sandbox)</p>
                       </div>
                     </div>

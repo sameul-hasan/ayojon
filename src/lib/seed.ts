@@ -205,7 +205,7 @@ export function createInitialSeed(): DatabaseState {
       {
         id: "cat-uni",
         name: "University & Campus Clubs",
-        name_bn: "বিশ্ববিদ্যালয় ও ক্যাম্পাস ক্লাব",
+        name_bn: "University & Campus Clubs",
         slug: "university-clubs",
         icon: "GraduationCap",
         active: true,
@@ -213,7 +213,7 @@ export function createInitialSeed(): DatabaseState {
       {
         id: "cat-tech",
         name: "Tech & AI Workshops",
-        name_bn: "প্রযুক্তি ও এআই ওয়ার্কশপ",
+        name_bn: "Tech & AI Workshops",
         slug: "tech-workshops",
         icon: "Cpu",
         active: true,
@@ -221,7 +221,7 @@ export function createInitialSeed(): DatabaseState {
       {
         id: "cat-conf",
         name: "Conferences & Summits",
-        name_bn: "কনফারেন্স ও সামিট",
+        name_bn: "Conferences & Summits",
         slug: "conferences",
         icon: "Presentation",
         active: true,
@@ -229,7 +229,7 @@ export function createInitialSeed(): DatabaseState {
       {
         id: "cat-startup",
         name: "Startup & Business",
-        name_bn: "স্টার্টআপ ও বিজনেস",
+        name_bn: "Startup & Business",
         slug: "startup-business",
         icon: "Rocket",
         active: true,
@@ -237,7 +237,7 @@ export function createInitialSeed(): DatabaseState {
       {
         id: "cat-design",
         name: "Design & Creative",
-        name_bn: "ডিজাইন ও সৃজনশীলতা",
+        name_bn: "Design & Creative",
         slug: "design-arts",
         icon: "Palette",
         active: true,
@@ -245,7 +245,7 @@ export function createInitialSeed(): DatabaseState {
       {
         id: "cat-culture",
         name: "Cultural & Music Fest",
-        name_bn: "সাংস্কৃতিক ও সংগীত উৎসব",
+        name_bn: "Cultural & Music Fest",
         slug: "cultural-festivals",
         icon: "Music",
         active: true,
@@ -314,7 +314,7 @@ export function createInitialSeed(): DatabaseState {
         id: "pkg-basic",
         code: "BASIC",
         name: "Basic",
-        name_bn: "বেসিক",
+        name_bn: "Basic",
         price_minor: 79900, // ৳799
         currency: "BDT",
         summary: "Publish event, registration, attendee list, basic analytics",
@@ -331,7 +331,7 @@ export function createInitialSeed(): DatabaseState {
         id: "pkg-promoted",
         code: "PROMOTED",
         name: "Promoted",
-        name_bn: "প্রমোটেড",
+        name_bn: "Promoted",
         price_minor: 149900, // ৳1,499
         currency: "BDT",
         summary: "Basic plus boosted listing and campaign tools",
@@ -347,7 +347,7 @@ export function createInitialSeed(): DatabaseState {
         id: "pkg-plus",
         code: "PLUS",
         name: "Plus",
-        name_bn: "প্লাস",
+        name_bn: "Plus",
         price_minor: 269900, // ৳2,699
         currency: "BDT",
         summary: "Promoted plus advanced analytics and custom branding",
@@ -363,7 +363,7 @@ export function createInitialSeed(): DatabaseState {
         id: "pkg-premium",
         code: "PREMIUM",
         name: "Premium",
-        name_bn: "প্রিমিয়াম",
+        name_bn: "Premium",
         price_minor: 499900, // ৳4,999
         currency: "BDT",
         summary: "Plus plus premium promotion options and priority support",
@@ -379,7 +379,7 @@ export function createInitialSeed(): DatabaseState {
         id: "pkg-featured-addon",
         code: "FEATURED_ADDON",
         name: "Featured Placement Add-on",
-        name_bn: "ফিচার্ড প্লেসমেন্ট অ্যাড-অন",
+        name_bn: "Featured Placement Add-on",
         price_minor: 50000, // +৳500
         currency: "BDT",
         summary: "Additional featured carousel placement for 14 days",
@@ -1693,7 +1693,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-super-admin",
         code: "SUPER_ADMIN",
         name: "Super Administrator",
-        name_bn: "সর্বোচ্চ প্ল্যাটফর্ম প্রশাসক",
+        name_bn: "Super Administrator",
         description: "Unrestricted platform control: manage database roles, grant permissions, system configuration, audit logs, financial escrow, and dispute resolution.",
         permissions: [
           "event.create",
@@ -1744,7 +1744,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-admin",
         code: "ADMIN",
         name: "Platform Administrator",
-        name_bn: "প্ল্যাটফর্ম প্রশাসক",
+        name_bn: "Platform Administrator",
         description: "Operational management, content moderation, organizer support, and audit log inspection.",
         permissions: [
           "event.create",
@@ -1793,7 +1793,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-organizer",
         code: "ORGANIZER",
         name: "Event Organizer",
-        name_bn: "ইভেন্ট আয়োজক",
+        name_bn: "Event Organizer",
         description: "Create, publish, and host events, manage tickets, export attendee rosters, submit venue/vendor RFQs.",
         permissions: [
           "event.read.public",
@@ -1826,7 +1826,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-staff",
         code: "STAFF",
         name: "Check-in Staff",
-        name_bn: "প্রবেশ নিরীক্ষক",
+        name_bn: "Check-in Staff",
         description: "Scan QR passes, validate attendee entry at event gates, prevent duplicate scans.",
         permissions: [
           "event.read.public",
@@ -1843,7 +1843,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-sponsor",
         code: "SPONSOR",
         name: "Corporate Sponsor",
-        name_bn: "স্পন্সর পার্টনার",
+        name_bn: "Corporate Sponsor",
         description: "Discover verified university and tech events, submit sponsorship proposals, view engagement metrics.",
         permissions: [
           "event.read.public",
@@ -1862,7 +1862,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-venue-owner",
         code: "VENUE_OWNER",
         name: "Venue Provider",
-        name_bn: "ভেন্যু প্রোভাইডার",
+        name_bn: "Venue Provider",
         description: "List auditoriums and spaces, respond to organizer RFQs with itemized quotations, lock booking dates.",
         permissions: [
           "event.read.public",
@@ -1885,7 +1885,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-vendor",
         code: "VENDOR",
         name: "Service Vendor",
-        name_bn: "সেবা সরবরাহকারী",
+        name_bn: "Service Vendor",
         description: "Manage sound, light, photography, and catering listings, bid on event RFQs, track bookings.",
         permissions: [
           "event.read.public",
@@ -1908,7 +1908,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-attendee",
         code: "ATTENDEE",
         name: "Event Attendee",
-        name_bn: "অংশগ্রহণকারী",
+        name_bn: "Event Attendee",
         description: "Discover public events, purchase tickets via bKash/Nagad/Cards, access offline digital ticket wallet.",
         permissions: [
           "event.read.public",
@@ -1928,7 +1928,7 @@ export function createInitialSeed(): DatabaseState {
         id: "role-guest",
         code: "GUEST",
         name: "Guest Visitor",
-        name_bn: "দর্শনার্থী",
+        name_bn: "Guest Visitor",
         description: "Public event discovery, search, and catalog exploration.",
         permissions: [
           "event.read.public",

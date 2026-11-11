@@ -167,3 +167,4 @@ export async function seedFirestore(fs: Firestore, seed: DatabaseState): Promise
     console.warn("[Firestore] Error seeding initial data:", err?.message);
   }
 }
+

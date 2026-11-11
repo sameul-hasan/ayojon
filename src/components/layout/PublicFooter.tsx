@@ -63,7 +63,7 @@ export function PublicFooter() {
           <div className="lg:col-span-2 space-y-4">
             <Logo size="lg" showText subtitle="Bangladesh" />
             <p className="text-sm text-ink-muted max-w-sm leading-relaxed">
-              Aayojon (আয়োজন) is a modern Bangladesh-focused event discovery, ticketing, and event management platform. Discover experiences, book tickets, and organize events seamlessly.
+              Aayojon is a modern Bangladesh-focused event discovery, ticketing, and event management platform. Discover experiences, book tickets, and organize events seamlessly.
             </p>
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">
               <Sparkles className="size-3.5 text-brand-600" />
@@ -113,7 +113,7 @@ export function PublicFooter() {
         {/* Bottom Bar */}
         <div className="mt-12 border-t border-line pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted">
           <div>
-            © {new Date().getFullYear()} Aayojon (আয়োজন) Technologies Ltd. All rights reserved.
+            © {new Date().getFullYear()} Aayojon Technologies Ltd. All rights reserved.
           </div>
           <div className="flex items-center gap-4">
             <Link href="/about" className="hover:text-brand-600 transition-colors">About Us</Link>

@@ -26,7 +26,7 @@ export function AboutHero() {
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-surface/90 px-4 py-1.5 shadow-xs backdrop-blur-sm">
             <Sparkles className="size-4 text-brand-600" />
             <span className="text-xs font-semibold text-brand-700">
-              Aayojon (আয়োজন) · Make Moments Happen
+              Aayojon · Make Moments Happen
             </span>
           </div>
         </div>

@@ -14,7 +14,7 @@ export function AboutMissionSection() {
             What is Aayojon?
           </h2>
           <p className="mt-4 text-base text-ink-muted leading-relaxed">
-            Aayojon (আয়োজন) is a unified platform connecting event discovery, ticketing, event management, and event service procurement in Bangladesh. We believe that offline human gatherings are essential to vibrant culture, education, and commerce.
+            Aayojon is a unified platform connecting event discovery, ticketing, event management, and event service procurement in Bangladesh. We believe that offline human gatherings are essential to vibrant culture, education, and commerce.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {[

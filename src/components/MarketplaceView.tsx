@@ -282,7 +282,7 @@ export function MarketplaceView({
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1 text-xs font-semibold text-brand-700 shadow-xs">
             <Sparkles className="h-3.5 w-3.5 text-amber-600" />
             <span>
-              আয়োজন • Bangladesh&apos;s All-in-One Event Discovery, Promotion & QR Ticketing Platform
+              Aayojon • Bangladesh&apos;s All-in-One Event Discovery, Promotion & QR Ticketing Platform
             </span>
           </div>
 
@@ -318,10 +318,10 @@ export function MarketplaceView({
                 className="rounded-btn border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-600 focus:ring-1 focus:ring-brand-600 focus:outline-none shadow-sm"
               >
                 <option value="ALL">All Cities (BD)</option>
-                <option value="Dhaka">Dhaka (ঢাকা)</option>
-                <option value="Chattogram">Chattogram (চট্টগ্রাম)</option>
-                <option value="Sylhet">Sylhet (সিলেট)</option>
-                <option value="Online">Online (অনলাইন)</option>
+                <option value="Dhaka">Dhaka</option>
+                <option value="Chattogram">Chattogram</option>
+                <option value="Sylhet">Sylhet</option>
+                <option value="Online">Online</option>
               </select>
 
               <button

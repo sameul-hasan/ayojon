@@ -41,7 +41,7 @@ export function Logo({
         <span className="flex flex-col text-left">
           {showText && (
             <span className="text-base font-bold tracking-tight text-ink leading-tight">
-              Aayojon <span className="text-xs font-normal text-brand-600 font-sans">(আয়োজন)</span>
+              Aayojon
             </span>
           )}
           {subtitle && (
