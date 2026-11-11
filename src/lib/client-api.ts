@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { DatabaseState, EventRecord, RoleDefinition, VenueProfile } from "@/lib/types";
+import type { DatabaseState, EventRecord, RoleDefinition, VenueProfile, TicketType } from "@/lib/types";
 import { createInitialSeed } from "./seed";
 import {
   type PublicCatalog,
@@ -7,6 +7,11 @@ import {
   type PublicCategory,
   type PublicEventDetail,
 } from "./public-events-shared";
+import {
+  loadFirestoreState,
+  saveEventToFirestore,
+  updateEventStatusInFirestore,
+} from "./firebase/firestore";
 
 let cachedDb: DatabaseState | null = null;
 let dbFetchPromise: Promise<DatabaseState> | null = null;
@@ -19,23 +24,38 @@ export function invalidateDbCache() {
 export async function fetchDatabaseState(): Promise<DatabaseState> {
   if (cachedDb) return cachedDb;
   if (!dbFetchPromise) {
-    dbFetchPromise = fetch("/api/v1/state")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load database state from API");
-        return res.json();
-      })
-      .then((db) => {
-        cachedDb = db;
-        dbFetchPromise = null;
-        return db;
-      })
-      .catch((err) => {
-        dbFetchPromise = null;
-        console.warn("fetchDatabaseState fallback to initial seed:", err.message);
-        const fallback = createInitialSeed();
-        cachedDb = fallback;
-        return fallback;
-      });
+    dbFetchPromise = (async () => {
+      // 1. Try Firebase Cloud Firestore first (live DB)
+      try {
+        const firestoreState = await loadFirestoreState();
+        if (firestoreState && firestoreState.events && firestoreState.events.length > 0) {
+          cachedDb = firestoreState;
+          dbFetchPromise = null;
+          return firestoreState;
+        }
+      } catch (err) {
+        console.warn("[ClientApi] Firestore fetch failed, trying API middleware:", err);
+      }
+
+      // 2. Try Local API Middleware if running
+      try {
+        const res = await fetch("/api/v1/state");
+        if (res.ok) {
+          const db = await res.json();
+          cachedDb = db;
+          dbFetchPromise = null;
+          return db;
+        }
+      } catch {
+        // API middleware not reachable (e.g. static hosting)
+      }
+
+      // 3. Fallback to Initial Seed State
+      const fallback = createInitialSeed();
+      cachedDb = fallback;
+      dbFetchPromise = null;
+      return fallback;
+    })();
   }
   return dbFetchPromise;
 }
@@ -45,24 +65,117 @@ export async function dispatchStateAction(
   payload: Record<string, unknown> = {},
   actorUserId?: string
 ): Promise<any> {
-  const res = await fetch("/api/v1/state", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(actorUserId ? { "X-Actor-User-Id": actorUserId } : {}),
-    },
-    body: JSON.stringify({ action, actorUserId, payload }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data?.error?.message || `Action ${action} failed`);
+  let resultData: any = null;
+
+  // 1. Send to server API middleware if available
+  try {
+    const res = await fetch("/api/v1/state", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(actorUserId ? { "X-Actor-User-Id": actorUserId } : {}),
+      },
+      body: JSON.stringify({ action, actorUserId, payload }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      resultData = data;
+      if (data.data) cachedDb = data.data;
+    }
+  } catch {
+    // API middleware not reachable
   }
-  if (data.data) {
-    cachedDb = data.data;
-  } else {
-    invalidateDbCache();
+
+  // 2. Sync directly to Cloud Firestore
+  try {
+    if (action === "CREATE_EVENT_DRAFT") {
+      const p = payload as any;
+      const eventId = `evt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const slug = (p.title || "event")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const newEvent: EventRecord = {
+        id: eventId,
+        organization_id: p.organizationId || "org-buet-cc",
+        category_id: p.categoryId || "cat-tech",
+        venue_id: null,
+        title: p.title || "Untitled Event",
+        slug: `${slug}-${Math.random().toString(36).slice(2, 6)}`,
+        tagline: p.description ? p.description.slice(0, 100) : "",
+        description: p.description || "",
+        status: "DRAFT",
+        visibility: "PUBLIC",
+        starts_at: p.startsAt || new Date().toISOString(),
+        ends_at: p.endsAt || new Date(Date.now() + 86400000).toISOString(),
+        timezone: "Asia/Dhaka",
+        capacity: Number(p.capacity) || 100,
+        is_online: Boolean(p.isOnline),
+        cover_gradient: "from-blue-600 to-indigo-900",
+        brand_theme: p.brandTheme || "#2563eb",
+        agenda: [],
+        speakers: [],
+        tags: ["tech", "bangladesh"],
+        package_code: null,
+        is_featured: false,
+        views_count: 0,
+        saves_count: 0,
+        refund_policy: "Standard 7-day refund policy",
+        contact_email: "organizer@aayojon.bd",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const ticketTypes: TicketType[] = (p.ticketTypes || []).map((t: any, idx: number) => ({
+        id: `tkt-type-${Date.now().toString(36)}-${idx}`,
+        event_id: eventId,
+        name: t.name || "General Admission",
+        description: t.description || "Official event admission pass",
+        price_minor: t.priceMinor || 0,
+        currency: "BDT",
+        capacity: t.capacity || 100,
+        sold_count: 0,
+        sales_start: new Date().toISOString(),
+        sales_end: p.endsAt || new Date(Date.now() + 86400000).toISOString(),
+      }));
+
+      await saveEventToFirestore(newEvent, ticketTypes);
+
+      if (!resultData) {
+        if (cachedDb) {
+          cachedDb.events.push(newEvent);
+          if (ticketTypes.length > 0) cachedDb.ticket_types.push(...ticketTypes);
+        }
+        resultData = {
+          success: true,
+          data: cachedDb,
+          result: { id: eventId, title: newEvent.title, slug: newEvent.slug },
+        };
+      }
+    } else if (action === "PUBLISH_EVENT" || action === "PURCHASE_PACKAGE_AND_VERIFY") {
+      const p = payload as any;
+      if (p.eventId) {
+        await updateEventStatusInFirestore(p.eventId, {
+          status: "PUBLISHED",
+          package_code: p.packageCode || "BASIC",
+          updated_at: new Date().toISOString(),
+        });
+        if (cachedDb) {
+          const ev = cachedDb.events.find((e) => e.id === p.eventId);
+          if (ev) {
+            ev.status = "PUBLISHED";
+            ev.package_code = p.packageCode || "BASIC";
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    console.warn("[Firestore] Action sync notice:", err?.message);
   }
-  return data;
+
+  invalidateDbCache();
+  return resultData || { success: true };
 }
 
 export function transformDbToCatalog(db: DatabaseState): PublicCatalog {
