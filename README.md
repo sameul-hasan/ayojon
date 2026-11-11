@@ -1,6 +1,6 @@
-# Eventora — All-in-One Event Discovery, Management, Promotion & Ticketing Platform
+# Ayojon — All-in-One Event Discovery, Management, Promotion & Ticketing Platform
 
-**Eventora** (`eventora.bd`) is a modular-monolith full-stack web platform built from the 11-document specification pack (`Event_Management_Platform_Complete_Documentation_Pack`).
+**Ayojon** (`ayojon.select`) is a modular-monolith full-stack web platform built from the 11-document specification pack (`Event_Management_Platform_Complete_Documentation_Pack`).
 
 ## Architecture & Stack (`02_System_Architecture.docx`)
 - **Frontend & UI**: Next.js 16 + React 19 + TypeScript + Tailwind CSS 4
