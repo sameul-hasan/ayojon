@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OrganizerWorkspaceView } from "@/components/OrganizerWorkspaceView";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { fetchDatabaseState, dispatchStateAction } from "@/lib/client-api";
-import type { DatabaseState } from "@/lib/types";
+import type { DatabaseState, Profile } from "@/lib/types";
 import { createInitialSeed } from "@/lib/seed";
 import { Calendar } from "lucide-react";
 
@@ -23,8 +23,28 @@ export function OrganizerWorkspacePage() {
   }, []);
 
   const activeUserId = authUser?.uid || authUser?.id || "usr-org-anis";
-  const currentUser =
-    db.profiles.find((p) => p.id === activeUserId || p.email === authUser?.email) || db.profiles[1];
+  const currentUser: Profile = React.useMemo(() => {
+    if (authUser) {
+      const found = db.profiles.find(
+        (p) => p.id === activeUserId || (authUser.email && p.email?.toLowerCase() === authUser.email.toLowerCase())
+      );
+      if (found) return found;
+      return {
+        id: authUser.uid,
+        email: authUser.email || "",
+        display_name: authUser.displayName || authUser.email?.split("@")[0] || "Organizer",
+        platform_role: authUser.platform_role || "ORGANIZER_OWNER",
+        avatar_url: authUser.photoURL || undefined,
+        phone: authUser.phone || "",
+        organization_label: authUser.organization_label || "Independent Organizer",
+        mfa_enabled: false,
+        interests: authUser.interests || [],
+        preferred_city: authUser.preferred_city || "Dhaka",
+        created_at: authUser.created_at || new Date().toISOString(),
+      };
+    }
+    return db.profiles[1] || db.profiles[0];
+  }, [authUser, activeUserId, db.profiles]);
 
   const handleAction = async (action: string, payload: Record<string, unknown>, overrideActorId?: string) => {
     const res = await dispatchStateAction(action, payload, overrideActorId || activeUserId);

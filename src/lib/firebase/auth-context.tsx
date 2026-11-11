@@ -10,6 +10,10 @@ import React, {
 } from "react";
 import { PlatformRole, Profile } from "../types";
 import {
+  syncUserProfileToFirestore,
+  fetchUserProfileFromFirestore,
+} from "./firestore";
+import {
   getFirebaseAuth,
   isFirebaseConfigured,
   signInWithEmailAndPassword,
@@ -428,12 +432,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const authInstance = getFirebaseAuth();
 
-        unsubscribe = onAuthStateChanged(authInstance, (fbUser) => {
+        unsubscribe = onAuthStateChanged(authInstance, async (fbUser) => {
           if (fbUser) {
             setFirebaseUser(fbUser);
-            
-            // Check if there is stored role metadata for this user
-            let savedRole: UserRole = toUserRole(fbUser.role);
+
+            // Fetch live profile from Firestore database if available
+            let liveProfile: Profile | null = null;
+            try {
+              liveProfile = await fetchUserProfileFromFirestore(fbUser.uid);
+            } catch {
+              // Firestore optional
+            }
+
+            // Determine role from live DB profile or fallback
+            let savedRole: UserRole = liveProfile?.platform_role
+              ? toUserRole(liveProfile.platform_role)
+              : toUserRole(fbUser.role);
+
             try {
               const saved = localStorage.getItem(SESSION_STORAGE_KEY);
               if (saved) {
@@ -448,6 +463,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             const displayName =
               fbUser.displayName ||
+              liveProfile?.display_name ||
               fbUser.email?.split("@")[0] ||
               "User";
 
@@ -457,34 +473,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               displayName,
               role: savedRole,
               tenantId: fbUser.tenantId,
-              photoURL: fbUser.photoURL,
+              photoURL: fbUser.photoURL || liveProfile?.avatar_url || null,
               isAnonymous: fbUser.isAnonymous,
             });
+
+            if (liveProfile) {
+              mappedUser.preferred_city = liveProfile.preferred_city || mappedUser.preferred_city;
+              mappedUser.interests = liveProfile.interests || mappedUser.interests;
+              mappedUser.phone = liveProfile.phone || mappedUser.phone;
+              mappedUser.organization_label = liveProfile.organization_label || mappedUser.organization_label;
+            }
+
             setCurrentUser(mappedUser);
             setActiveRole(mappedUser.role);
             persistUserState(mappedUser);
-          } else {
-            // Check if there is a saved local session in development
-            let restored = false;
-            try {
-              const saved = localStorage.getItem(SESSION_STORAGE_KEY);
-              if (saved) {
-                const parsed = JSON.parse(saved) as AuthUser;
-                if (parsed && parsed.uid) {
-                  setCurrentUser(parsed);
-                  setActiveRole(parsed.role);
-                  setFirebaseUser(createMockFirebaseUser(parsed));
-                  restored = true;
-                }
-              }
-            } catch {
-              // Ignore parse errors
-            }
 
-            if (!restored) {
+            // Synchronize with Cloud Firestore to guarantee DB persistence
+            syncUserProfileToFirestore(mappedUser);
+          } else {
+            // User is signed out: do NOT restore arbitrary mock personas if Firebase is configured
+            if (isFirebaseConfigured()) {
               setCurrentUser(null);
               setFirebaseUser(null);
               setActiveRole("attendee");
+              persistUserState(null);
+            } else {
+              // Only restore local mock session in offline-only test mode
+              let restored = false;
+              try {
+                const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+                if (saved) {
+                  const parsed = JSON.parse(saved) as AuthUser;
+                  if (parsed && parsed.uid) {
+                    setCurrentUser(parsed);
+                    setActiveRole(parsed.role);
+                    setFirebaseUser(createMockFirebaseUser(parsed));
+                    restored = true;
+                  }
+                }
+              } catch {
+                // Ignore parse errors
+              }
+
+              if (!restored) {
+                setCurrentUser(null);
+                setFirebaseUser(null);
+                setActiveRole("attendee");
+              }
             }
           }
           setLoading(false);
@@ -540,6 +575,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setActiveRole(assignedRole);
       setFirebaseUser(user);
       persistUserState(authUser);
+      await syncUserProfileToFirestore(authUser);
     },
     [persistUserState]
   );
@@ -549,7 +585,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const authInstance = getFirebaseAuth();
     const { user } = await clientSignInWithGoogle(authInstance);
 
-    let assignedRole: UserRole = toUserRole(user.role);
+    let liveProfile: Profile | null = null;
+    try {
+      liveProfile = await fetchUserProfileFromFirestore(user.uid);
+    } catch {
+      // Optional
+    }
+
+    let assignedRole: UserRole = liveProfile?.platform_role
+      ? toUserRole(liveProfile.platform_role)
+      : toUserRole(user.role);
+
     try {
       const saved = localStorage.getItem(SESSION_STORAGE_KEY);
       if (saved) {
@@ -562,21 +608,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ignore
     }
 
-    const displayName = user.displayName || user.email?.split("@")[0] || "User";
+    const displayName =
+      user.displayName ||
+      liveProfile?.display_name ||
+      user.email?.split("@")[0] ||
+      "User";
+
     const authUser = createDefaultAuthUser({
       uid: user.uid,
       email: user.email || "",
       displayName,
       role: assignedRole,
       tenantId: user.tenantId,
-      photoURL: user.photoURL,
+      photoURL: user.photoURL || liveProfile?.avatar_url || null,
       isAnonymous: user.isAnonymous,
     });
+
+    if (liveProfile) {
+      authUser.preferred_city = liveProfile.preferred_city || authUser.preferred_city;
+      authUser.interests = liveProfile.interests || authUser.interests;
+      authUser.phone = liveProfile.phone || authUser.phone;
+      authUser.organization_label = liveProfile.organization_label || authUser.organization_label;
+    }
 
     setCurrentUser(authUser);
     setActiveRole(assignedRole);
     setFirebaseUser(user);
     persistUserState(authUser);
+
+    // Save to Firestore DB
+    await syncUserProfileToFirestore(authUser);
   }, [persistUserState]);
 
   // Sign Up with Email
@@ -617,6 +678,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setActiveRole(assignedRole);
       setFirebaseUser(cred.user);
       persistUserState(newUser);
+      await syncUserProfileToFirestore(newUser);
     },
     [persistUserState]
   );

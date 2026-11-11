@@ -11,6 +11,8 @@ import {
   loadFirestoreState,
   saveEventToFirestore,
   updateEventStatusInFirestore,
+  saveOrderToFirestore,
+  saveTicketToFirestore,
 } from "./firebase/firestore";
 
 let cachedDb: DatabaseState | null = null;
@@ -30,31 +32,64 @@ export async function fetchDatabaseState(): Promise<DatabaseState> {
         const firestoreState = await loadFirestoreState();
         if (firestoreState && firestoreState.events && firestoreState.events.length > 0) {
           cachedDb = firestoreState;
-          dbFetchPromise = null;
-          return firestoreState;
         }
       } catch (err) {
         console.warn("[ClientApi] Firestore fetch failed, trying API middleware:", err);
       }
 
-      // 2. Try Local API Middleware if running
-      try {
-        const res = await fetch("/api/v1/state");
-        if (res.ok) {
-          const db = await res.json();
-          cachedDb = db;
-          dbFetchPromise = null;
-          return db;
+      // 2. Try Local API Middleware if running and firestore didn't populate
+      if (!cachedDb) {
+        try {
+          const res = await fetch("/api/v1/state");
+          if (res.ok) {
+            const db = await res.json();
+            cachedDb = db;
+          }
+        } catch {
+          // API middleware not reachable (e.g. static hosting)
         }
-      } catch {
-        // API middleware not reachable (e.g. static hosting)
       }
 
       // 3. Fallback to Initial Seed State
-      const fallback = createInitialSeed();
-      cachedDb = fallback;
+      if (!cachedDb) {
+        cachedDb = createInitialSeed();
+      }
+
+      // 4. Attach active session profile if present so user is immediately in DB
+      try {
+        if (typeof window !== "undefined" && cachedDb) {
+          const raw = localStorage.getItem("aayojon_user_session");
+          if (raw) {
+            const user = JSON.parse(raw);
+            if (user && (user.uid || user.id)) {
+              const uid = user.uid || user.id;
+              const exists = cachedDb.profiles.some(
+                (p) => p.id === uid || (user.email && p.email?.toLowerCase() === user.email.toLowerCase())
+              );
+              if (!exists) {
+                cachedDb.profiles.unshift({
+                  id: uid,
+                  email: user.email || "",
+                  display_name: user.displayName || user.display_name || user.email?.split("@")[0] || "User",
+                  platform_role: user.platform_role || "ATTENDEE",
+                  avatar_url: user.photoURL || undefined,
+                  phone: user.phone || "",
+                  organization_label: user.organization_label || "",
+                  mfa_enabled: false,
+                  interests: user.interests || [],
+                  preferred_city: user.preferred_city || "Dhaka",
+                  created_at: user.created_at || new Date().toISOString(),
+                });
+              }
+            }
+          }
+        }
+      } catch {
+        // Ignore
+      }
+
       dbFetchPromise = null;
-      return fallback;
+      return cachedDb;
     })();
   }
   return dbFetchPromise;
@@ -166,6 +201,20 @@ export async function dispatchStateAction(
           if (ev) {
             ev.status = "PUBLISHED";
             ev.package_code = p.packageCode || "BASIC";
+          }
+        }
+      }
+    } else if (action === "VERIFY_PENDING_ORDER_WEBHOOK" || action === "PURCHASE_TICKET") {
+      const p = payload as any;
+      if (p.orderId && cachedDb) {
+        const order = cachedDb.orders.find((o) => o.id === p.orderId);
+        if (order) {
+          await saveOrderToFirestore(order);
+          const regs = cachedDb.registrations.filter((r) => r.order_id === p.orderId);
+          const regIds = new Set(regs.map((r) => r.id));
+          const tickets = cachedDb.tickets.filter((t) => regIds.has(t.registration_id));
+          for (const t of tickets) {
+            await saveTicketToFirestore(t);
           }
         }
       }

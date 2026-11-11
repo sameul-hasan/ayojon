@@ -362,12 +362,20 @@ export function Navbar({
                   aria-expanded={accountMenuOpen}
                   aria-label="User navigation and role switcher"
                 >
-                  <div className="flex size-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
-                    {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
-                  </div>
+                  {currentUser.photoURL ? (
+                    <img
+                      src={currentUser.photoURL}
+                      alt={currentUser.displayName || "User"}
+                      className="size-7 rounded-full object-cover shadow-xs border border-line"
+                    />
+                  ) : (
+                    <div className="flex size-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
+                      {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
+                    </div>
+                  )}
                   <div className="hidden sm:flex flex-col text-left">
                     <span className="text-xs font-bold text-ink leading-tight line-clamp-1">
-                      {currentUser.displayName || "User"}
+                      {currentUser.displayName || currentUser.display_name || "User"}
                     </span>
                     <span className="text-[10px] text-ink-muted leading-none">
                       {roleBadgeConfig.icon} {roleBadgeConfig.label}
@@ -535,14 +543,27 @@ export function Navbar({
             {/* User Profile Card (if signed in) */}
             {currentUser && role !== "guest" && (
               <div className="rounded-2xl border border-line bg-surface p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">{currentUser.displayName}</h4>
-                    <p className="text-xs text-ink-muted">{currentUser.email}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {currentUser.photoURL ? (
+                      <img
+                        src={currentUser.photoURL}
+                        alt={currentUser.displayName || "User"}
+                        className="size-8 rounded-full object-cover shrink-0 border border-line"
+                      />
+                    ) : (
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
+                        {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-bold text-ink truncate">{currentUser.displayName || currentUser.display_name || "User"}</h4>
+                      <p className="text-xs text-ink-muted truncate">{currentUser.email}</p>
+                    </div>
                   </div>
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold",
+                      "inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold",
                       roleBadgeConfig.className
                     )}
                   >

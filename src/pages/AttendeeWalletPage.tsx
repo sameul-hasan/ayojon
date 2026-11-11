@@ -5,7 +5,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AttendeeWalletView } from "@/components/AttendeeWalletView";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { fetchDatabaseState, dispatchStateAction } from "@/lib/client-api";
-import type { DatabaseState } from "@/lib/types";
+import type { DatabaseState, Profile } from "@/lib/types";
 import { createInitialSeed } from "@/lib/seed";
 import { Ticket, Sparkles } from "lucide-react";
 
@@ -25,8 +25,28 @@ export function AttendeeWalletPage() {
   }, []);
 
   const activeUserId = authUser?.uid || authUser?.id || "usr-attendee-rafiq";
-  const currentUser =
-    db.profiles.find((p) => p.id === activeUserId || p.email === authUser?.email) || db.profiles[0];
+  const currentUser: Profile = React.useMemo(() => {
+    if (authUser) {
+      const found = db.profiles.find(
+        (p) => p.id === activeUserId || (authUser.email && p.email?.toLowerCase() === authUser.email.toLowerCase())
+      );
+      if (found) return found;
+      return {
+        id: authUser.uid,
+        email: authUser.email || "",
+        display_name: authUser.displayName || authUser.email?.split("@")[0] || "User",
+        platform_role: authUser.platform_role || "ATTENDEE",
+        avatar_url: authUser.photoURL || undefined,
+        phone: authUser.phone || "",
+        organization_label: authUser.organization_label || "",
+        mfa_enabled: false,
+        interests: authUser.interests || [],
+        preferred_city: authUser.preferred_city || "Dhaka",
+        created_at: authUser.created_at || new Date().toISOString(),
+      };
+    }
+    return db.profiles[0];
+  }, [authUser, activeUserId, db.profiles]);
 
   return (
     <ProtectedRoute allowedRoles={["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"]}>

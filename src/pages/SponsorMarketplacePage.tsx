@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SponsorMarketplaceView } from "@/components/SponsorMarketplaceView";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { fetchDatabaseState, dispatchStateAction } from "@/lib/client-api";
-import type { DatabaseState } from "@/lib/types";
+import type { DatabaseState, Profile } from "@/lib/types";
 import { createInitialSeed } from "@/lib/seed";
 import { Briefcase } from "lucide-react";
 
@@ -23,8 +23,28 @@ export function SponsorMarketplacePage() {
   }, []);
 
   const activeUserId = authUser?.uid || authUser?.id || "usr-sponsor-farhana";
-  const currentUser =
-    db.profiles.find((p) => p.id === activeUserId || p.email === authUser?.email) || db.profiles[0];
+  const currentUser: Profile = React.useMemo(() => {
+    if (authUser) {
+      const found = db.profiles.find(
+        (p) => p.id === activeUserId || (authUser.email && p.email?.toLowerCase() === authUser.email.toLowerCase())
+      );
+      if (found) return found;
+      return {
+        id: authUser.uid,
+        email: authUser.email || "",
+        display_name: authUser.displayName || authUser.email?.split("@")[0] || "Sponsor",
+        platform_role: authUser.platform_role || "SPONSOR",
+        avatar_url: authUser.photoURL || undefined,
+        phone: authUser.phone || "",
+        organization_label: authUser.organization_label || "Corporate Sponsor",
+        mfa_enabled: false,
+        interests: authUser.interests || [],
+        preferred_city: authUser.preferred_city || "Dhaka",
+        created_at: authUser.created_at || new Date().toISOString(),
+      };
+    }
+    return db.profiles[0];
+  }, [authUser, activeUserId, db.profiles]);
 
   const handleAction = async (action: string, payload: Record<string, unknown>, overrideActorId?: string) => {
     const res = await dispatchStateAction(action, payload, overrideActorId || activeUserId);
