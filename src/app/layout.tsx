@@ -1,9 +1,4 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/inter";
-import "@fontsource/hind-siliguri/400.css";
-import "@fontsource/hind-siliguri/500.css";
-import "@fontsource/hind-siliguri/600.css";
-import "@fontsource/hind-siliguri/700.css";
 import "./globals.css";
 import "./brand.css";
 import { ToastProvider } from "@/components/ui/Toast";
