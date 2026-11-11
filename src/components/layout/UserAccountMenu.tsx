@@ -188,16 +188,6 @@ export function UserAccountMenu({
               <span>AI Event Assistant</span>
             </Link>
 
-            {/* Portal Hub */}
-            <Link
-              href="/portal"
-              onClick={onClose}
-              role="menuitem"
-              className="flex items-center gap-2.5 rounded-btn px-3 py-2 text-xs font-medium text-ink hover:bg-canvas-alt hover:text-brand-700 transition"
-            >
-              <LayoutDashboard className="size-4 text-ink-muted shrink-0" />
-              <span>Portal Switcher & Hub</span>
-            </Link>
           </div>
 
           {/* Sign out */}

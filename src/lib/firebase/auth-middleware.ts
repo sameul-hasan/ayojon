@@ -4,7 +4,7 @@
  * Location: src/lib/firebase/auth-middleware.ts
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "../http";
 import { DomainError } from "../db";
 import { UserRole, toUserRole, DEMO_PERSONAS } from "./auth-context";
 

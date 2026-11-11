@@ -21,10 +21,12 @@ import { QrMatrixSvg } from "@/components/QrMatrixSvg";
 import { TicketPrintActions } from "@/components/attendee/TicketPrintActions";
 import { fetchDatabaseState } from "@/lib/client-api";
 import { coverGradient } from "@/components/marketplace/categoryStyle";
+import { useAuth } from "@/lib/firebase/auth-context";
 
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const [ticketData, setTicketData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -192,7 +194,7 @@ export function TicketDetailPage() {
               <div className="grid grid-cols-2 gap-4 border-b border-line pb-4">
                 <div>
                   <div className="text-ink-muted font-medium">Attendee</div>
-                  <div className="text-sm font-bold text-ink mt-0.5">{reg?.attendee_name || "Rafiqul Islam"}</div>
+                  <div className="text-sm font-bold text-ink mt-0.5">{reg?.attendee_name || currentUser?.displayName || "Attendee"}</div>
                   <div className="text-ink-muted font-mono">{reg?.attendee_email || "attendee@aayojon.bd"}</div>
                 </div>
                 <div>

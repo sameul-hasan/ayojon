@@ -8,7 +8,7 @@
 import path from "path";
 import fs from "fs";
 import assert from "assert";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "../../src/lib/http";
 
 // Register TypeScript and TSX compilation extensions for transparent resolution
 try {

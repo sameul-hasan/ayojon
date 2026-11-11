@@ -74,3 +74,4 @@ export function CheckInScannerPage() {
 }
 
 export default CheckInScannerPage;
+

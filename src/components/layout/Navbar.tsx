@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/ui/cn";
-import { useAuth, DEMO_PERSONAS, type UserRole } from "@/lib/firebase/auth-context";
+import { useAuth, type UserRole } from "@/lib/firebase/auth-context";
 import { usePermissions } from "@/hooks/usePermissions";
 import { isSuperAdmin as checkIsSuperAdmin, normalizeUserRole } from "@/lib/permissions/rbac";
 
@@ -55,7 +55,6 @@ export function Navbar({
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [personaMenuOpen, setPersonaMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -63,7 +62,7 @@ export function Navbar({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
-  const { currentUser, activeRole, signOutUser, switchPersona } = useAuth();
+  const { currentUser, activeRole, signOutUser } = useAuth();
   const { role, isSuperAdmin, dbRoles } = usePermissions();
 
   const isUserSuperAdmin = useMemo(() => {
@@ -96,7 +95,6 @@ export function Navbar({
     const handleClickOutside = (e: MouseEvent) => {
       if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
         setAccountMenuOpen(false);
-        setPersonaMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -113,7 +111,6 @@ export function Navbar({
       } else if (e.key === "Escape") {
         setSearchOpen(false);
         setAccountMenuOpen(false);
-        setPersonaMenuOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -450,45 +447,6 @@ export function Navbar({
                       </Link>
                     </div>
 
-                    {/* LIVE RBAC PERSONA SWITCHER SECTION */}
-                    <div className="border-t border-line/60 pt-2 mb-2">
-                      <div className="flex items-center justify-between px-2.5 py-1">
-                        <span className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">
-                          Test Real-Time RBAC Roles
-                        </span>
-                      </div>
-
-                      <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
-                        {Object.values(DEMO_PERSONAS).map((persona) => {
-                          const isCurrent = currentUser.uid === persona.uid;
-                          return (
-                            <button
-                              key={persona.uid}
-                              type="button"
-                              onClick={async () => {
-                                await switchPersona(persona.uid);
-                                setAccountMenuOpen(false);
-                              }}
-                              className={cn(
-                                "w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition",
-                                isCurrent
-                                  ? "bg-brand-50 text-brand-800 font-bold border border-brand-200"
-                                  : "text-ink hover:bg-canvas-alt"
-                              )}
-                            >
-                              <div className="truncate">
-                                <p className="truncate leading-tight">{persona.displayName}</p>
-                                <p className="text-[10px] text-ink-muted capitalize">
-                                  {persona.role === "super_admin" ? "👑 Super Admin" : persona.role}
-                                </p>
-                              </div>
-                              {isCurrent && <CheckCircle2 className="size-3.5 text-brand-600 shrink-0" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
                     {/* Sign Out */}
                     <div className="border-t border-line/60 pt-1">
                       <button
@@ -501,7 +459,7 @@ export function Navbar({
                         className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 transition"
                       >
                         <LogOut className="size-3.5" />
-                        <span>Sign Out (Guest Mode)</span>
+                        <span>Sign Out</span>
                       </button>
                     </div>
                   </div>
@@ -619,43 +577,6 @@ export function Navbar({
                   </Link>
                 );
               })}
-            </div>
-
-            {/* Mobile Real-Time RBAC Persona Switcher */}
-            <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
-              <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                <Radio className="size-3.5 text-brand-600 animate-pulse" />
-                <span>Switch RBAC Persona (Live Demo)</span>
-              </span>
-              <div className="grid grid-cols-1 gap-1.5">
-                {Object.values(DEMO_PERSONAS).map((persona) => {
-                  const isCurrent = currentUser?.uid === persona.uid;
-                  return (
-                    <button
-                      key={persona.uid}
-                      type="button"
-                      onClick={async () => {
-                        await switchPersona(persona.uid);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={cn(
-                        "flex items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition",
-                        isCurrent
-                          ? "bg-brand-50 text-brand-800 font-bold border border-brand-200"
-                          : "text-ink hover:bg-canvas-alt border border-line/60"
-                      )}
-                    >
-                      <div>
-                        <span className="font-semibold block">{persona.displayName}</span>
-                        <span className="text-[10px] text-ink-muted capitalize">
-                          {persona.role === "super_admin" ? "👑 Super Admin" : persona.role}
-                        </span>
-                      </div>
-                      {isCurrent && <CheckCircle2 className="size-4 text-brand-600 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* Auth Actions */}

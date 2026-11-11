@@ -1,5 +1,5 @@
 import assert from "assert";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "../src/lib/http";
 import {
   toUserRole,
   toPlatformRole,

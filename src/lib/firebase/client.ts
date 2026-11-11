@@ -1,8 +1,27 @@
 /**
- * Firebase Client SDK Initialization & In-Memory Authentication Engine
- * Milestone 1: FEAT-AUTH-001 & FEAT-AUTH-003
+ * Firebase Client SDK Initialization & Unified Authentication Engine
+ * Supports real Firebase Authentication (v11) when credentials are provided in .env,
+ * and seamlessly provides local cryptographic auth for offline dev & test suites.
  * Location: src/lib/firebase/client.ts
  */
+
+import {
+  initializeApp,
+  getApps,
+  getApp,
+  type FirebaseApp as FirebaseSdkApp,
+} from "firebase/app";
+import {
+  getAuth,
+  signInWithEmailAndPassword as fbSignInWithEmailAndPassword,
+  createUserWithEmailAndPassword as fbCreateUserWithEmailAndPassword,
+  signOut as fbSignOut,
+  onAuthStateChanged as fbOnAuthStateChanged,
+  updateProfile as fbUpdateProfile,
+  connectAuthEmulator as fbConnectAuthEmulator,
+  type Auth as FirebaseSdkAuth,
+  type User as FirebaseSdkUser,
+} from "firebase/auth";
 
 import {
   getFirebaseConfig,
@@ -17,12 +36,6 @@ import {
 // ---------------------------------------------------------------------------
 // Type Definitions & Interfaces
 // ---------------------------------------------------------------------------
-
-export interface FirebaseApp {
-  name: string;
-  options: FirebaseConfig;
-  automaticDataCollectionEnabled: boolean;
-}
 
 export interface FirebaseUser {
   uid: string;
@@ -40,10 +53,11 @@ export interface FirebaseUser {
 export type AuthStateListener = (user: FirebaseUser | null) => void;
 
 export interface Auth {
-  app: FirebaseApp;
+  app: any;
   currentUser: FirebaseUser | null;
   emulatorHost: string | null;
   onAuthStateChanged: (callback: AuthStateListener) => () => void;
+  _sdkAuth?: FirebaseSdkAuth;
 }
 
 export interface StoredUserCredential {
@@ -52,7 +66,7 @@ export interface StoredUserCredential {
   passwordHash: string;
   displayName: string | null;
   photoURL: string | null;
-  role: "attendee" | "organizer" | "staff" | "sponsor" | "admin";
+  role: "attendee" | "organizer" | "staff" | "sponsor" | "admin" | "venue_owner" | "vendor" | "super_admin";
   tenantId?: string;
   phoneNumber?: string;
   emailVerified: boolean;
@@ -109,107 +123,44 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// Canonical Personas & In-Memory Store
+// Local Offline Credential Store (for Development & Testing)
 // ---------------------------------------------------------------------------
 
-// SHA-256 digest of "demo123456"
-const DEMO_PASSWORD_HASH =
-  "d2b000ce0875cad8615dd8cf34f788635c959a0ce2b8a977e22caab745380b06";
-
-const CANONICAL_PERSONAS: StoredUserCredential[] = [
-  {
-    uid: "usr-attendee-rafiq",
-    email: "rafiq@student.buet.ac.bd",
-    passwordHash: DEMO_PASSWORD_HASH,
-    displayName: "Rafiqul Islam",
-    photoURL: null,
-    role: "attendee",
-    phoneNumber: "+8801711223344",
-    emailVerified: true,
-    createdAt: "2026-10-15T08:00:00Z",
-  },
-  {
-    uid: "usr-org-nusrat",
-    email: "nusrat@buetcs.org",
-    passwordHash: DEMO_PASSWORD_HASH,
-    displayName: "Nusrat Jahan",
-    photoURL: null,
-    role: "organizer",
-    tenantId: "org-buet-cc",
-    phoneNumber: "+8801819556677",
-    emailVerified: true,
-    createdAt: "2026-10-01T09:00:00Z",
-  },
-  {
-    uid: "usr-org-tanvir",
-    email: "tanvir@nsu-yes.org",
-    passwordHash: DEMO_PASSWORD_HASH,
-    displayName: "Tanvir Ahmed",
-    photoURL: null,
-    role: "organizer",
-    tenantId: "org-nsu-yes",
-    phoneNumber: "+8801912334455",
-    emailVerified: true,
-    createdAt: "2026-10-05T10:00:00Z",
-  },
-  {
-    uid: "usr-staff-mehedi",
-    email: "mehedi@staff.buetcs.org",
-    passwordHash: DEMO_PASSWORD_HASH,
-    displayName: "Mehedi Hasan",
-    photoURL: null,
-    role: "staff",
-    tenantId: "org-buet-cc",
-    phoneNumber: "+8801611889900",
-    emailVerified: true,
-    createdAt: "2026-10-12T11:00:00Z",
-  },
-  {
-    uid: "usr-sponsor-farhana",
-    email: "farhana@pathao-ventures.bd",
-    passwordHash: DEMO_PASSWORD_HASH,
-    displayName: "Farhana Rahman",
-    photoURL: null,
-    role: "sponsor",
-    phoneNumber: "+8801755667788",
-    emailVerified: true,
-    createdAt: "2026-10-18T12:00:00Z",
-  },
-  {
-    uid: "usr-admin-tariq",
-    email: "admin@aayojon.bd",
-    passwordHash: DEMO_PASSWORD_HASH,
-    displayName: "Tariq Mahmud",
-    photoURL: null,
-    role: "admin",
-    tenantId: "aayojon-admin",
-    phoneNumber: "+8801700001122",
-    emailVerified: true,
-    createdAt: "2026-09-25T06:00:00Z",
-  },
-];
-
-// Module-level in-memory credential store (keyed by normalized lowercase email)
 const userStore: Map<string, StoredUserCredential> = new Map();
 
 function initUserStore(): void {
   userStore.clear();
-  for (const persona of CANONICAL_PERSONAS) {
-    userStore.set(persona.email.toLowerCase(), { ...persona });
-  }
 }
 
-// Initial seeding
 initUserStore();
 
 // ---------------------------------------------------------------------------
 // Singleton Instances & Listener Registry
 // ---------------------------------------------------------------------------
 
-let cachedApp: FirebaseApp | null = null;
+let cachedApp: any = null;
 let cachedAuth: Auth | null = null;
 const activeListeners: Set<AuthStateListener> = new Set();
 let emulatorConnected = false;
+
+function sdkUserToFirebaseUser(sdkUser: FirebaseSdkUser, fallbackRole?: string): FirebaseUser {
+  return {
+    uid: sdkUser.uid,
+    email: sdkUser.email,
+    displayName: sdkUser.displayName,
+    photoURL: sdkUser.photoURL,
+    emailVerified: sdkUser.emailVerified,
+    isAnonymous: sdkUser.isAnonymous,
+    tenantId: sdkUser.tenantId || undefined,
+    role: fallbackRole || "attendee",
+    getIdToken: async (forceRefresh?: boolean) => {
+      return sdkUser.getIdToken(forceRefresh);
+    },
+    reload: async () => {
+      await sdkUser.reload();
+    },
+  };
+}
 
 function storedToFirebaseUser(stored: StoredUserCredential): FirebaseUser {
   return {
@@ -245,15 +196,26 @@ function notifyListeners(user: FirebaseUser | null): void {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Public Firebase SDK API
 // ---------------------------------------------------------------------------
 
-export function getFirebaseApp(): FirebaseApp {
+export function getFirebaseApp(): any {
   if (cachedApp) return cachedApp;
 
   const config = getFirebaseConfig();
+
+  if (isFirebaseConfigured()) {
+    try {
+      const existing = getApps();
+      cachedApp = existing.length > 0 ? getApp() : initializeApp(config);
+      return cachedApp;
+    } catch (err) {
+      console.warn("[Firebase] Real Firebase App init error, using fallback:", err);
+    }
+  }
+
   cachedApp = {
-    name: isFirebaseConfigured() ? "[DEFAULT]" : "aayojon-mock-app",
+    name: "aayojon-app",
     options: config,
     automaticDataCollectionEnabled: true,
   };
@@ -267,6 +229,15 @@ export function connectAuthEmulator(
 ): void {
   authInstance.emulatorHost = url;
   emulatorConnected = true;
+
+  if (authInstance._sdkAuth) {
+    try {
+      fbConnectAuthEmulator(authInstance._sdkAuth, url, { disableWarnings: Boolean(_options?.disableWarnings) });
+    } catch {
+      // Ignored if already connected
+    }
+  }
+
   if (typeof window !== "undefined") {
     console.info(`[Firebase] Connected Auth to emulator at ${url}`);
   }
@@ -276,14 +247,39 @@ export function getFirebaseAuth(): Auth {
   if (cachedAuth) return cachedAuth;
 
   const appInstance = getFirebaseApp();
+  let realSdkAuth: FirebaseSdkAuth | undefined;
+
+  if (isFirebaseConfigured()) {
+    try {
+      realSdkAuth = getAuth(appInstance);
+    } catch (err) {
+      console.warn("[Firebase] Real Firebase Auth init error, using fallback:", err);
+    }
+  }
 
   cachedAuth = {
     app: appInstance,
     currentUser: null,
     emulatorHost: null,
+    _sdkAuth: realSdkAuth,
     onAuthStateChanged: (callback: AuthStateListener) => {
       activeListeners.add(callback);
-      // Trigger callback asynchronously with current user (Firebase semantics)
+
+      if (realSdkAuth) {
+        const unsubscribe = fbOnAuthStateChanged(realSdkAuth, (sdkUser) => {
+          const user = sdkUser ? sdkUserToFirebaseUser(sdkUser) : null;
+          if (cachedAuth) {
+            cachedAuth.currentUser = user;
+          }
+          callback(user);
+        });
+        return () => {
+          activeListeners.delete(callback);
+          unsubscribe();
+        };
+      }
+
+      // Local / Offline mode: trigger callback asynchronously with current user
       Promise.resolve().then(() => {
         if (cachedAuth) {
           callback(cachedAuth.currentUser);
@@ -327,6 +323,26 @@ export async function createUserWithEmailAndPassword(
     );
   }
 
+  const assignedRole = (role as any) || "attendee";
+
+  // If real Firebase Auth is configured, delegate directly to Google Firebase:
+  if (authInstance._sdkAuth) {
+    try {
+      const cred = await fbCreateUserWithEmailAndPassword(
+        authInstance._sdkAuth,
+        email.trim(),
+        pass
+      );
+      const user = sdkUserToFirebaseUser(cred.user, assignedRole);
+      authInstance.currentUser = user;
+      notifyListeners(user);
+      return { user };
+    } catch (err: any) {
+      throw new FirebaseAuthError(err?.code || "auth/unknown", err?.message);
+    }
+  }
+
+  // Local / Offline Fallback Engine:
   const normalizedEmail = email.toLowerCase().trim();
   if (userStore.has(normalizedEmail)) {
     throw new FirebaseAuthError(
@@ -336,10 +352,7 @@ export async function createUserWithEmailAndPassword(
   }
 
   const passwordHash = await hashPassword(pass);
-  const uid = `usr-gen-${Date.now().toString(36)}-${Math.random()
-    .toString(36)
-    .slice(2, 7)}`;
-  const assignedRole = (role as any) || "attendee";
+  const uid = `usr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
   const stored: StoredUserCredential = {
     uid,
@@ -385,6 +398,24 @@ export async function signInWithEmailAndPassword(
     );
   }
 
+  // If real Firebase Auth is configured, delegate directly to Google Firebase:
+  if (authInstance._sdkAuth) {
+    try {
+      const cred = await fbSignInWithEmailAndPassword(
+        authInstance._sdkAuth,
+        email.trim(),
+        pass
+      );
+      const user = sdkUserToFirebaseUser(cred.user);
+      authInstance.currentUser = user;
+      notifyListeners(user);
+      return { user };
+    } catch (err: any) {
+      throw new FirebaseAuthError(err?.code || "auth/wrong-password", err?.message);
+    }
+  }
+
+  // Local / Offline Fallback Engine:
   const normalizedEmail = email.toLowerCase().trim();
   const stored = userStore.get(normalizedEmail);
 
@@ -410,6 +441,14 @@ export async function signInWithEmailAndPassword(
 }
 
 export async function signOut(authInstance: Auth): Promise<void> {
+  if (authInstance._sdkAuth) {
+    try {
+      await fbSignOut(authInstance._sdkAuth);
+    } catch (err) {
+      console.warn("[Firebase] Error during SDK sign-out:", err);
+    }
+  }
+
   authInstance.currentUser = null;
   notifyListeners(null);
 }
@@ -425,6 +464,18 @@ export async function updateProfile(
   user: FirebaseUser,
   profile: { displayName?: string | null; photoURL?: string | null }
 ): Promise<void> {
+  const authInstance = getFirebaseAuth();
+  if (authInstance._sdkAuth?.currentUser) {
+    try {
+      await fbUpdateProfile(authInstance._sdkAuth.currentUser, {
+        displayName: profile.displayName ?? undefined,
+        photoURL: profile.photoURL ?? undefined,
+      });
+    } catch (err) {
+      console.warn("[Firebase] Error updating SDK profile:", err);
+    }
+  }
+
   if (profile.displayName !== undefined) {
     user.displayName = profile.displayName;
   }
@@ -432,7 +483,6 @@ export async function updateProfile(
     user.photoURL = profile.photoURL;
   }
 
-  // Synchronize in-memory credential record
   if (user.email) {
     const stored = userStore.get(user.email.toLowerCase());
     if (stored) {
@@ -446,16 +496,17 @@ export async function signInAsPersona(
   authInstance: Auth,
   personaUserId: string
 ): Promise<FirebaseUser> {
-  const matched = Array.from(userStore.values()).find(
-    (u) => u.uid === personaUserId
-  );
-  if (!matched) {
-    throw new FirebaseAuthError(
-      "auth/user-not-found",
-      `Demo persona '${personaUserId}' not found.`
-    );
-  }
-  const user = storedToFirebaseUser(matched);
+  const user: FirebaseUser = {
+    uid: personaUserId,
+    email: `${personaUserId}@aayojon.bd`,
+    displayName: personaUserId,
+    photoURL: null,
+    emailVerified: true,
+    isAnonymous: false,
+    role: "attendee",
+    getIdToken: async () => `mock-token:${personaUserId}`,
+    reload: async () => {},
+  };
   authInstance.currentUser = user;
   notifyListeners(user);
   return user;
@@ -474,7 +525,7 @@ export function resetFirebaseClient(): void {
   emulatorConnected = false;
 }
 
-export const app: FirebaseApp = getFirebaseApp();
+export const app: any = getFirebaseApp();
 export const auth: Auth = getFirebaseAuth();
 export const isLiveFirebase: boolean = isFirebaseConfigured();
 

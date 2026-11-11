@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "./http";
 import { DomainError } from "./db";
 
 export function handleApiError(err: unknown) {

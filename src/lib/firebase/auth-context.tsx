@@ -371,59 +371,51 @@ function validatePassword(pass: string): void {
 // ---------------------------------------------------------------------------
 
 const LOCAL_STORAGE_PERSONA_KEY = "aayojon_active_persona";
-const DEFAULT_PERSONA_ID = "usr-attendee-rafiq";
+const SESSION_STORAGE_KEY = "aayojon_user_session";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const defaultPersona = DEMO_PERSONAS[DEFAULT_PERSONA_ID];
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(defaultPersona);
-  const [firebaseUser, setFirebaseUser] = useState<any | null>(() =>
-    createMockFirebaseUser(defaultPersona)
-  );
-  const [activeRole, setActiveRole] = useState<UserRole>(defaultPersona.role);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<any | null>(null);
+  const [activeRole, setActiveRole] = useState<UserRole>("attendee");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Helper to persist persona cookies and localStorage
-  const persistPersonaState = useCallback((user: AuthUser | null) => {
+  // Helper to persist user session in cookies and localStorage
+  const persistUserState = useCallback((user: AuthUser | null) => {
     if (typeof window === "undefined") return;
     try {
       if (user) {
-        localStorage.setItem(LOCAL_STORAGE_PERSONA_KEY, user.uid);
-        document.cookie = `aayojon_persona=${user.uid}; path=/; max-age=604800; SameSite=Lax`;
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
+        document.cookie = `aayojon_uid=${user.uid}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `aayojon_role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
       } else {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.removeItem(LOCAL_STORAGE_PERSONA_KEY);
-        document.cookie = `aayojon_persona=; path=/; max-age=0`;
+        document.cookie = `aayojon_uid=; path=/; max-age=0`;
         document.cookie = `aayojon_role=; path=/; max-age=0`;
+        document.cookie = `aayojon_persona=; path=/; max-age=0`;
       }
     } catch {
       // Storage access errors in private browsing are non-fatal
     }
   }, []);
 
-  // Switch persona handler (FEAT-AUTH-003)
+  // Switch persona handler (retained for backward compatibility and test runner)
   const switchPersona = useCallback(
     async (personaUserId: string): Promise<void> => {
       const persona = DEMO_PERSONAS[personaUserId];
       if (!persona) {
-        throw new Error(`Unknown demo persona: ${personaUserId}`);
-      }
-
-      const authInstance = getFirebaseAuth();
-      try {
-        await signInAsPersona(authInstance, personaUserId);
-      } catch {
-        // Fallback if not found in userStore
+        throw new Error(`Unknown persona: ${personaUserId}`);
       }
 
       setCurrentUser(persona);
       setActiveRole(persona.role);
       const mockFbUser = createMockFirebaseUser(persona);
       setFirebaseUser(mockFbUser);
-      persistPersonaState(persona);
+      persistUserState(persona);
     },
-    [persistPersonaState]
+    [persistUserState]
   );
 
   // Initialize auth state on mount
@@ -437,46 +429,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         unsubscribe = onAuthStateChanged(authInstance, (fbUser) => {
           if (fbUser) {
             setFirebaseUser(fbUser);
-            const persona = fbUser.email
-              ? DEMO_PERSONAS_LIST.find(
-                  (p) => p.email.toLowerCase() === fbUser.email!.toLowerCase()
-                )
-              : undefined;
+            
+            // Check if there is stored role metadata for this user
+            let savedRole: UserRole = toUserRole(fbUser.role);
+            try {
+              const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.uid === fbUser.uid && parsed.role) {
+                  savedRole = parsed.role;
+                }
+              }
+            } catch {
+              // Ignore parse errors
+            }
 
             const displayName =
               fbUser.displayName ||
-              persona?.displayName ||
               fbUser.email?.split("@")[0] ||
               "User";
-            const role = persona ? persona.role : toUserRole(fbUser.role);
-            const tenantId = persona?.tenantId || fbUser.tenantId;
 
             const mappedUser = createDefaultAuthUser({
               uid: fbUser.uid,
               email: fbUser.email || "",
               displayName,
-              role,
-              tenantId,
+              role: savedRole,
+              tenantId: fbUser.tenantId,
               photoURL: fbUser.photoURL,
               isAnonymous: fbUser.isAnonymous,
             });
             setCurrentUser(mappedUser);
             setActiveRole(mappedUser.role);
-            persistPersonaState(mappedUser);
+            persistUserState(mappedUser);
           } else {
-            const storedPersonaId =
-              typeof window !== "undefined"
-                ? localStorage.getItem(LOCAL_STORAGE_PERSONA_KEY)
-                : null;
-            const personaToLoad =
-              storedPersonaId && DEMO_PERSONAS[storedPersonaId]
-                ? DEMO_PERSONAS[storedPersonaId]
-                : DEMO_PERSONAS[DEFAULT_PERSONA_ID];
+            // Check if there is a saved local session in development
+            let restored = false;
+            try {
+              const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+              if (saved) {
+                const parsed = JSON.parse(saved) as AuthUser;
+                if (parsed && parsed.uid) {
+                  setCurrentUser(parsed);
+                  setActiveRole(parsed.role);
+                  setFirebaseUser(createMockFirebaseUser(parsed));
+                  restored = true;
+                }
+              }
+            } catch {
+              // Ignore parse errors
+            }
 
-            setCurrentUser(personaToLoad);
-            setActiveRole(personaToLoad.role);
-            setFirebaseUser(createMockFirebaseUser(personaToLoad));
-            persistPersonaState(personaToLoad);
+            if (!restored) {
+              setCurrentUser(null);
+              setFirebaseUser(null);
+              setActiveRole("attendee");
+            }
           }
           setLoading(false);
         });
@@ -492,7 +499,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [persistPersonaState]);
+  }, [persistUserState]);
 
   // Sign In with Email
   const signInWithEmail = useCallback(
@@ -501,29 +508,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       validatePassword(pass);
 
       const authInstance = getFirebaseAuth();
-
-      // Authenticate via client.ts in-memory engine
       const { user } = await signInWithEmailAndPassword(
         authInstance,
         email,
         pass
       );
 
-      // Check if email matches any demo persona
+      // Check if this account has custom role metadata
+      let assignedRole: UserRole = toUserRole(user.role);
       const matchedPersona = DEMO_PERSONAS_LIST.find(
         (p) => p.email && p.email.toLowerCase() === email.toLowerCase()
       );
+      if (matchedPersona) {
+        assignedRole = matchedPersona.role;
+      }
 
       const displayName = user.displayName || email.split("@")[0];
-      const assignedRole = matchedPersona ? matchedPersona.role : toUserRole(user.role);
-      const tenantId = matchedPersona?.tenantId || user.tenantId;
-
       const authUser = createDefaultAuthUser({
         uid: user.uid,
         email: user.email || email,
         displayName,
         role: assignedRole,
-        tenantId,
+        tenantId: user.tenantId,
         photoURL: user.photoURL,
         isAnonymous: user.isAnonymous,
       });
@@ -531,9 +537,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(authUser);
       setActiveRole(assignedRole);
       setFirebaseUser(user);
-      persistPersonaState(authUser);
+      persistUserState(authUser);
     },
-    [persistPersonaState]
+    [persistUserState]
   );
 
   // Sign Up with Email
@@ -573,9 +579,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(newUser);
       setActiveRole(assignedRole);
       setFirebaseUser(cred.user);
-      persistPersonaState(newUser);
+      persistUserState(newUser);
     },
-    [persistPersonaState]
+    [persistUserState]
   );
 
   // Sign Out
@@ -588,8 +594,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(null);
     setFirebaseUser(null);
     setActiveRole("attendee");
-    persistPersonaState(null);
-  }, [persistPersonaState]);
+    persistUserState(null);
+  }, [persistUserState]);
 
   const contextValue = useMemo<AuthContextValue>(
     () => ({

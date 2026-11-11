@@ -26,8 +26,38 @@ export interface FirebaseEnvironmentStatus {
 }
 
 /**
- * Standard deterministic fallback configuration used when real Firebase credentials
- * are not supplied in .env.local. Prevents initialization crashes.
+ * Universal environment variable accessor supporting:
+ * 1. Vite's `import.meta.env`
+ * 2. Node / test runner's `process.env`
+ */
+export function getEnv(key: string): string | undefined {
+  try {
+    const metaEnv = (new Function("try { return import.meta.env; } catch { return undefined; }"))();
+    if (metaEnv && metaEnv[key] !== undefined && metaEnv[key] !== "") {
+      return metaEnv[key];
+    }
+  } catch {
+    // Ignore in non-ESM environments
+  }
+
+  if (typeof process !== "undefined" && process.env) {
+    const val = process.env[key];
+    if (val !== undefined && val !== "") return val;
+  }
+  return undefined;
+}
+
+export function getFirebaseEnvVar(suffix: string): string | undefined {
+  return (
+    getEnv(`VITE_FIREBASE_${suffix}`) ||
+    getEnv(`NEXT_PUBLIC_FIREBASE_${suffix}`) ||
+    getEnv(`FIREBASE_${suffix}`)
+  );
+}
+
+/**
+ * Standard fallback configuration used when real Firebase credentials
+ * are not yet supplied in .env. Prevents initialization crashes.
  */
 export const DEFAULT_MOCK_FIREBASE_CONFIG: FirebaseConfig = {
   apiKey: "mock-api-key-aayojon-demo-2026",
@@ -40,13 +70,13 @@ export const DEFAULT_MOCK_FIREBASE_CONFIG: FirebaseConfig = {
 };
 
 /**
- * Returns true if real, valid-looking Firebase credentials are provided.
+ * Returns true if real, valid Firebase credentials are provided.
  * Returns false if credentials are empty or known placeholders.
  */
 export function isFirebaseConfigured(): boolean {
-  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
+  const apiKey = getFirebaseEnvVar("API_KEY");
+  const projectId = getFirebaseEnvVar("PROJECT_ID");
+  const appId = getFirebaseEnvVar("APP_ID");
 
   if (!apiKey || !projectId || !appId) {
     return false;
@@ -60,6 +90,7 @@ export function isFirebaseConfigured(): boolean {
     trimmedKey.startsWith("mock-") ||
     trimmedKey.includes("placeholder") ||
     trimmedKey === "your-api-key" ||
+    trimmedKey === "your-api-key-here" ||
     trimmedProject === "" ||
     trimmedProject === "aayojon-demo" ||
     trimmedProject === "your-project-id"
@@ -74,7 +105,9 @@ export function isFirebaseConfigured(): boolean {
  * Returns true if the application is configured to connect to local Firebase Emulators.
  */
 export function isEmulatorEnabled(): boolean {
-  const emulatorFlag = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR;
+  const emulatorFlag =
+    getEnv("VITE_USE_FIREBASE_EMULATOR") ||
+    getEnv("NEXT_PUBLIC_USE_FIREBASE_EMULATOR");
   return emulatorFlag === "true" || emulatorFlag === "1";
 }
 
@@ -82,7 +115,11 @@ export function isEmulatorEnabled(): boolean {
  * Returns the host and port string for the Auth Emulator (default: "127.0.0.1:9099").
  */
 export function getFirebaseAuthEmulatorHost(): string {
-  return process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST || "127.0.0.1:9099";
+  return (
+    getEnv("VITE_FIREBASE_AUTH_EMULATOR_HOST") ||
+    getEnv("NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST") ||
+    "127.0.0.1:9099"
+  );
 }
 
 /**
@@ -90,20 +127,21 @@ export function getFirebaseAuthEmulatorHost(): string {
  */
 export function getFirebaseConfig(): FirebaseConfig {
   if (isFirebaseConfigured()) {
+    const projectId = getFirebaseEnvVar("PROJECT_ID")!.trim();
     return {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!.trim(),
+      apiKey: getFirebaseEnvVar("API_KEY")!.trim(),
       authDomain:
-        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ||
-        `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!.trim(),
+        getFirebaseEnvVar("AUTH_DOMAIN")?.trim() ||
+        `${projectId}.firebaseapp.com`,
+      projectId,
       storageBucket:
-        process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim() ||
-        `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com`,
+        getFirebaseEnvVar("STORAGE_BUCKET")?.trim() ||
+        `${projectId}.firebasestorage.app`,
       messagingSenderId:
-        process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim() || undefined,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!.trim(),
+        getFirebaseEnvVar("MESSAGING_SENDER_ID")?.trim() || undefined,
+      appId: getFirebaseEnvVar("APP_ID")!.trim(),
       measurementId:
-        process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim() || undefined,
+        getFirebaseEnvVar("MEASUREMENT_ID")?.trim() || undefined,
     };
   }
   return DEFAULT_MOCK_FIREBASE_CONFIG;

@@ -72,3 +72,4 @@ export function AttendeeWalletPage() {
 }
 
 export default AttendeeWalletPage;
+
