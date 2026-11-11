@@ -1,0 +1,34 @@
+/* Aayojon design tokens. Read by scripts/build-css.cjs and compiled into globals.css. */
+@theme static {
+  --color-brand-50: #f5f0ff;
+  --color-brand-100: #ede4ff;
+  --color-brand-200: #ddd0fb;
+  --color-brand-500: #8b46e8;
+  --color-brand-600: #6d28d9;
+  --color-brand-700: #5b21b6;
+  --color-violet: #a855f7;
+  --color-pink: #ec4899;
+  --color-coral: #ff7867;
+
+  --color-canvas: #fffbfe;
+  --color-canvas-alt: #f5f0ff;
+  --color-surface: #ffffff;
+  --color-ink: #24143b;
+  --color-ink-muted: #756b83;
+  --color-line: #e9e1f0;
+
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #dc2626;
+  --color-info: #2563eb;
+
+  --font-sans: "Inter Variable", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-btn: 0.75rem;
+  --radius-card: 1.125rem;
+  --radius-modal: 1.25rem;
+
+  --shadow-card: 0 1px 2px rgb(36 20 59 / 0.04), 0 4px 16px rgb(109 40 217 / 0.06);
+  --shadow-pop: 0 12px 32px rgb(36 20 59 / 0.14);
+}
+

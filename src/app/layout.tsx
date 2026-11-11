@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/inter";
+import "@fontsource/hind-siliguri/400.css";
+import "@fontsource/hind-siliguri/500.css";
+import "@fontsource/hind-siliguri/600.css";
+import "@fontsource/hind-siliguri/700.css";
 import "./globals.css";
+import "./brand.css";
+import { ToastProvider } from "@/components/ui/Toast";
+import { AuthProvider } from "@/lib/firebase/auth-context";
 
 export const metadata: Metadata = {
-  title: "Aayojon (আয়োজন) — Bangladesh Event Discovery, Promotion & Ticketing Platform",
+  title: "Aayojon (আয়োজন) — Event Discovery & Ticketing Platform",
   description:
-    "All-in-one event discovery, creation, promotion, registration, QR ticketing, attendee management, and analytics platform built for Bangladesh.",
+    "Find your people. Find your events. Bangladesh's event discovery, ticketing, and event management platform.",
 };
 
 export default function RootLayout({
@@ -13,11 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-emerald-500/20 selection:text-emerald-900">
-        {children}
+    <html lang="en" data-scroll-behavior="smooth">
+      <body className="min-h-screen bg-canvas text-ink antialiased">
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
-

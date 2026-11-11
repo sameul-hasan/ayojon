@@ -1,0 +1,25 @@
+/* Hand-written global styles. Not generated; safe to edit. */
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+:lang(bn), [lang="bn"] { font-family: "Hind Siliguri", var(--font-sans); line-height: 1.7; }
+:focus-visible { outline: 2px solid var(--color-brand-600); outline-offset: 2px; }
+::selection { background: rgb(168 85 247 / 0.25); color: var(--color-ink); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-canvas-alt); }
+::-webkit-scrollbar-thumb { background: #cdbfe6; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a995cc; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

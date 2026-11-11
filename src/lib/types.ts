@@ -1,4 +1,4 @@
-export type PlatformRole = "ATTENDEE" | "ORGANIZER_OWNER" | "EVENT_MANAGER" | "CHECKIN_STAFF" | "SPONSOR" | "ADMIN";
+export type PlatformRole = "ATTENDEE" | "ORGANIZER_OWNER" | "EVENT_MANAGER" | "CHECKIN_STAFF" | "SPONSOR" | "ADMIN" | "VENUE_OWNER" | "VENDOR";
 
 export type OrgMemberRole = "OWNER" | "EVENT_MANAGER" | "CHECKIN_STAFF";
 
@@ -7,7 +7,7 @@ export type EventVisibility = "PUBLIC" | "UNLISTED" | "PRIVATE";
 
 export type PackageCode = "BASIC" | "PROMOTED" | "PLUS" | "PREMIUM" | "FEATURED_ADDON";
 
-export type OrderType = "TICKET" | "PACKAGE" | "PROMOTION";
+export type OrderType = "TICKET" | "PACKAGE" | "PROMOTION" | "VENUE_BOOKING_DEPOSIT";
 export type OrderStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
 
 export type PaymentProvider = "SSLCOMMERZ_SANDBOX" | "BKASH_SANDBOX" | "NAGAD_SANDBOX";
@@ -362,6 +362,277 @@ export interface AnalyticsEvent {
   timestamp: string;
 }
 
+// ---------------------------------------------------------------------------
+// VENUE & SERVICES MARKETPLACE MODELS
+// ---------------------------------------------------------------------------
+
+export type VenueCategory =
+  | "BANQUET_HALL"
+  | "CONVENTION_CENTER"
+  | "HOTEL"
+  | "ROOFTOP"
+  | "RESTAURANT"
+  | "OUTDOOR_GARDEN"
+  | "RESORT"
+  | "CONFERENCE_ROOM"
+  | "AUDITORIUM"
+  | "EXHIBITION_SPACE"
+  | "UNIVERSITY_VENUE"
+  | "INNOVATION_HUB";
+
+export interface VenueProfile {
+  id: string;
+  owner_user_id: string;
+  organization_id?: string;
+  name: string;
+  slug: string;
+  category: VenueCategory;
+  address: string;
+  city: "Dhaka" | "Chattogram" | "Sylhet" | "Rajshahi" | "Khulna";
+  area: string;
+  capacity: { min: number; max: number };
+  indoor_outdoor: "INDOOR" | "OUTDOOR" | "HYBRID";
+  indicative_pricing: {
+    hourly_rate_bdt: number;
+    daily_rate_bdt: number;
+    currency: "BDT";
+  };
+  amenities: {
+    has_ac: boolean;
+    has_parking: boolean;
+    parking_capacity?: number;
+    has_generator: boolean;
+    has_wifi: boolean;
+    in_house_catering: boolean;
+    in_house_decoration: boolean;
+    sound_system: boolean;
+    projector_screen: boolean;
+    greenroom_count: number;
+  };
+  media: Array<{ url: string; caption: string; is_cover: boolean }>;
+  policies: {
+    cancellation_rules: string;
+    outside_catering_allowed: boolean;
+    outside_sound_allowed: boolean;
+    curfew_time?: string;
+  };
+  verification_status: "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED";
+  rating?: number;
+  review_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type VendorCategory =
+  | "CATERING"
+  | "DECORATION"
+  | "STAGE_SETUP"
+  | "SOUND_SYSTEM"
+  | "LIGHTING"
+  | "PHOTOGRAPHY"
+  | "VIDEOGRAPHY"
+  | "EQUIPMENT_RENTAL"
+  | "FURNITURE_RENTAL"
+  | "SECURITY"
+  | "TRANSPORTATION"
+  | "CLEANING"
+  | "EVENT_MANAGEMENT"
+  | "OTHER";
+
+export interface VendorServiceListing {
+  id: string;
+  vendor_user_id: string;
+  title: string;
+  category: VendorCategory;
+  cities_served: string[];
+  base_price_bdt: number;
+  unit: "PER_EVENT" | "PER_PERSON" | "PER_HOUR" | "PER_DAY";
+  portfolio_images: string[];
+  packages: Array<{
+    name: string;
+    description: string;
+    price_bdt: number;
+    deliverables: string[];
+  }>;
+  verification_status: "PENDING" | "VERIFIED" | "REJECTED";
+  rating?: number;
+  review_count?: number;
+  created_at: string;
+}
+
+export type RFQStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "RESPONSES_PENDING"
+  | "ACCEPTED"
+  | "EXPIRED"
+  | "CANCELLED";
+
+export interface VenueRequest {
+  id: string;
+  organizer_user_id: string;
+  linked_event_id?: string;
+  event_title: string;
+  event_type: string;
+  description: string;
+  event_date: string;
+  alternative_date?: string;
+  start_time: string;
+  end_time: string;
+  expected_guests: number;
+  location_requirements: {
+    city: string;
+    preferred_areas: string[];
+    venue_category?: VenueCategory;
+    indoor_outdoor: "INDOOR" | "OUTDOOR" | "ANY";
+    required_facilities: string[];
+  };
+  budget: {
+    total_budget_bdt: number;
+    venue_only_budget_bdt?: number;
+    services_budget_bdt?: number;
+    flexible: boolean;
+  };
+  additional_services: Array<{
+    category: VendorCategory;
+    description: string;
+    quantity?: number;
+    estimated_budget_bdt?: number;
+  }>;
+  target_provider_ids: string[];
+  attachments: Array<{ url: string; name: string; file_type: string }>;
+  status: RFQStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export type QuotationStatus =
+  | "DRAFT"
+  | "SUBMITTED"
+  | "VIEWED"
+  | "CLARIFICATION_REQUESTED"
+  | "REVISION_REQUESTED"
+  | "REVISED"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "WITHDRAWN";
+
+export interface QuotationLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit_price_bdt: number;
+  total_bdt: number;
+  category: "VENUE_RENTAL" | "SERVICE" | "EQUIPMENT" | "LOGISTICS" | "TAX" | "DISCOUNT";
+}
+
+export interface Quotation {
+  id: string;
+  rfq_id: string;
+  provider_user_id: string;
+  provider_type: "VENUE_OWNER" | "SERVICE_VENDOR";
+  provider_name: string;
+  venue_id?: string;
+  service_id?: string;
+  status: QuotationStatus;
+  revision_number: number;
+  valid_until: string;
+  line_items: QuotationLineItem[];
+  subtotal_bdt: number;
+  discount_bdt: number;
+  tax_bdt: number;
+  grand_total_bdt: number;
+  inclusions: string[];
+  exclusions: string[];
+  setup_charges_bdt: number;
+  transport_charges_bdt: number;
+  payment_terms: {
+    deposit_percentage: number;
+    deposit_due_days_before: number;
+    final_payment_due: "EVENT_DAY" | "BEFORE_EVENT" | "POST_EVENT";
+  };
+  cancellation_policy: string;
+  terms_conditions: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuotationRevision {
+  id: string;
+  quotation_id: string;
+  revision_number: number;
+  snapshot: Quotation;
+  change_notes: string;
+  created_at: string;
+}
+
+export interface RFQMessage {
+  id: string;
+  rfq_id: string;
+  quotation_id?: string;
+  sender_user_id: string;
+  sender_role: "ORGANIZER" | "PROVIDER";
+  message_text: string;
+  attachments?: Array<{ url: string; name: string }>;
+  is_clarification_prompt?: boolean;
+  read: boolean;
+  created_at: string;
+}
+
+export type BookingStatus =
+  | "PENDING_CONFIRMATION"
+  | "CONFIRMED"
+  | "DEPOSIT_PENDING"
+  | "PARTIALLY_PAID"
+  | "PAID"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "DISPUTED";
+
+export interface VenueBooking {
+  id: string;
+  rfq_id: string;
+  accepted_quotation_id: string;
+  organizer_user_id: string;
+  provider_user_id: string;
+  venue_id?: string;
+  service_id?: string;
+  event_date: string;
+  total_agreed_bdt: number;
+  deposit_required_bdt: number;
+  deposit_paid_bdt: number;
+  status: BookingStatus;
+  payment_reference_id?: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIAssistantMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  extracted_rfq?: Partial<VenueRequest>;
+  quote_comparison?: {
+    cheapest_quote_id?: string;
+    best_value_quote_id?: string;
+    tradeoffs: string[];
+  };
+  created_at: string;
+}
+
+export interface AIAssistantSession {
+  id: string;
+  user_id: string;
+  session_type: "REQUIREMENT_BUILDER" | "QUOTE_EXPLANATION" | "NEGOTIATION_DRAFT" | "BUDGET_ADVICE";
+  rfq_id?: string;
+  quotation_ids?: string[];
+  messages: AIAssistantMessage[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DatabaseState {
   profiles: Profile[];
   organizations: Organization[];
@@ -388,5 +659,13 @@ export interface DatabaseState {
   reports: AbuseReport[];
   sponsor_inquiries: SponsorInquiry[];
   analytics_events: AnalyticsEvent[];
+  venue_profiles: VenueProfile[];
+  vendor_services: VendorServiceListing[];
+  venue_requests: VenueRequest[];
+  quotations: Quotation[];
+  quotation_revisions: QuotationRevision[];
+  rfq_messages: RFQMessage[];
+  venue_bookings: VenueBooking[];
+  ai_sessions: AIAssistantSession[];
 }
 

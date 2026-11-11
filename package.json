@@ -11,11 +11,14 @@
     "start": "next start",
     "test:qa": "tsc --skipLibCheck --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/qa-suite.test.ts && node .test-dist/tests/qa-suite.test.js",
     "test:auth": "tsc --skipLibCheck --jsx react-jsx --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/firebase-auth.test.ts && node .test-dist/tests/firebase-auth.test.js",
-    "test": "tsc --skipLibCheck --jsx react-jsx --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/qa-suite.test.ts tests/firebase-auth.test.ts tests/test-runner.ts && node .test-dist/tests/test-runner.js"
+    "test": "tsc --skipLibCheck --jsx react-jsx --module commonjs --moduleResolution node --target es2022 --esModuleInterop --allowImportingTsExtensions false --outDir .test-dist tests/qa-suite.test.ts tests/firebase-auth.test.ts tests/marketplace-rfq.test.ts tests/rbac.test.ts tests/test-runner.ts && node .test-dist/tests/test-runner.js"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/hind-siliguri": "^5.3.0",
     "firebase": "^11.0.0",
     "lucide-react": "1.43.0",
+    "motion": "^14.12.0",
     "next": "16.2.9",
     "react": "19.2.8",
     "react-dom": "19.2.8"

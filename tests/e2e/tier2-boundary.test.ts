@@ -318,7 +318,7 @@ test("T2-DB01-03", "End date earlier than start date rejected", () => {
 
 test("T2-DB01-04", "Null relational foreign keys for optional relations handled safely", () => {
   const seed = createInitialSeed();
-  const onlineEvent = seed.events.find((e) => e.is_online);
+  const onlineEvent = seed.events.find((e: any) => e.is_online);
   assert.ok(onlineEvent);
   assert.strictEqual(onlineEvent.venue_id, null);
 });
@@ -757,7 +757,7 @@ test("T2-UI04-01", "Wallet query for user with zero tickets returns empty array"
 
 test("T2-UI04-02", "Visual presentation of USED ticket reflects status in seed", () => {
   const seed = createInitialSeed();
-  const usedTicket = seed.tickets.find((t) => t.status === "USED");
+  const usedTicket = seed.tickets.find((t: any) => t.status === "USED");
   assert.ok(usedTicket);
   assert.strictEqual(usedTicket.status, "USED");
 });
@@ -922,7 +922,7 @@ test("T2-UI07-01", "Scan of already-used ticket returns ALREADY_USED (QA-009)", 
   harness.asPersona("staff");
   // Seed ticket tkt-3 is already in USED status
   const seed = createInitialSeed();
-  const usedTkt = seed.tickets.find((t) => t.status === "USED")!;
+  const usedTkt = seed.tickets.find((t: any) => t.status === "USED")!;
   const res = await harness.post("/api/v1/tickets/validate", {
     qrToken: usedTkt.qr_token,
     eventId: usedTkt.event_id,

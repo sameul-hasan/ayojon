@@ -708,7 +708,7 @@ test("T1-UI04-04", "Order history query returns completed orders", async () => {
 
 test("T1-UI04-05", "Offline wallet ticket viewing backed by initial seed", () => {
   const seed = createInitialSeed();
-  const attendeeTickets = seed.tickets.filter((t) => t.attendee_email === "rafiq@student.buet.ac.bd");
+  const attendeeTickets = seed.tickets.filter((t: any) => t.attendee_email === "rafiq@student.buet.ac.bd");
   assert.ok(attendeeTickets.length >= 1);
 });
 
@@ -833,7 +833,7 @@ test("T1-UI07-03", "Recent scans real-time audit list update", async () => {
 
 test("T1-UI07-04", "Event selector filter in scanner", () => {
   const seed = createInitialSeed();
-  const buetEvent = seed.events.find((e) => e.id === "evt-buet-cse-fest");
+  const buetEvent = seed.events.find((e: any) => e.id === "evt-buet-cse-fest");
   assert.ok(buetEvent);
 });
 

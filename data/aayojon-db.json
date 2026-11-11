@@ -906,7 +906,7 @@
       "price_minor": 150000,
       "currency": "BDT",
       "capacity": 200,
-      "sold_count": 88,
+      "sold_count": 89,
       "sales_start": "2026-10-10T00:00:00Z",
       "sales_end": "2026-11-21T23:59:59Z"
     },
@@ -984,6 +984,23 @@
     }
   ],
   "orders": [
+    {
+      "id": "ord-9daeea91",
+      "buyer_user_id": "usr-attendee-rafiq",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_type": "TICKET",
+      "status": "PAID",
+      "subtotal_minor": 150000,
+      "fee_minor": 3750,
+      "total_minor": 153750,
+      "currency": "BDT",
+      "idempotency_key": "test-checkout-flow-1794392055094",
+      "attendee_name": "Test Checkout",
+      "attendee_email": "testcheckout@example.com",
+      "attendee_phone": "",
+      "institute_or_company": "",
+      "created_at": "2026-11-11T10:14:15.094Z"
+    },
     {
       "id": "ord-pkg-ai-summit",
       "buyer_user_id": "usr-org-nusrat",
@@ -1066,9 +1083,31 @@
       "quantity": 1,
       "unit_price_minor": 50000,
       "line_total_minor": 50000
+    },
+    {
+      "id": "oi-b22016a7",
+      "order_id": "ord-9daeea91",
+      "ticket_type_id": "tt-ai-pro",
+      "package_id": null,
+      "description": "Professional Engineer Pass",
+      "quantity": 1,
+      "unit_price_minor": 150000,
+      "line_total_minor": 150000
     }
   ],
   "payments": [
+    {
+      "id": "pay-8921f644",
+      "order_id": "ord-9daeea91",
+      "provider": "BKASH_SANDBOX",
+      "provider_reference": "BKASH-TEST-1794392055099",
+      "webhook_event_id": "wh-test-1794392055099",
+      "amount_minor": 153750,
+      "currency": "BDT",
+      "status": "VERIFIED",
+      "verified_at": "2026-11-11T10:14:15.100Z",
+      "created_at": "2026-11-11T10:14:15.100Z"
+    },
     {
       "id": "pay-1",
       "order_id": "ord-pkg-ai-summit",
@@ -1107,6 +1146,20 @@
     }
   ],
   "registrations": [
+    {
+      "id": "reg-9ea0da47",
+      "event_id": "evt-dhaka-ai-summit",
+      "user_id": "usr-attendee-rafiq",
+      "order_id": "ord-9daeea91",
+      "ticket_type_id": "tt-ai-pro",
+      "attendee_name": "Test Checkout",
+      "attendee_email": "testcheckout@example.com",
+      "attendee_phone": "",
+      "institute_or_company": "",
+      "marketing_consent": true,
+      "status": "CONFIRMED",
+      "created_at": "2026-11-11T10:14:15.100Z"
+    },
     {
       "id": "reg-rafiq-cse",
       "event_id": "evt-buet-cse-fest",
@@ -1167,6 +1220,19 @@
     }
   ],
   "tickets": [
+    {
+      "id": "tkt-1b216c99",
+      "registration_id": "reg-9ea0da47",
+      "event_id": "evt-dhaka-ai-summit",
+      "ticket_type_id": "tt-ai-pro",
+      "attendee_name": "Test Checkout",
+      "attendee_email": "testcheckout@example.com",
+      "ticket_type_name": "Professional Engineer Pass",
+      "qr_token": "AAYOJON-TKT-EVT-DHAKA-AI-SUMMIT-4941B2ABB191",
+      "token_hash": "004596abe3ee72708ab8543ae3713ce0d41c31bd59927d286fddee5437d5fb43",
+      "status": "VALID",
+      "issued_at": "2026-11-11T10:14:15.100Z"
+    },
     {
       "id": "tkt-1",
       "registration_id": "reg-rafiq-cse",
@@ -1276,6 +1342,19 @@
   ],
   "notifications": [
     {
+      "id": "notif-0afc142f",
+      "user_id": "usr-attendee-rafiq",
+      "destination": "testcheckout@example.com",
+      "channel": "EMAIL",
+      "template": "TICKET_ISSUED_CONFIRMATION",
+      "subject": "Your QR Ticket for Dhaka AI & Cloud Engineering Summit 2026",
+      "status": "SENT",
+      "retry_count": 0,
+      "idempotency_key": "notif-ord-ord-9daeea91",
+      "sent_at": "2026-11-11T10:14:15.100Z",
+      "created_at": "2026-11-11T10:14:15.100Z"
+    },
+    {
       "id": "notif-1",
       "user_id": "usr-attendee-rafiq",
       "destination": "rafiq@student.buet.ac.bd",
@@ -1374,6 +1453,31 @@
   ],
   "analytics_events": [
     {
+      "id": "ae-0be32768",
+      "event_name": "payment_succeeded",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_id": "ord-9daeea91",
+      "session_id": "webhook-callback",
+      "properties": {
+        "provider": "BKASH_SANDBOX",
+        "amount_minor": 153750,
+        "currency": "BDT"
+      },
+      "timestamp": "2026-11-11T10:14:15.100Z"
+    },
+    {
+      "id": "ae-f6dc5941",
+      "event_name": "checkout_started",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_id": "ord-9daeea91",
+      "session_id": "server-session",
+      "properties": {
+        "currency": "BDT",
+        "total_minor": 153750
+      },
+      "timestamp": "2026-11-11T10:14:15.094Z"
+    },
+    {
       "id": "ae-1",
       "event_name": "event_viewed",
       "event_id": "evt-dhaka-ai-summit",
@@ -1407,6 +1511,408 @@
         "staff_role": "CHECKIN_STAFF"
       },
       "timestamp": "2026-11-09T14:05:12Z"
+    }
+  ],
+  "venue_profiles": [
+    {
+      "id": "vp-kib",
+      "owner_user_id": "usr-venue-kamal",
+      "organization_id": "org-buet-cc",
+      "name": "Krishibid Institution Bangladesh (KIB) Auditorium",
+      "slug": "kib-auditorium-dhaka",
+      "category": "AUDITORIUM",
+      "address": "Khamarbari Road, Farmgate, Dhaka 1215",
+      "city": "Dhaka",
+      "area": "Farmgate",
+      "capacity": {
+        "min": 200,
+        "max": 1200
+      },
+      "indoor_outdoor": "INDOOR",
+      "indicative_pricing": {
+        "hourly_rate_bdt": 12000,
+        "daily_rate_bdt": 85000,
+        "currency": "BDT"
+      },
+      "amenities": {
+        "has_ac": true,
+        "has_parking": true,
+        "parking_capacity": 250,
+        "has_generator": true,
+        "has_wifi": true,
+        "in_house_catering": false,
+        "in_house_decoration": false,
+        "sound_system": true,
+        "projector_screen": true,
+        "greenroom_count": 2
+      },
+      "media": [
+        {
+          "url": "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80",
+          "caption": "Main Tiered Auditorium & Stage",
+          "is_cover": true
+        }
+      ],
+      "policies": {
+        "cancellation_rules": "100% refund up to 14 days before event date; 50% refund up to 7 days.",
+        "outside_catering_allowed": true,
+        "outside_sound_allowed": true,
+        "curfew_time": "23:00"
+      },
+      "verification_status": "VERIFIED",
+      "rating": 4.8,
+      "review_count": 32,
+      "created_at": "2026-10-10T09:00:00Z",
+      "updated_at": "2026-11-01T10:00:00Z"
+    },
+    {
+      "id": "vp-buet",
+      "owner_user_id": "usr-org-nusrat",
+      "name": "BUET ECE Building Auditorium",
+      "slug": "buet-ece-auditorium",
+      "category": "UNIVERSITY_VENUE",
+      "address": "West Palashi Campus, BUET, Dhaka 1000",
+      "city": "Dhaka",
+      "area": "Palashi",
+      "capacity": {
+        "min": 100,
+        "max": 450
+      },
+      "indoor_outdoor": "INDOOR",
+      "indicative_pricing": {
+        "hourly_rate_bdt": 5000,
+        "daily_rate_bdt": 35000,
+        "currency": "BDT"
+      },
+      "amenities": {
+        "has_ac": true,
+        "has_parking": true,
+        "parking_capacity": 80,
+        "has_generator": true,
+        "has_wifi": true,
+        "in_house_catering": false,
+        "in_house_decoration": false,
+        "sound_system": true,
+        "projector_screen": true,
+        "greenroom_count": 1
+      },
+      "media": [
+        {
+          "url": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
+          "caption": "Lecture Theater & Stage",
+          "is_cover": true
+        }
+      ],
+      "policies": {
+        "cancellation_rules": "Standard academic calendar cancellation policy.",
+        "outside_catering_allowed": true,
+        "outside_sound_allowed": false,
+        "curfew_time": "21:00"
+      },
+      "verification_status": "VERIFIED",
+      "rating": 4.7,
+      "review_count": 18,
+      "created_at": "2026-10-11T10:00:00Z",
+      "updated_at": "2026-11-01T11:00:00Z"
+    }
+  ],
+  "vendor_services": [
+    {
+      "id": "vs-soundcraft",
+      "vendor_user_id": "usr-vendor-tariq",
+      "title": "SoundCraft Pro Audio & Stage Truss Line-Array",
+      "category": "SOUND_SYSTEM",
+      "cities_served": [
+        "Dhaka",
+        "Chattogram"
+      ],
+      "base_price_bdt": 25000,
+      "unit": "PER_EVENT",
+      "portfolio_images": [
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "packages": [
+        {
+          "name": "Summit Standard PA",
+          "description": "Dual digital podium mics, 4 wireless UHF handmics, Yamaha TF3 console, 4 QSC speakers.",
+          "price_bdt": 25000,
+          "deliverables": [
+            "2 Sound Technicians",
+            "Full Day Sound Control",
+            "Live Recording Feed"
+          ]
+        },
+        {
+          "name": "Concert Line-Array Rig",
+          "description": "JBL VTX line-array (8 tops + 4 subs), stage monitors, Shure wireless rigs.",
+          "price_bdt": 65000,
+          "deliverables": [
+            "Senior Audio Engineer",
+            "Stage Hands",
+            "Digital Multitrack Recording"
+          ]
+        }
+      ],
+      "verification_status": "VERIFIED",
+      "rating": 4.9,
+      "review_count": 24,
+      "created_at": "2026-10-12T10:00:00Z"
+    },
+    {
+      "id": "vs-mastercatering",
+      "vendor_user_id": "usr-vendor-tariq",
+      "title": "Master Chef Event Catering & Buffet Management",
+      "category": "CATERING",
+      "cities_served": [
+        "Dhaka"
+      ],
+      "base_price_bdt": 450,
+      "unit": "PER_PERSON",
+      "portfolio_images": [
+        "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "packages": [
+        {
+          "name": "Corporate Buffet Deluxe",
+          "description": "Basmati Kacchi / Polao, Chicken Roast, Jali Kebab, Borhani, Firni & Mineral Water.",
+          "price_bdt": 550,
+          "deliverables": [
+            "Chafing Dishes",
+            "Uniformed Waitstaff",
+            "Cutlery & Mineral Water"
+          ]
+        }
+      ],
+      "verification_status": "VERIFIED",
+      "rating": 4.8,
+      "review_count": 41,
+      "created_at": "2026-10-13T11:00:00Z"
+    }
+  ],
+  "venue_requests": [
+    {
+      "id": "rfq-hackathon-2026",
+      "organizer_user_id": "usr-org-nusrat",
+      "linked_event_id": "evt-buet-cse-fest",
+      "event_title": "Dhaka Tech Hackathon 2026",
+      "event_type": "Tech Hackathon & Exhibition",
+      "description": "36-hour national collegiate hackathon with 400 attendees, judging panel, and opening ceremony.",
+      "event_date": "2027-02-15",
+      "alternative_date": "2027-02-22",
+      "start_time": "08:00",
+      "end_time": "22:00",
+      "expected_guests": 400,
+      "location_requirements": {
+        "city": "Dhaka",
+        "preferred_areas": [
+          "Farmgate",
+          "Palashi",
+          "Gulshan"
+        ],
+        "venue_category": "AUDITORIUM",
+        "indoor_outdoor": "INDOOR",
+        "required_facilities": [
+          "AC",
+          "PARKING",
+          "GENERATOR",
+          "WIFI"
+        ]
+      },
+      "budget": {
+        "total_budget_bdt": 150000,
+        "venue_only_budget_bdt": 85000,
+        "services_budget_bdt": 65000,
+        "flexible": true
+      },
+      "additional_services": [
+        {
+          "category": "SOUND_SYSTEM",
+          "description": "Auditorium sound system with podium mics and ambient speech clarity.",
+          "quantity": 1,
+          "estimated_budget_bdt": 25000
+        },
+        {
+          "category": "CATERING",
+          "description": "Evening dinner buffet for 400 delegates and student innovators.",
+          "quantity": 400,
+          "estimated_budget_bdt": 40000
+        }
+      ],
+      "target_provider_ids": [
+        "usr-venue-kamal",
+        "usr-vendor-tariq"
+      ],
+      "attachments": [],
+      "status": "SUBMITTED",
+      "created_at": "2026-11-05T10:00:00Z",
+      "updated_at": "2026-11-05T10:00:00Z"
+    }
+  ],
+  "quotations": [
+    {
+      "id": "qt-kib-001",
+      "rfq_id": "rfq-hackathon-2026",
+      "provider_user_id": "usr-venue-kamal",
+      "provider_type": "VENUE_OWNER",
+      "provider_name": "Krishibid Institution Bangladesh (KIB)",
+      "venue_id": "vp-kib",
+      "status": "SUBMITTED",
+      "revision_number": 1,
+      "valid_until": "2026-12-31T23:59:59Z",
+      "line_items": [
+        {
+          "id": "li-1",
+          "description": "Full Day Auditorium Hall Rental (08:00 - 22:00)",
+          "quantity": 1,
+          "unit_price_bdt": 85000,
+          "total_bdt": 85000,
+          "category": "VENUE_RENTAL"
+        },
+        {
+          "id": "li-2",
+          "description": "Continuous Heavy Generator Power Backup (200kVA Fuel Included)",
+          "quantity": 1,
+          "unit_price_bdt": 5000,
+          "total_bdt": 5000,
+          "category": "LOGISTICS"
+        },
+        {
+          "id": "li-3",
+          "description": "Non-profit Academic University Discount",
+          "quantity": 1,
+          "unit_price_bdt": -5000,
+          "total_bdt": -5000,
+          "category": "DISCOUNT"
+        }
+      ],
+      "subtotal_bdt": 90000,
+      "discount_bdt": 5000,
+      "tax_bdt": 0,
+      "grand_total_bdt": 85000,
+      "inclusions": [
+        "1,200 Tiered Seating Access",
+        "Central HVAC Air Conditioning",
+        "Dual Greenroom Access",
+        "250 Vehicle Parking"
+      ],
+      "exclusions": [
+        "Outside Stage Fabrication Cleaning (Additional ৳3,000 if debris left)"
+      ],
+      "setup_charges_bdt": 0,
+      "transport_charges_bdt": 0,
+      "payment_terms": {
+        "deposit_percentage": 50,
+        "deposit_due_days_before": 14,
+        "final_payment_due": "BEFORE_EVENT"
+      },
+      "cancellation_policy": "100% refund up to 14 days before event.",
+      "terms_conditions": "Hall must be vacated by 23:00. No smoking or open flames inside auditorium.",
+      "created_at": "2026-11-06T11:00:00Z",
+      "updated_at": "2026-11-06T11:00:00Z"
+    },
+    {
+      "id": "qt-soundcraft-001",
+      "rfq_id": "rfq-hackathon-2026",
+      "provider_user_id": "usr-vendor-tariq",
+      "provider_type": "SERVICE_VENDOR",
+      "provider_name": "SoundCraft BD Pro Audio",
+      "service_id": "vs-soundcraft",
+      "status": "SUBMITTED",
+      "revision_number": 1,
+      "valid_until": "2026-12-31T23:59:59Z",
+      "line_items": [
+        {
+          "id": "li-sc-1",
+          "description": "Summit Standard PA Audio System Package",
+          "quantity": 1,
+          "unit_price_bdt": 25000,
+          "total_bdt": 25000,
+          "category": "SERVICE"
+        },
+        {
+          "id": "li-sc-2",
+          "description": "Late Night Technician Standby Fee (36h Hackathon Coverage)",
+          "quantity": 1,
+          "unit_price_bdt": 5000,
+          "total_bdt": 5000,
+          "category": "LOGISTICS"
+        }
+      ],
+      "subtotal_bdt": 30000,
+      "discount_bdt": 2000,
+      "tax_bdt": 0,
+      "grand_total_bdt": 28000,
+      "inclusions": [
+        "2 Senior Sound Engineers on Shift",
+        "Digital Podium Mics & 4 Wireless Handheld Mics",
+        "Yamaha Digital Console & FOH Speakers"
+      ],
+      "exclusions": [
+        "Truss lighting (available as add-on for ৳15,000)"
+      ],
+      "setup_charges_bdt": 0,
+      "transport_charges_bdt": 0,
+      "payment_terms": {
+        "deposit_percentage": 30,
+        "deposit_due_days_before": 7,
+        "final_payment_due": "EVENT_DAY"
+      },
+      "cancellation_policy": "Deposit non-refundable if cancelled within 72 hours of event setup.",
+      "terms_conditions": "Safe power outlet (220V 15A) must be provided by venue.",
+      "created_at": "2026-11-06T14:30:00Z",
+      "updated_at": "2026-11-06T14:30:00Z"
+    }
+  ],
+  "quotation_revisions": [],
+  "rfq_messages": [
+    {
+      "id": "msg-1",
+      "rfq_id": "rfq-hackathon-2026",
+      "quotation_id": "qt-kib-001",
+      "sender_user_id": "usr-org-nusrat",
+      "sender_role": "ORGANIZER",
+      "message_text": "Assalamu Alaikum Kamal Bhai. Can we enter at 07:00 AM for stage backdrop setup instead of 08:00 AM?",
+      "read": true,
+      "created_at": "2026-11-07T10:15:00Z"
+    },
+    {
+      "id": "msg-2",
+      "rfq_id": "rfq-hackathon-2026",
+      "quotation_id": "qt-kib-001",
+      "sender_user_id": "usr-venue-kamal",
+      "sender_role": "PROVIDER",
+      "message_text": "Walaikum Assalam Nusrat Apa. Yes, 07:00 AM entry for production crew is approved without extra charge.",
+      "read": true,
+      "created_at": "2026-11-07T11:00:00Z"
+    }
+  ],
+  "venue_bookings": [],
+  "ai_sessions": [
+    {
+      "id": "ai-sess-1",
+      "user_id": "usr-org-nusrat",
+      "session_type": "QUOTE_EXPLANATION",
+      "rfq_id": "rfq-hackathon-2026",
+      "quotation_ids": [
+        "qt-kib-001",
+        "qt-soundcraft-001"
+      ],
+      "messages": [
+        {
+          "id": "ai-msg-1",
+          "role": "user",
+          "content": "Compare the venue quote and tell me if the generator backup is included.",
+          "created_at": "2026-11-07T11:30:00Z"
+        },
+        {
+          "id": "ai-msg-2",
+          "role": "assistant",
+          "content": "In the quotation from Krishibid Institution Bangladesh (KIB), continuous heavy generator power backup (200kVA fuel included) is explicitly listed as Line Item 2 for ৳5,000, with a ৳5,000 academic discount offsetting it. Total venue rental is ৳85,000.",
+          "created_at": "2026-11-07T11:30:05Z"
+        }
+      ],
+      "created_at": "2026-11-07T11:30:00Z",
+      "updated_at": "2026-11-07T11:30:05Z"
     }
   ]
 }

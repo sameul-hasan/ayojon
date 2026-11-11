@@ -9,6 +9,7 @@ import {
   moderateEventListing,
   processPaymentWebhook,
   publishEvent,
+  recordAudit,
   registerFreeEvent,
   resetDbToSeed,
   retryPendingNotifications,
@@ -17,8 +18,10 @@ import {
   validateAndStoreEventMedia,
   validateTicketQr,
   verifyOrganizationCustomDomain,
+  DomainError,
 } from "@/lib/db";
 import { handleApiError } from "@/lib/api-response";
+import { canAccessResource } from "@/lib/permissions/rbac";
 
 export async function GET() {
   const db = loadDb();
@@ -30,6 +33,20 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, actorUserId, payload } = body;
     const db = loadDb();
+
+    // Security Check: Resolve actor profile and verify account status
+    const actorProfile = db.profiles.find((p) => p.id === actorUserId);
+    if (
+      actorProfile &&
+      (actorProfile as any).status === "SUSPENDED" &&
+      action !== "RESET_SEED"
+    ) {
+      throw new DomainError(
+        "FORBIDDEN",
+        "Account suspended by Trust & Governance. Contact compliance@aayojon.com.bd",
+        403
+      );
+    }
 
     switch (action) {
       case "RESET_SEED": {
@@ -251,6 +268,127 @@ export async function POST(req: NextRequest) {
       case "RETRY_NOTIFICATIONS": {
         const retried = retryPendingNotifications(db);
         return NextResponse.json({ data: db, result: { retried } });
+      }
+
+      case "UPDATE_USER_ROLE": {
+        // Enforce: Only Admin can change roles. Prevent self-escalation!
+        if (!actorProfile || actorProfile.platform_role !== "ADMIN") {
+          recordAudit(
+            db,
+            actorUserId || "anonymous",
+            "UNAUTHORIZED_ROLE_ESCALATION_ATTEMPT",
+            "profiles",
+            payload.targetUserId || "self",
+            {
+              requestedRole: payload.newRole,
+            }
+          );
+          saveDb(db);
+          throw new DomainError(
+            "FORBIDDEN",
+            "Security Policy Violation: Only administrators can modify platform roles.",
+            403
+          );
+        }
+        const target = db.profiles.find((p) => p.id === payload.targetUserId);
+        if (!target) throw new DomainError("NOT_FOUND", "Target user profile not found", 404);
+        target.platform_role = payload.newRole;
+        recordAudit(db, actorUserId, "USER_ROLE_UPDATED", "profiles", target.id, {
+          newRole: payload.newRole,
+        });
+        saveDb(db);
+        return NextResponse.json({ data: db, result: target });
+      }
+
+      case "SUSPEND_USER": {
+        // Enforce: Only Admin can suspend users
+        if (!actorProfile || actorProfile.platform_role !== "ADMIN") {
+          throw new DomainError(
+            "FORBIDDEN",
+            "Security Policy Violation: Only administrators can suspend user accounts.",
+            403
+          );
+        }
+        const target = db.profiles.find((p) => p.id === payload.targetUserId);
+        if (!target) throw new DomainError("NOT_FOUND", "Target user not found", 404);
+        (target as any).status = payload.status || "SUSPENDED";
+        recordAudit(db, actorUserId, "USER_SUSPENDED", "profiles", target.id, {
+          reason: payload.reason || "Policy violation",
+        });
+        saveDb(db);
+        return NextResponse.json({ data: db, result: target });
+      }
+
+      case "CHECK_RESOURCE_ACCESS": {
+        const check = canAccessResource(
+          actorUserId,
+          actorProfile?.platform_role || "ATTENDEE",
+          payload.resourceType,
+          payload.resourceId,
+          db
+        );
+        if (!check.allowed) {
+          throw new DomainError(
+            check.code as any,
+            check.message || "Access denied",
+            check.code === "UNAUTHENTICATED" ? 401 : 403
+          );
+        }
+        return NextResponse.json({ data: db, result: { allowed: true } });
+      }
+
+      case "SUBMIT_VENUE_RFQ": {
+        if (
+          !actorProfile ||
+          (actorProfile.platform_role !== "ORGANIZER_OWNER" &&
+            actorProfile.platform_role !== "EVENT_MANAGER" &&
+            actorProfile.platform_role !== "ADMIN")
+        ) {
+          throw new DomainError(
+            "FORBIDDEN",
+            "Only event organizers can submit venue and service requirements.",
+            403
+          );
+        }
+        const rfq = {
+          ...payload,
+          id: payload.id || `rfq-${crypto.randomUUID().slice(0, 8)}`,
+          organizer_user_id: actorUserId,
+          status: "SUBMITTED",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        db.venue_requests = db.venue_requests || [];
+        db.venue_requests.unshift(rfq);
+        saveDb(db);
+        return NextResponse.json({ data: db, result: rfq });
+      }
+
+      case "SUBMIT_PROVIDER_QUOTATION": {
+        if (
+          !actorProfile ||
+          (actorProfile.platform_role !== "VENUE_OWNER" &&
+            actorProfile.platform_role !== "VENDOR" &&
+            actorProfile.platform_role !== "ADMIN")
+        ) {
+          throw new DomainError(
+            "FORBIDDEN",
+            "Only verified venue owners or vendors can submit formal quotations.",
+            403
+          );
+        }
+        const quote = {
+          ...payload,
+          id: payload.id || `qt-${crypto.randomUUID().slice(0, 8)}`,
+          provider_user_id: actorUserId,
+          status: "SUBMITTED",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        db.quotations = db.quotations || [];
+        db.quotations.unshift(quote);
+        saveDb(db);
+        return NextResponse.json({ data: db, result: quote });
       }
 
       default:

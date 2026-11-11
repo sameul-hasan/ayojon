@@ -21,7 +21,7 @@ import {
   type FirebaseUser,
 } from "./client";
 
-export type UserRole = "attendee" | "organizer" | "staff" | "sponsor" | "admin";
+export type UserRole = "attendee" | "organizer" | "staff" | "sponsor" | "admin" | "venue_owner" | "vendor";
 
 /**
  * Authenticated user interface.
@@ -84,6 +84,8 @@ export function toUserRole(role: string | null | undefined): UserRole {
   if (norm === "staff" || norm === "checkin_staff") return "staff";
   if (norm === "sponsor") return "sponsor";
   if (norm === "admin") return "admin";
+  if (norm === "venue_owner" || norm === "venue") return "venue_owner";
+  if (norm === "vendor" || norm === "service_vendor") return "vendor";
   return "attendee";
 }
 
@@ -99,6 +101,10 @@ export function toPlatformRole(role: UserRole | string): PlatformRole {
       return "SPONSOR";
     case "admin":
       return "ADMIN";
+    case "venue_owner":
+      return "VENUE_OWNER";
+    case "vendor":
+      return "VENDOR";
     default:
       return "ATTENDEE";
   }
@@ -221,6 +227,44 @@ export const DEMO_PERSONAS: Record<string, AuthUser & { defaultPortal: string }>
     photoURL: null,
     isAnonymous: false,
     defaultPortal: "ADMIN",
+  },
+  "usr-venue-kamal": {
+    uid: "usr-venue-kamal",
+    id: "usr-venue-kamal",
+    email: "kamal@kib-auditorium.org.bd",
+    displayName: "Kamal Hossain",
+    display_name: "Kamal Hossain",
+    role: "venue_owner",
+    platform_role: "VENUE_OWNER",
+    phone: "+8801711234567",
+    organization_label: "Krishibid Institution Bangladesh (KIB)",
+    tenantId: "ven-kib-dhaka",
+    interests: ["conferences", "university-clubs", "cultural-festivals"],
+    preferred_city: "Dhaka",
+    mfa_enabled: true,
+    created_at: "2026-10-10T08:00:00Z",
+    photoURL: null,
+    isAnonymous: false,
+    defaultPortal: "PROVIDER",
+  },
+  "usr-vendor-tariq": {
+    uid: "usr-vendor-tariq",
+    id: "usr-vendor-tariq",
+    email: "tariq@soundcraft.com.bd",
+    displayName: "Tariqul Islam",
+    display_name: "Tariqul Islam",
+    role: "vendor",
+    platform_role: "VENDOR",
+    phone: "+8801811998877",
+    organization_label: "SoundCraft BD & Master Catering",
+    tenantId: "vnd-soundcraft-bd",
+    interests: ["concerts", "conferences", "tech-workshops"],
+    preferred_city: "Dhaka",
+    mfa_enabled: true,
+    created_at: "2026-10-12T09:30:00Z",
+    photoURL: null,
+    isAnonymous: false,
+    defaultPortal: "PROVIDER",
   },
 };
 

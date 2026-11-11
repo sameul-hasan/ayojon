@@ -274,39 +274,39 @@ export function MarketplaceView({
   return (
     <div className="space-y-8">
       {/* HERO SECTION (05_UI_UX_Wireframes.docx) */}
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-emerald-50/60 via-slate-50 to-teal-50/40 p-6 sm:p-10 shadow-sm">
-        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-emerald-50/60 via-slate-50 to-teal-50/40 p-6 sm:p-10 shadow-sm">
+        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-brand-500/5 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-semibold text-emerald-800 shadow-xs">
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1 text-xs font-semibold text-brand-700 shadow-xs">
             <Sparkles className="h-3.5 w-3.5 text-amber-600" />
             <span>
               আয়োজন • Bangladesh&apos;s All-in-One Event Discovery, Promotion & QR Ticketing Platform
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-ink leading-tight">
             Find events worth attending across{" "}
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-brand-600 via-teal-600 to-amber-600 bg-clip-text text-transparent">
               Bangladesh
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base text-ink-muted max-w-2xl leading-relaxed">
             Discover university hackathons, AI & engineering workshops, startup pitch days, and cultural festivals in Dhaka, Chattogram, Sylhet, and Online — with verified bKash/SSLCommerz QR ticketing.
           </p>
 
           {/* Search & Location Filter Bar */}
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-muted" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by event title, university club (BUET, NSU), tag, or topic..."
-                className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none shadow-sm"
+                className="w-full rounded-btn border border-line bg-surface pl-10 pr-4 py-3 text-sm text-ink placeholder-slate-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 focus:outline-none shadow-sm"
               />
             </div>
 
@@ -315,7 +315,7 @@ export function MarketplaceView({
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
                 aria-label="Filter by City"
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none shadow-sm"
+                className="rounded-btn border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-600 focus:ring-1 focus:ring-brand-600 focus:outline-none shadow-sm"
               >
                 <option value="ALL">All Cities (BD)</option>
                 <option value="Dhaka">Dhaka (ঢাকা)</option>
@@ -327,7 +327,7 @@ export function MarketplaceView({
               <button
                 type="button"
                 onClick={onNavigateOrganizer}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 transition cursor-pointer shrink-0 shadow-sm"
+                className="inline-flex items-center gap-2 rounded-btn bg-brand-600 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-700 transition cursor-pointer shrink-0 shadow-sm"
               >
                 <span>Host Event</span>
                 <ArrowRight className="h-4 w-4" />
@@ -337,7 +337,7 @@ export function MarketplaceView({
 
           {/* Quick Filters */}
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            <span className="text-xs font-medium text-slate-600 mr-1">Quick Filters:</span>
+            <span className="text-xs font-medium text-ink-muted mr-1">Quick Filters:</span>
             {(
               [
                 { id: "ALL", label: "All Events" },
@@ -354,8 +354,8 @@ export function MarketplaceView({
                 onClick={() => setQuickFilter(f.id)}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition cursor-pointer ${
                   quickFilter === f.id
-                    ? "bg-emerald-600 text-white font-semibold shadow-sm"
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-xs"
+                    ? "bg-brand-600 text-white font-semibold shadow-sm"
+                    : "bg-surface border border-line text-ink hover:bg-canvas-alt hover:text-ink shadow-xs"
                 }`}
               >
                 {f.label}
@@ -368,14 +368,14 @@ export function MarketplaceView({
       {/* EXPLORE CATEGORIES */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-600">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-ink-muted">
             Explore Categories
           </h2>
           {selectedCategory !== "ALL" && (
             <button
               type="button"
               onClick={() => setSelectedCategory("ALL")}
-              className="text-xs text-emerald-700 hover:underline cursor-pointer font-medium"
+              className="text-xs text-brand-700 hover:underline cursor-pointer font-medium"
             >
               Reset category filter
             </button>
@@ -394,21 +394,21 @@ export function MarketplaceView({
                 onClick={() =>
                   setSelectedCategory(active ? "ALL" : cat.id)
                 }
-                className={`flex flex-col items-start justify-between rounded-2xl border p-3.5 text-left transition cursor-pointer ${
+                className={`flex flex-col items-start justify-between rounded-card border p-3.5 text-left transition cursor-pointer ${
                   active
-                    ? "border-emerald-600 bg-emerald-50/60 text-slate-900 ring-1 ring-emerald-600 shadow-sm"
-                    : "bg-white border-slate-200 text-slate-800 hover:border-emerald-400 hover:bg-emerald-50/30 shadow-xs"
+                    ? "border-emerald-600 bg-brand-50/60 text-ink ring-1 ring-emerald-600 shadow-sm"
+                    : "bg-surface border-line text-ink hover:border-emerald-400 hover:bg-brand-50/30 shadow-xs"
                 }`}
               >
                 <div className="flex w-full items-center justify-between">
-                  <span className="text-xs font-semibold text-emerald-700">
+                  <span className="text-xs font-semibold text-brand-700">
                     {cat.name_bn}
                   </span>
-                  <span className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                  <span className="rounded-full bg-canvas-alt border border-line px-2 py-0.5 text-[11px] font-medium text-ink-muted">
                     {count}
                   </span>
                 </div>
-                <p className="mt-1.5 text-xs font-semibold text-slate-900 line-clamp-1">
+                <p className="mt-1.5 text-xs font-semibold text-ink line-clamp-1">
                   {cat.name}
                 </p>
               </button>
@@ -421,27 +421,27 @@ export function MarketplaceView({
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-ink">
               {quickFilter === "FEATURED"
                 ? "Featured & Promoted Events"
                 : "Upcoming Public Events"}
             </h2>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-ink-muted">
               Showing {filteredEvents.length} verified public events • Ranked by relevance, city ({currentUser.preferred_city}), and package promotion tier
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-600" />
+          <div className="flex items-center gap-2 text-xs text-ink-muted">
+            <span className="inline-block h-2 w-2 rounded-full bg-brand-600" />
             <span>Draft & suspended events are strictly hidden from public feeds (QA-001 / QA-012)</span>
           </div>
         </div>
 
         {filteredEvents.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center space-y-3 shadow-sm">
-            <p className="text-base font-semibold text-slate-900">
+          <div className="rounded-card border border-line bg-surface p-12 text-center space-y-3 shadow-sm">
+            <p className="text-base font-semibold text-ink">
               No public events match your current filters
             </p>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-ink-muted">
               Try clearing your search query or switching back to All Cities.
             </p>
             <button
@@ -452,7 +452,7 @@ export function MarketplaceView({
                 setSelectedCity("ALL");
                 setQuickFilter("ALL");
               }}
-              className="rounded-xl bg-emerald-50 border border-emerald-300 px-4 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 cursor-pointer shadow-xs"
+              className="rounded-btn bg-brand-50 border border-emerald-300 px-4 py-2 text-xs font-semibold text-brand-700 hover:bg-emerald-100 cursor-pointer shadow-xs"
             >
               Reset All Filters
             </button>
@@ -482,7 +482,7 @@ export function MarketplaceView({
                 <div
                   key={evt.id}
                   onClick={() => openEventModal(evt)}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white overflow-hidden transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md cursor-pointer shadow-sm"
+                  className="group relative flex flex-col justify-between rounded-card border border-line bg-surface overflow-hidden transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md cursor-pointer shadow-sm"
                 >
                   <div>
                     {/* Cover Gradient Header */}
@@ -501,7 +501,7 @@ export function MarketplaceView({
                             </span>
                           )}
                           {evt.package_code && (
-                            <span className="rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            <span className="rounded-full bg-brand-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-semibold text-white">
                               {evt.package_code}
                             </span>
                           )}
@@ -517,7 +517,7 @@ export function MarketplaceView({
                             year: "numeric",
                           })}
                         </span>
-                        <span className="rounded-lg bg-white/95 px-2.5 py-1 font-bold text-emerald-700 border border-emerald-200 shadow-sm">
+                        <span className="rounded-lg bg-surface/95 px-2.5 py-1 font-bold text-brand-700 border border-brand-200 shadow-sm">
                           {minPrice === 0 ? "Free (৳0)" : `From ${formatBDT(minPrice)}`}
                         </span>
                       </div>
@@ -525,22 +525,22 @@ export function MarketplaceView({
 
                     {/* Card Body */}
                     <div className="p-4 space-y-2.5">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                        <span className="truncate font-medium text-slate-700">
+                      <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                        <ShieldCheck className="h-3.5 w-3.5 text-brand-600 shrink-0" />
+                        <span className="truncate font-medium text-ink">
                           {org?.name}
                         </span>
                       </div>
 
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition line-clamp-2">
+                      <h3 className="text-base font-bold text-ink group-hover:text-brand-600 transition line-clamp-2">
                         {evt.title}
                       </h3>
 
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-ink-muted line-clamp-2 leading-relaxed">
                         {evt.tagline}
                       </p>
 
-                      <div className="flex items-center gap-2 pt-1 text-xs text-slate-600">
+                      <div className="flex items-center gap-2 pt-1 text-xs text-ink-muted">
                         {evt.is_online ? (
                           <span className="inline-flex items-center gap-1 text-teal-700 font-medium">
                             <Globe className="h-3.5 w-3.5" />
@@ -549,7 +549,7 @@ export function MarketplaceView({
                         ) : (
                           <span className="inline-flex items-center gap-1 truncate">
                             <MapPin className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                            <span className="truncate text-slate-600">
+                            <span className="truncate text-ink-muted">
                               {venue?.name}, {venue?.city}
                             </span>
                           </span>
@@ -560,25 +560,25 @@ export function MarketplaceView({
 
                   {/* Card Footer Capacity */}
                   <div className="px-4 pb-4 pt-2 border-t border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] text-slate-600">
+                    <div className="flex items-center justify-between text-[11px] text-ink-muted">
                       <span className="inline-flex items-center gap-1">
-                        <Users className="h-3.5 w-3.5 text-slate-500" />
+                        <Users className="h-3.5 w-3.5 text-ink-muted" />
                         {totalSold} / {totalCap} registered
                       </span>
                       <span
                         className={
                           pctFull >= 90
                             ? "text-amber-700 font-semibold"
-                            : "text-emerald-700 font-medium"
+                            : "text-brand-700 font-medium"
                         }
                       >
                         {totalCap - totalSold} spots left
                       </span>
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                    <div className="h-1.5 w-full rounded-full bg-canvas-alt overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          pctFull >= 90 ? "bg-amber-500" : "bg-emerald-600"
+                          pctFull >= 90 ? "bg-amber-500" : "bg-brand-600"
                         }`}
                         style={{ width: `${pctFull}%` }}
                       />
@@ -594,7 +594,7 @@ export function MarketplaceView({
       {/* EVENT DETAIL & CHECKOUT MODAL (05_UI_UX_Wireframes.docx) */}
       {activeEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
-          <div className="relative my-auto w-full max-w-5xl rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+          <div className="relative my-auto w-full max-w-5xl rounded-3xl border border-line bg-surface shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
             {/* Modal Top Header */}
             <div
               className={`bg-gradient-to-r ${activeEvent.cover_gradient} p-6 sm:p-8 border-b border-white/10`}
@@ -640,12 +640,12 @@ export function MarketplaceView({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-y-auto">
               {/* Left 7 Cols: About, Agenda, Speakers, Venue, Organizer */}
               <div className="lg:col-span-7 space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-card border border-line bg-canvas-alt p-4 text-xs">
                   <div className="flex items-start gap-2.5">
-                    <Calendar className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <Calendar className="h-4 w-4 text-brand-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-900">Date & Time</p>
-                      <p className="text-slate-600">
+                      <p className="font-semibold text-ink">Date & Time</p>
+                      <p className="text-ink-muted">
                         {new Date(activeEvent.starts_at).toLocaleString("en-GB", {
                           dateStyle: "medium",
                           timeStyle: "short",
@@ -656,10 +656,10 @@ export function MarketplaceView({
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-ink">
                         {activeEvent.is_online ? "Online Platform" : "Venue & City"}
                       </p>
-                      <p className="text-slate-600">
+                      <p className="text-ink-muted">
                         {activeEvent.is_online
                           ? activeEvent.online_url
                           : (() => {
@@ -675,10 +675,10 @@ export function MarketplaceView({
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-ink-muted">
                     About This Event
                   </h3>
-                  <p className="text-sm text-slate-700 leading-relaxed">
+                  <p className="text-sm text-ink leading-relaxed">
                     {activeEvent.description}
                   </p>
                 </div>
@@ -686,25 +686,25 @@ export function MarketplaceView({
                 {/* Agenda */}
                 {activeEvent.agenda.length > 0 && (
                   <div className="space-y-2.5">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-ink-muted">
                       Event Schedule & Agenda
                     </h3>
                     <div className="space-y-2">
                       {activeEvent.agenda.map((item, idx) => (
                         <div
                           key={idx}
-                          className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs"
+                          className="flex items-start gap-3 rounded-btn border border-line bg-canvas-alt/70 p-3 text-xs"
                         >
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-1 font-mono font-semibold text-emerald-700 shrink-0">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-brand-50 border border-brand-200 px-2 py-1 font-mono font-semibold text-brand-700 shrink-0">
                             <Clock className="h-3 w-3" />
                             {item.time}
                           </span>
                           <div>
-                            <p className="font-semibold text-slate-900">
+                            <p className="font-semibold text-ink">
                               {item.title}
                             </p>
                             {item.speaker && (
-                              <p className="text-slate-600">{item.speaker}</p>
+                              <p className="text-ink-muted">{item.speaker}</p>
                             )}
                           </div>
                         </div>
@@ -716,18 +716,18 @@ export function MarketplaceView({
                 {/* Speakers */}
                 {activeEvent.speakers.length > 0 && (
                   <div className="space-y-2.5">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-600">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-ink-muted">
                       Featured Speakers & Jury
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {activeEvent.speakers.map((sp, i) => (
                         <div
                           key={i}
-                          className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs"
+                          className="rounded-btn border border-line bg-canvas-alt/70 p-3 text-xs"
                         >
-                          <p className="font-bold text-slate-900">{sp.name}</p>
-                          <p className="text-emerald-700 font-medium">{sp.role}</p>
-                          <p className="text-slate-600">{sp.org}</p>
+                          <p className="font-bold text-ink">{sp.name}</p>
+                          <p className="text-brand-700 font-medium">{sp.role}</p>
+                          <p className="text-ink-muted">{sp.org}</p>
                         </div>
                       ))}
                     </div>
@@ -735,9 +735,9 @@ export function MarketplaceView({
                 )}
 
                 {/* Organizer & Refund Policy */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs">
+                <div className="rounded-card border border-line bg-canvas-alt p-4 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">
+                    <span className="font-bold text-ink">
                       Organized by{" "}
                       {
                         db.organizations.find(
@@ -754,12 +754,12 @@ export function MarketplaceView({
                       Report Listing
                     </button>
                   </div>
-                  <p className="text-slate-600">
-                    <strong className="text-slate-800">Refund & Cancellation Policy:</strong>{" "}
+                  <p className="text-ink-muted">
+                    <strong className="text-ink">Refund & Cancellation Policy:</strong>{" "}
                     {activeEvent.refund_policy}
                   </p>
-                  <p className="text-slate-600">
-                    <strong className="text-slate-800">Organizer Contact:</strong>{" "}
+                  <p className="text-ink-muted">
+                    <strong className="text-ink">Organizer Contact:</strong>{" "}
                     {activeEvent.contact_email}
                   </p>
                 </div>
@@ -767,7 +767,7 @@ export function MarketplaceView({
                 {reportModalOpen && (
                   <form
                     onSubmit={handleReportSubmit}
-                    className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4 space-y-3 text-xs"
+                    className="rounded-card border border-rose-200 bg-rose-50/60 p-4 space-y-3 text-xs"
                   >
                     <p className="font-bold text-rose-800">
                       Report Event Listing to Platform Admin
@@ -778,13 +778,13 @@ export function MarketplaceView({
                       value={reportReason}
                       onChange={(e) => setReportReason(e.target.value)}
                       placeholder="Describe the issue (e.g., misleading ticket price, venue change)..."
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"
+                      className="w-full rounded-btn border border-line bg-surface px-3 py-2 text-ink placeholder-slate-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"
                     />
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setReportModalOpen(false)}
-                        className="rounded-lg px-3 py-1.5 text-slate-600 hover:text-slate-900 cursor-pointer"
+                        className="rounded-lg px-3 py-1.5 text-ink-muted hover:text-ink cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -803,23 +803,23 @@ export function MarketplaceView({
               <div className="lg:col-span-5">
                 <form
                   onSubmit={handleCheckoutOrRegister}
-                  className="sticky top-0 rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4 shadow-sm"
+                  className="sticky top-0 rounded-card border border-line bg-canvas-alt p-5 space-y-4 shadow-sm"
                 >
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <div className="flex items-center justify-between border-b border-line pb-3">
                     <div>
-                      <h3 className="text-base font-bold text-slate-900">
+                      <h3 className="text-base font-bold text-ink">
                         Registration & Tickets
                       </h3>
-                      <p className="text-xs text-slate-600">
+                      <p className="text-xs text-ink-muted">
                         Instant QR Ticket issued after verification
                       </p>
                     </div>
-                    <CreditCard className="h-5 w-5 text-emerald-600" />
+                    <CreditCard className="h-5 w-5 text-brand-600" />
                   </div>
 
                   {/* Ticket Type Selector */}
                   <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700">
+                    <label className="block text-xs font-semibold text-ink">
                       Select Ticket Tier
                     </label>
                     {activeEventTickets.map((tt) => {
@@ -829,32 +829,32 @@ export function MarketplaceView({
                         <div
                           key={tt.id}
                           onClick={() => setSelectedTicketTypeId(tt.id)}
-                          className={`rounded-xl border p-3 transition cursor-pointer ${
+                          className={`rounded-btn border p-3 transition cursor-pointer ${
                             isSelected
-                              ? "border-emerald-600 bg-emerald-50/50 ring-1 ring-emerald-600 shadow-xs"
-                              : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
+                              ? "border-emerald-600 bg-brand-50/50 ring-1 ring-emerald-600 shadow-xs"
+                              : "border-line bg-surface hover:border-line hover:bg-canvas-alt/60"
                           }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-900">
+                            <span className="text-xs font-bold text-ink">
                               {tt.name}
                             </span>
-                            <span className="text-xs font-extrabold text-emerald-700">
+                            <span className="text-xs font-extrabold text-brand-700">
                               {formatBDT(tt.price_minor)}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-[11px] text-slate-600">
+                          <p className="mt-0.5 text-[11px] text-ink-muted">
                             {tt.description}
                           </p>
                           <div className="mt-1.5 flex items-center justify-between text-[11px]">
-                            <span className="text-slate-500">
+                            <span className="text-ink-muted">
                               Capacity: {tt.sold_count}/{tt.capacity}
                             </span>
                             <span
                               className={
                                 rem === 0
                                   ? "text-rose-600 font-bold"
-                                  : "text-emerald-700 font-medium"
+                                  : "text-brand-700 font-medium"
                               }
                             >
                               {rem === 0 ? "SOLD OUT" : `${rem} available`}
@@ -867,13 +867,13 @@ export function MarketplaceView({
 
                   {selectedTicket && selectedTicket.price_minor > 0 && (
                     <div className="flex items-center justify-between text-xs">
-                      <label className="font-semibold text-slate-700">
+                      <label className="font-semibold text-ink">
                         Quantity
                       </label>
                       <select
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-slate-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none"
+                        className="rounded-lg border border-line bg-surface px-3 py-1.5 text-ink focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none"
                       >
                         {[1, 2, 3, 4, 5].map((n) => (
                           <option key={n} value={n}>
@@ -887,7 +887,7 @@ export function MarketplaceView({
                   {/* Attendee Details */}
                   <div className="space-y-2.5 pt-1">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                      <label className="block text-[11px] font-medium text-ink mb-1">
                         Attendee Full Name *
                       </label>
                       <input
@@ -895,12 +895,12 @@ export function MarketplaceView({
                         required
                         value={attendeeName}
                         onChange={(e) => setAttendeeName(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none shadow-xs"
+                        className="w-full rounded-btn border border-line bg-surface px-3 py-2 text-xs text-ink placeholder-slate-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none shadow-xs"
                       />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-ink mb-1">
                           Email Address *
                         </label>
                         <input
@@ -908,35 +908,35 @@ export function MarketplaceView({
                           required
                           value={attendeeEmail}
                           onChange={(e) => setAttendeeEmail(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none shadow-xs"
+                          className="w-full rounded-btn border border-line bg-surface px-3 py-2 text-xs text-ink placeholder-slate-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none shadow-xs"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-ink mb-1">
                           Mobile Number (BD)
                         </label>
                         <input
                           type="text"
                           value={attendeePhone}
                           onChange={(e) => setAttendeePhone(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none shadow-xs"
+                          className="w-full rounded-btn border border-line bg-surface px-3 py-2 text-xs text-ink placeholder-slate-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none shadow-xs"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-ink mb-1">
                           University / Organization
                         </label>
                         <input
                           type="text"
                           value={institute}
                           onChange={(e) => setInstitute(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none shadow-xs"
+                          className="w-full rounded-btn border border-line bg-surface px-3 py-2 text-xs text-ink placeholder-slate-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none shadow-xs"
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-700 mb-1">
+                        <label className="block text-[11px] font-medium text-ink mb-1">
                           Campaign / Referral Code
                         </label>
                         <input
@@ -944,7 +944,7 @@ export function MarketplaceView({
                           value={campaignCode}
                           onChange={(e) => setCampaignCode(e.target.value)}
                           placeholder="e.g. FB-BUET-CAMPUS"
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-emerald-700 font-mono placeholder-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none shadow-xs"
+                          className="w-full rounded-btn border border-line bg-surface px-3 py-2 text-xs text-brand-700 font-mono placeholder-slate-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 outline-none shadow-xs"
                         />
                       </div>
                     </div>
@@ -952,31 +952,31 @@ export function MarketplaceView({
 
                   {/* Gateway & Price Breakdown for Paid Tickets */}
                   {selectedTicket && selectedTicket.price_minor > 0 && (
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 text-xs shadow-xs">
-                      <div className="flex justify-between text-slate-600">
+                    <div className="rounded-btn border border-line bg-surface p-3 space-y-2 text-xs shadow-xs">
+                      <div className="flex justify-between text-ink-muted">
                         <span>
                           Ticket Subtotal ({quantity} ×{" "}
                           {formatBDT(selectedTicket.price_minor)})
                         </span>
-                        <span className="text-slate-800 font-medium">
+                        <span className="text-ink font-medium">
                           {formatBDT(subtotalMinor)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-slate-600">
+                      <div className="flex justify-between text-ink-muted">
                         <span>Disclosed Ticketing Service Fee (2.5%)</span>
-                        <span className="text-slate-800 font-medium">
+                        <span className="text-ink font-medium">
                           {formatBDT(serviceFeeMinor)}
                         </span>
                       </div>
-                      <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-sm">
-                        <span className="text-slate-900">Total Payable (BDT)</span>
-                        <span className="text-emerald-700 font-bold">
+                      <div className="flex justify-between border-t border-line pt-2 font-bold text-sm">
+                        <span className="text-ink">Total Payable (BDT)</span>
+                        <span className="text-brand-700 font-bold">
                           {formatBDT(totalMinor)}
                         </span>
                       </div>
 
                       <div className="pt-2 space-y-1.5">
-                        <label className="block text-[11px] font-semibold text-slate-700">
+                        <label className="block text-[11px] font-semibold text-ink">
                           Bangladesh Sandbox Payment Gateway
                         </label>
                         <div className="grid grid-cols-3 gap-1.5">
@@ -993,8 +993,8 @@ export function MarketplaceView({
                               onClick={() => setProvider(gw.id)}
                               className={`rounded-lg border py-1.5 text-[11px] font-semibold transition cursor-pointer ${
                                 provider === gw.id
-                                  ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600 shadow-xs"
-                                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                  ? "border-emerald-600 bg-brand-50 text-brand-700 ring-1 ring-emerald-600 shadow-xs"
+                                  : "border-line bg-canvas-alt text-ink hover:bg-canvas-alt"
                               }`}
                             >
                               {gw.label}
@@ -1011,7 +1011,7 @@ export function MarketplaceView({
                           onChange={(e) =>
                             setBrowserRedirectOnly(e.target.checked)
                           }
-                          className="rounded border-slate-300"
+                          className="rounded border-line"
                         />
                         <span>
                           QA-008 Test Mode: Simulate browser redirect WITHOUT server webhook verification
@@ -1021,12 +1021,12 @@ export function MarketplaceView({
                   )}
 
                   {/* Privacy Notice & Marketing Opt-in (09_Security_Privacy_Compliance.docx) */}
-                  <label className="flex items-start gap-2 text-[11px] text-slate-600 cursor-pointer">
+                  <label className="flex items-start gap-2 text-[11px] text-ink-muted cursor-pointer">
                     <input
                       type="checkbox"
                       checked={marketingConsent}
                       onChange={(e) => setMarketingConsent(e.target.checked)}
-                      className="mt-0.5 rounded border-slate-300"
+                      className="mt-0.5 rounded border-line"
                     />
                     <span>
                       Optional: Send me future event updates from this organizer (separated from operational ticket confirmations per Privacy Policy).
@@ -1035,9 +1035,9 @@ export function MarketplaceView({
 
                   {checkoutBanner && (
                     <div
-                      className={`rounded-xl border p-3 text-xs ${
+                      className={`rounded-btn border p-3 text-xs ${
                         checkoutBanner.type === "success"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          ? "border-brand-200 bg-brand-50 text-brand-700"
                           : checkoutBanner.type === "warning"
                           ? "border-amber-200 bg-amber-50 text-amber-800"
                           : "border-rose-200 bg-rose-50 text-rose-800"
@@ -1051,7 +1051,7 @@ export function MarketplaceView({
                             setActiveEventId(null);
                             onNavigateWallet();
                           }}
-                          className="mt-2 inline-flex items-center gap-1 font-bold text-emerald-700 underline cursor-pointer"
+                          className="mt-2 inline-flex items-center gap-1 font-bold text-brand-700 underline cursor-pointer"
                         >
                           Open My Ticket Wallet & QR Pass →
                         </button>
@@ -1062,7 +1062,7 @@ export function MarketplaceView({
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 text-sm disabled:opacity-50 transition cursor-pointer shadow-sm"
+                    className="w-full rounded-btn bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 text-sm disabled:opacity-50 transition cursor-pointer shadow-sm"
                   >
                     {submitting
                       ? "Processing Transaction..."
