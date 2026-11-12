@@ -34,6 +34,17 @@ import { Badge } from "@/components/ui/Badge";
 import { computeTotals, MAX_TICKETS_PER_ORDER, type PublicTicketType } from "@/lib/public-events-shared";
 import { cn, formatBDT } from "@/lib/ui/cn";
 import { useAuth } from "@/lib/firebase/auth-context";
+import {
+  clientCreateTicketOrder,
+  clientGetMyOrders,
+  clientRegisterFreeEvent,
+  clientSandboxConfirmPayment,
+} from "@/lib/client-api";
+
+function isStaticHostingFallback(res: Response): boolean {
+  const ct = res.headers.get("content-type") || "";
+  return res.status === 404 || res.status === 405 || (res.ok && !ct.includes("application/json"));
+}
 
 const DEMO_BUYER_ID = "usr-attendee-rafiq";
 
@@ -169,10 +180,19 @@ export function CheckoutFlow({
     let cancelled = false;
     const tick = async () => {
       try {
-        const res = await fetch("/api/v1/me/orders", { headers: buildHeaders(), cache: "no-store" });
-        if (!res.ok) return;
-        const json = (await res.json()) as { data: OrderLite[] };
-        const fresh = json.data.find((o) => o.id === orderId);
+        let ordersList: OrderLite[] = [];
+        try {
+          const res = await fetch("/api/v1/me/orders", { headers: buildHeaders(), cache: "no-store" });
+          if (res.ok && !isStaticHostingFallback(res)) {
+            const json = (await res.json()) as { data: OrderLite[] };
+            ordersList = json.data;
+          } else {
+            ordersList = (await clientGetMyOrders(buyerId)) as OrderLite[];
+          }
+        } catch {
+          ordersList = (await clientGetMyOrders(buyerId)) as OrderLite[];
+        }
+        const fresh = ordersList.find((o) => o.id === orderId);
         if (fresh && !cancelled) {
           setOrder({ id: fresh.id, status: fresh.status, total_minor: fresh.total_minor });
         }
@@ -185,14 +205,24 @@ export function CheckoutFlow({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [orderId, orderStatus, buildHeaders]);
+  }, [orderId, orderStatus, buildHeaders, buyerId]);
 
   const refreshNow = async () => {
     if (!orderId) return;
     try {
-      const res = await fetch("/api/v1/me/orders", { headers: buildHeaders(), cache: "no-store" });
-      const json = (await res.json()) as { data: OrderLite[] };
-      const fresh = json.data.find((o) => o.id === orderId);
+      let ordersList: OrderLite[] = [];
+      try {
+        const res = await fetch("/api/v1/me/orders", { headers: buildHeaders(), cache: "no-store" });
+        if (res.ok && !isStaticHostingFallback(res)) {
+          const json = (await res.json()) as { data: OrderLite[] };
+          ordersList = json.data;
+        } else {
+          ordersList = (await clientGetMyOrders(buyerId)) as OrderLite[];
+        }
+      } catch {
+        ordersList = (await clientGetMyOrders(buyerId)) as OrderLite[];
+      }
+      const fresh = ordersList.find((o) => o.id === orderId);
       if (fresh) {
         setOrder({ id: fresh.id, status: fresh.status, total_minor: fresh.total_minor });
       }
@@ -205,12 +235,25 @@ export function CheckoutFlow({
     if (!orderId || verifyingSandbox) return;
     setVerifyingSandbox(true);
     try {
-      const res = await fetch("/api/v1/payments/sandbox-confirm", {
-        method: "POST",
-        headers: buildHeaders(),
-        body: JSON.stringify({ orderId, provider: selectedProvider }),
-      });
-      if (!res.ok) throw new Error(await readError(res));
+      let handledViaApi = false;
+      try {
+        const res = await fetch("/api/v1/payments/sandbox-confirm", {
+          method: "POST",
+          headers: buildHeaders(),
+          body: JSON.stringify({ orderId, provider: selectedProvider }),
+        });
+        if (!isStaticHostingFallback(res)) {
+          if (!res.ok) throw new Error(await readError(res));
+          handledViaApi = true;
+        }
+      } catch (apiErr) {
+        if (apiErr instanceof Error && !apiErr.message.includes("Failed to fetch")) {
+          throw apiErr;
+        }
+      }
+      if (!handledViaApi) {
+        await clientSandboxConfirmPayment({ orderId, provider: selectedProvider });
+      }
       await refreshNow();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Sandbox payment simulation failed.");
@@ -232,34 +275,79 @@ export function CheckoutFlow({
     };
     try {
       if (isFree) {
-        const res = await fetch(`/api/v1/events/${encodeURIComponent(event.slug)}/registrations`, {
-          method: "POST",
-          headers: buildHeaders(),
-          body: JSON.stringify({
+        let handledViaApi = false;
+        try {
+          const res = await fetch(`/api/v1/events/${encodeURIComponent(event.slug)}/registrations`, {
+            method: "POST",
+            headers: buildHeaders(),
+            body: JSON.stringify({
+              ticketTypeId: selected.id,
+              attendeeName: attendee.name,
+              attendeeEmail: attendee.email,
+              attendeePhone: attendee.phone,
+              instituteOrCompany: attendee.instituteOrCompany,
+            }),
+          });
+          if (!isStaticHostingFallback(res)) {
+            if (!res.ok) throw new Error(await readError(res));
+            handledViaApi = true;
+          }
+        } catch (apiErr) {
+          if (apiErr instanceof Error && !apiErr.message.includes("Failed to fetch")) {
+            throw apiErr;
+          }
+        }
+        if (!handledViaApi) {
+          await clientRegisterFreeEvent({
+            eventSlugOrId: event.slug,
+            buyerUserId: buyerId,
             ticketTypeId: selected.id,
             attendeeName: attendee.name,
             attendeeEmail: attendee.email,
             attendeePhone: attendee.phone,
             instituteOrCompany: attendee.instituteOrCompany,
-          }),
-        });
-        if (!res.ok) throw new Error(await readError(res));
+          });
+        }
         setFreeDone(true);
         setStep(5);
       } else {
         const key = `ui-ord-${event.id}-${selected.id}-${safeQty}-${attendee.email}-${sessionNonce()}`;
-        const res = await fetch("/api/v1/orders", {
-          method: "POST",
-          headers: buildHeaders({ "Idempotency-Key": key }),
-          body: JSON.stringify({
+        let createdOrder: OrderLite | null = null;
+        try {
+          const res = await fetch("/api/v1/orders", {
+            method: "POST",
+            headers: buildHeaders({ "Idempotency-Key": key }),
+            body: JSON.stringify({
+              eventId: event.id,
+              items: [{ ticketTypeId: selected.id, quantity: safeQty }],
+              attendee,
+            }),
+          });
+          if (!isStaticHostingFallback(res)) {
+            if (!res.ok) throw new Error(await readError(res));
+            const json = (await res.json()) as { data: OrderLite };
+            createdOrder = json.data;
+          }
+        } catch (apiErr) {
+          if (apiErr instanceof Error && !apiErr.message.includes("Failed to fetch")) {
+            throw apiErr;
+          }
+        }
+        if (!createdOrder) {
+          const fallbackOrder = await clientCreateTicketOrder({
             eventId: event.id,
+            buyerUserId: buyerId,
             items: [{ ticketTypeId: selected.id, quantity: safeQty }],
             attendee,
-          }),
-        });
-        if (!res.ok) throw new Error(await readError(res));
-        const json = (await res.json()) as { data: OrderLite };
-        setOrder({ id: json.data.id, status: json.data.status, total_minor: json.data.total_minor });
+            idempotencyKey: key,
+          });
+          createdOrder = {
+            id: fallbackOrder.id,
+            status: fallbackOrder.status,
+            total_minor: fallbackOrder.total_minor,
+          };
+        }
+        setOrder({ id: createdOrder.id, status: createdOrder.status, total_minor: createdOrder.total_minor });
         setStep(5);
       }
     } catch (e) {

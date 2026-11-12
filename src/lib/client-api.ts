@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import type { DatabaseState, EventRecord, RoleDefinition, VenueProfile, TicketType } from "@/lib/types";
+import type {
+  DatabaseState,
+  EventRecord,
+  Order,
+  OrderItem,
+  Registration,
+  RoleDefinition,
+  TicketRecord,
+  TicketType,
+  VenueProfile,
+} from "@/lib/types";
 import { createInitialSeed } from "./seed";
 import {
   type PublicCatalog,
@@ -611,9 +621,12 @@ export function useRoles() {
   const fetchRoles = () => {
     setLoading(true);
     fetch("/api/v1/roles")
-      .then((res) => res.json())
+      .then((res) => (res.ok && res.headers.get("content-type")?.includes("application/json") ? res.json() : null))
       .then((data) => {
-        if (data.roles) setRoles(data.roles);
+        if (data?.roles) setRoles(data.roles);
+      })
+      .catch(() => {
+        // Static hosting fallback: ignore missing local API
       })
       .finally(() => setLoading(false));
   };
@@ -623,4 +636,263 @@ export function useRoles() {
   }, []);
 
   return { roles, loading, refresh: fetchRoles };
+}
+
+function browserRandomHex(bytes = 6): string {
+  if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+    const arr = new Uint8Array(bytes);
+    window.crypto.getRandomValues(arr);
+    return Array.from(arr, (b) => b.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
+  }
+  return Math.random().toString(36).slice(2, 2 + bytes * 2).toUpperCase();
+}
+
+async function browserSha256(value: string): Promise<string> {
+  if (typeof window !== "undefined" && window.crypto?.subtle) {
+    const data = new TextEncoder().encode(value);
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer), (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return `hash-${value}`;
+}
+
+export async function clientCreateTicketOrder(input: {
+  eventId: string;
+  buyerUserId: string;
+  items: { ticketTypeId: string; quantity: number }[];
+  attendee: {
+    name: string;
+    email: string;
+    phone?: string;
+    instituteOrCompany?: string;
+  };
+  idempotencyKey?: string;
+}): Promise<Order> {
+  const db = await fetchDatabaseState();
+  const event = db.events.find((e) => e.id === input.eventId);
+  if (!event || event.status !== "PUBLISHED") {
+    throw new Error("Published event not found for ticket purchase.");
+  }
+
+  const idemKey = input.idempotencyKey || `ord-idem-${Date.now()}-${browserRandomHex(4)}`;
+  const existing = db.orders.find((o) => o.idempotency_key === idemKey);
+  if (existing) {
+    return existing;
+  }
+
+  let subtotalMinor = 0;
+  const pendingItems: Array<{ ticketType: TicketType; quantity: number; lineTotal: number }> = [];
+
+  for (const item of input.items) {
+    const qty = Math.floor(item.quantity);
+    if (qty <= 0 || qty > 10) {
+      throw new Error("Quantity per ticket tier must be between 1 and 10.");
+    }
+    const tt = db.ticket_types.find((t) => t.id === item.ticketTypeId && t.event_id === event.id);
+    if (!tt) {
+      throw new Error("Selected ticket tier not found.");
+    }
+    const remaining = Math.max(0, tt.capacity - tt.sold_count);
+    if (qty > remaining) {
+      throw new Error(`Only ${remaining} ticket(s) remaining for ${tt.name}.`);
+    }
+    const lineTotal = tt.price_minor * qty;
+    subtotalMinor += lineTotal;
+    pendingItems.push({ ticketType: tt, quantity: qty, lineTotal });
+  }
+
+  const feeMinor = Math.round(subtotalMinor * 0.025);
+  const totalMinor = subtotalMinor + feeMinor;
+  const orderId = `ord-${Date.now().toString(36)}-${browserRandomHex(3).toLowerCase()}`;
+  const now = new Date().toISOString();
+
+  const order: Order = {
+    id: orderId,
+    buyer_user_id: input.buyerUserId || null,
+    event_id: event.id,
+    order_type: "TICKET",
+    status: "PENDING",
+    subtotal_minor: subtotalMinor,
+    fee_minor: feeMinor,
+    total_minor: totalMinor,
+    currency: "BDT",
+    idempotency_key: idemKey,
+    attendee_name: input.attendee.name.trim(),
+    attendee_email: input.attendee.email.trim().toLowerCase(),
+    attendee_phone: input.attendee.phone?.trim(),
+    institute_or_company: input.attendee.instituteOrCompany?.trim(),
+    created_at: now,
+  };
+
+  for (const p of pendingItems) {
+    p.ticketType.sold_count += p.quantity;
+    const orderItem: OrderItem = {
+      id: `oi-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+      order_id: orderId,
+      ticket_type_id: p.ticketType.id,
+      package_id: null,
+      description: `${event.title} — ${p.ticketType.name}`,
+      quantity: p.quantity,
+      unit_price_minor: p.ticketType.price_minor,
+      line_total_minor: p.lineTotal,
+    };
+    db.order_items.push(orderItem);
+  }
+
+  db.orders.unshift(order);
+  cachedDb = db;
+  await saveOrderToFirestore(order);
+  return order;
+}
+
+export async function clientSandboxConfirmPayment(input: {
+  orderId: string;
+  provider?: string;
+}): Promise<Order> {
+  const db = await fetchDatabaseState();
+  const order = db.orders.find((o) => o.id === input.orderId);
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+  if (order.status === "PAID") {
+    return order;
+  }
+
+  order.status = "PAID";
+  const now = new Date().toISOString();
+  const items = db.order_items.filter((oi) => oi.order_id === order.id);
+
+  for (const item of items) {
+    if (!item.ticket_type_id) continue;
+    const tt = db.ticket_types.find((t) => t.id === item.ticket_type_id);
+    const reg: Registration = {
+      id: `reg-${Date.now().toString(36)}-${browserRandomHex(3).toLowerCase()}`,
+      event_id: order.event_id,
+      user_id: order.buyer_user_id,
+      order_id: order.id,
+      ticket_type_id: item.ticket_type_id,
+      attendee_name: order.attendee_name,
+      attendee_email: order.attendee_email,
+      attendee_phone: order.attendee_phone || "",
+      institute_or_company: order.institute_or_company || "",
+      marketing_consent: true,
+      status: "CONFIRMED",
+      created_at: now,
+    };
+    db.registrations.unshift(reg);
+    await saveRegistrationToFirestore(reg);
+
+    for (let q = 0; q < item.quantity; q++) {
+      const rawToken = `AAYOJON-TKT-${order.event_id.toUpperCase()}-${browserRandomHex(6)}`;
+      const tkt: TicketRecord = {
+        id: `tkt-${Date.now().toString(36)}-${browserRandomHex(3).toLowerCase()}`,
+        registration_id: reg.id,
+        event_id: order.event_id,
+        ticket_type_id: item.ticket_type_id,
+        attendee_name: order.attendee_name,
+        attendee_email: order.attendee_email,
+        ticket_type_name: tt?.name || "General Admission",
+        qr_token: rawToken,
+        token_hash: await browserSha256(rawToken),
+        status: "VALID",
+        issued_at: now,
+      };
+      db.tickets.unshift(tkt);
+      await saveTicketToFirestore(tkt);
+    }
+  }
+
+  cachedDb = db;
+  await saveOrderToFirestore(order);
+  return order;
+}
+
+export async function clientRegisterFreeEvent(input: {
+  eventSlugOrId: string;
+  buyerUserId: string;
+  ticketTypeId?: string;
+  attendeeName: string;
+  attendeeEmail: string;
+  attendeePhone?: string;
+  instituteOrCompany?: string;
+}): Promise<{ registration: Registration; ticket: TicketRecord }> {
+  const db = await fetchDatabaseState();
+  const event = db.events.find((e) => e.slug === input.eventSlugOrId || e.id === input.eventSlugOrId);
+  if (!event || event.status !== "PUBLISHED") {
+    throw new Error("Published event not found.");
+  }
+
+  const normalizedEmail = input.attendeeEmail.trim().toLowerCase();
+  const duplicate = db.registrations.find(
+    (r) =>
+      r.event_id === event.id &&
+      r.attendee_email.toLowerCase() === normalizedEmail &&
+      r.status === "CONFIRMED"
+  );
+  if (duplicate) {
+    throw new Error("This email is already registered for this event.");
+  }
+
+  const tt = input.ticketTypeId
+    ? db.ticket_types.find((t) => t.id === input.ticketTypeId && t.event_id === event.id)
+    : db.ticket_types.find((t) => t.event_id === event.id);
+
+  if (!tt) {
+    throw new Error("Ticket tier not found for event.");
+  }
+  if (tt.price_minor > 0) {
+    throw new Error("Paid ticket types require order and payment checkout.");
+  }
+  if (tt.sold_count >= tt.capacity || tt.sold_count >= event.capacity) {
+    throw new Error("Event is at full capacity.");
+  }
+
+  tt.sold_count += 1;
+  const now = new Date().toISOString();
+
+  const registration: Registration = {
+    id: `reg-${Date.now().toString(36)}-${browserRandomHex(3).toLowerCase()}`,
+    event_id: event.id,
+    user_id: input.buyerUserId || null,
+    order_id: null,
+    ticket_type_id: tt.id,
+    attendee_name: input.attendeeName.trim(),
+    attendee_email: normalizedEmail,
+    attendee_phone: input.attendeePhone?.trim() || "",
+    institute_or_company: input.instituteOrCompany?.trim() || "",
+    marketing_consent: false,
+    status: "CONFIRMED",
+    created_at: now,
+  };
+
+  const rawQrToken = `AAYOJON-TKT-${event.id.toUpperCase()}-${browserRandomHex(6)}`;
+  const ticket: TicketRecord = {
+    id: `tkt-${Date.now().toString(36)}-${browserRandomHex(3).toLowerCase()}`,
+    registration_id: registration.id,
+    event_id: event.id,
+    ticket_type_id: tt.id,
+    attendee_name: registration.attendee_name,
+    attendee_email: registration.attendee_email,
+    ticket_type_name: tt.name,
+    qr_token: rawQrToken,
+    token_hash: await browserSha256(rawQrToken),
+    status: "VALID",
+    issued_at: now,
+  };
+
+  db.registrations.unshift(registration);
+  db.tickets.unshift(ticket);
+  cachedDb = db;
+
+  await saveRegistrationToFirestore(registration);
+  await saveTicketToFirestore(ticket);
+
+  return { registration, ticket };
+}
+
+export async function clientGetMyOrders(buyerUserId: string): Promise<Order[]> {
+  const db = await fetchDatabaseState();
+  return db.orders.filter((o) => o.buyer_user_id === buyerUserId || !buyerUserId);
 }
