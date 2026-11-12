@@ -149,6 +149,26 @@ function Hero({ cities }: { cities: string[] }) {
 export function HomePage() {
   const { catalog, loading, error } = usePublicCatalog();
 
+  const events = catalog?.events || [];
+  const categories = catalog?.categories || [];
+  const cities = catalog?.cities || [];
+
+  // Curate 4 featured categories for the homepage showcase (must run before early return)
+  const prioritySlugs = ["tech-workshops", "conferences", "university-clubs", "cultural-festivals"];
+  const homeCategories = React.useMemo(() => {
+    if (!categories.length) return [];
+    const prioritized = prioritySlugs
+      .map((slug) => categories.find((c) => c.slug === slug))
+      .filter((c): c is typeof categories[0] => Boolean(c));
+
+    if (prioritized.length < 4) {
+      const remaining = categories.filter((c) => !prioritySlugs.includes(c.slug));
+      prioritized.push(...remaining.slice(0, 4 - prioritized.length));
+    }
+
+    return prioritized.slice(0, 4);
+  }, [categories]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-canvas">
@@ -164,29 +184,9 @@ export function HomePage() {
     );
   }
 
-  const events = catalog?.events || [];
-  const categories = catalog?.categories || [];
-  const cities = catalog?.cities || [];
-
   const featured = events.filter((e) => e.isFeatured);
   const popular = [...events].sort((a, b) => b.popularity - a.popularity).slice(0, 6);
   const soonest = [...events].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()).slice(0, 6);
-
-  // Curate 4 featured categories for the homepage showcase
-  const prioritySlugs = ["tech-workshops", "conferences", "university-clubs", "cultural-festivals"];
-  const homeCategories = React.useMemo(() => {
-    if (!categories.length) return [];
-    const prioritized = prioritySlugs
-      .map((slug) => categories.find((c) => c.slug === slug))
-      .filter((c): c is typeof categories[0] => Boolean(c));
-
-    if (prioritized.length < 4) {
-      const remaining = categories.filter((c) => !prioritySlugs.includes(c.slug));
-      prioritized.push(...remaining.slice(0, 4 - prioritized.length));
-    }
-
-    return prioritized.slice(0, 4);
-  }, [categories]);
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
