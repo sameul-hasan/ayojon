@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { HomePage } from "@/pages/HomePage";
 import { EventsPage } from "@/pages/EventsPage";
 import { EventDetailPage } from "@/pages/EventDetailPage";
+import { CheckoutPage } from "@/pages/CheckoutPage";
 import { VenuesPage } from "@/pages/VenuesPage";
 import { VenueDetailPage } from "@/pages/VenueDetailPage";
 import { TicketDetailPage } from "@/pages/TicketDetailPage";
@@ -59,6 +60,8 @@ export function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/events" element={<EventsPage />} />
       <Route path="/events/:slug" element={<EventDetailPage />} />
+      <Route path="/events/:slug/checkout" element={<CheckoutPage />} />
+      <Route path="/checkout/:slug" element={<CheckoutPage />} />
       <Route path="/venues" element={<VenuesPage />} />
       <Route path="/venues/:slug" element={<VenueDetailPage />} />
       <Route path="/tickets/:id" element={<TicketDetailPage />} />

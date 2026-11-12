@@ -65,27 +65,6 @@ export function PublicFooter() {
             <p className="text-sm text-ink-muted max-w-sm leading-relaxed">
               Aayojon is a modern Bangladesh-focused event discovery, ticketing, and event management platform. Discover experiences, book tickets, and organize events seamlessly.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">
-              <Sparkles className="size-3.5 text-brand-600" />
-              <span>Make Moments Happen</span>
-            </div>
-
-            {/* Local MFS Trust Badges */}
-            <div className="pt-3">
-              <span className="text-[11px] font-semibold text-ink-muted block uppercase tracking-wider mb-2">
-                Supported Local Payment Methods
-              </span>
-              <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-muted">
-                {["bKash", "Nagad", "Rocket", "Upay", "Visa", "Mastercard", "SSLCommerz"].map((pm) => (
-                  <span
-                    key={pm}
-                    className="rounded-md border border-line bg-surface px-2 py-1 text-[11px] font-semibold text-ink shadow-xs"
-                  >
-                    {pm}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Navigation Columns */}
@@ -110,8 +89,28 @@ export function PublicFooter() {
           ))}
         </div>
 
+        {/* SSLCommerz Verified Payment Gateway Banner */}
+        <div className="mt-10 border-t border-line/60 pt-6">
+          <div className="flex flex-col items-center justify-between gap-2 text-center sm:text-left sm:flex-row mb-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+              100% Secure Payments Powered by SSLCommerz
+            </span>
+            <span className="text-[11px] text-ink-muted">
+              Instant bKash, Nagad, Rocket, Cards & Internet Banking
+            </span>
+          </div>
+          <div className="rounded-2xl border border-line bg-surface p-3 shadow-xs flex items-center justify-center overflow-hidden">
+            <img
+              src="/ssl.png"
+              alt="SSLCommerz Supported Payment Methods: bKash, Nagad, Visa, Mastercard, AMEX, Rocket, Upay"
+              className="w-full h-auto object-contain max-h-12 sm:max-h-14"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
         {/* Bottom Bar */}
-        <div className="mt-12 border-t border-line pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted">
+        <div className="mt-8 border-t border-line pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-muted">
           <div>
             © {new Date().getFullYear()} Aayojon Technologies Ltd. All rights reserved.
           </div>
@@ -125,6 +124,16 @@ export function PublicFooter() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Decorative Bangladesh City Skyline */}
+      <div className="w-full overflow-hidden border-t border-line/40 bg-canvas-alt pt-2">
+        <img
+          src="/city1.png"
+          alt="Bangladesh City Skyline"
+          className="w-full h-12 sm:h-16 md:h-20 object-cover object-bottom opacity-85 select-none pointer-events-none"
+          loading="lazy"
+        />
       </div>
     </footer>
   );

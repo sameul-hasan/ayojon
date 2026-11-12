@@ -12,17 +12,12 @@ export function AboutCTA() {
       </div>
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-800/60 px-3.5 py-1 text-xs font-semibold text-brand-200 backdrop-blur-sm mb-6">
-          <Sparkles className="size-3.5 text-pink" />
-          <span>Make Moments Happen</span>
-        </div>
-
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl max-w-3xl mx-auto leading-tight">
-          Your Next Great Experience Starts Here.
+          Ready to Host or Attend Your Next Event?
         </h2>
 
         <p className="mx-auto mt-4 max-w-xl text-base text-brand-100 sm:text-lg">
-          Discover something exciting or bring your own event to life with Aayojon.
+          Join thousands of attendees and event organizers across Bangladesh on Aayojon.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

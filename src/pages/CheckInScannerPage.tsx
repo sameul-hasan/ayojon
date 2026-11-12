@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { CheckInScannerView } from "@/components/CheckInScannerView";
 import { useAuth } from "@/lib/firebase/auth-context";
@@ -36,10 +37,10 @@ export function CheckInScannerPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["staff", "organizer", "admin", "super_admin"]}>
-      <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
-        <Navbar activeHref="/scanner" />
+    <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
+      <Navbar activeHref="/scanner" />
 
+      <ProtectedRoute allowedRoles={["staff", "organizer", "admin", "super_admin"]}>
         <div className="border-b border-line bg-surface py-5 px-4 sm:px-6 lg:px-8 shadow-xs">
           <div className="mx-auto max-w-7xl flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -68,8 +69,10 @@ export function CheckInScannerPage() {
             />
           )}
         </main>
-      </div>
-    </ProtectedRoute>
+      </ProtectedRoute>
+
+      <PublicFooter />
+    </div>
   );
 }
 

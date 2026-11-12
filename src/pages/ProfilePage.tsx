@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { useAuth, type UserRole } from "@/lib/firebase/auth-context";
+import { useAuth, type UserRole, toPlatformRole } from "@/lib/firebase/auth-context";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   User,
@@ -14,18 +14,23 @@ import {
   Building,
   MapPin,
   Sparkles,
+  Check,
   CheckCircle2,
   AlertCircle,
   Save,
   Ticket,
   Calendar,
   ShieldCheck,
+  ShieldAlert,
   LogOut,
   Camera,
   RefreshCw,
   ExternalLink,
   Layers,
   ArrowRight,
+  Briefcase,
+  Store,
+  Handshake,
 } from "lucide-react";
 import { cn } from "@/lib/ui/cn";
 
@@ -66,6 +71,7 @@ export function ProfilePage() {
   const [preferredCity, setPreferredCity] = useState("Dhaka");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<UserRole>("attendee");
 
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -81,6 +87,7 @@ export function ProfilePage() {
       setPreferredCity(currentUser.preferred_city || "Dhaka");
       setAvatarUrl(currentUser.photoURL || currentUser.avatar_url || "");
       setInterests(currentUser.interests || ["Technology", "Startups"]);
+      setSelectedRole(currentUser.role || "attendee");
     }
   }, [currentUser]);
 
@@ -106,6 +113,7 @@ export function ProfilePage() {
         preferred_city: preferredCity,
         avatar_url: avatarUrl.trim() || undefined,
         interests,
+        platform_role: toPlatformRole(selectedRole),
       });
 
       setSaveSuccess(true);
@@ -123,14 +131,14 @@ export function ProfilePage() {
   };
 
   const roleLabelMap: Record<string, { label: string; badge: string; color: string }> = {
-    super_admin: { label: "Super Administrator", badge: "👑 Platform SuperAdmin", color: "bg-purple-50 text-purple-700 border-purple-200" },
-    admin: { label: "Administrator", badge: "🛡️ Administrator", color: "bg-blue-50 text-blue-700 border-blue-200" },
-    organizer: { label: "Event Organizer", badge: "🎪 Organizer", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-    staff: { label: "Check-in Staff", badge: "⚡ Gate Staff", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    venue_owner: { label: "Venue Provider", badge: "🏢 Venue Partner", color: "bg-amber-50 text-amber-700 border-amber-200" },
-    vendor: { label: "Service Vendor", badge: "🛠️ Vendor", color: "bg-orange-50 text-orange-700 border-orange-200" },
-    sponsor: { label: "Corporate Sponsor", badge: "💼 Sponsor Partner", color: "bg-violet-50 text-violet-700 border-violet-200" },
-    attendee: { label: "Event Attendee", badge: "🎟️ Attendee", color: "bg-teal-50 text-teal-700 border-teal-200" },
+    super_admin: { label: "Super Administrator", badge: "Platform SuperAdmin", color: "bg-purple-50 text-purple-700 border-purple-200" },
+    admin: { label: "Administrator", badge: "Administrator", color: "bg-blue-50 text-blue-700 border-blue-200" },
+    organizer: { label: "Event Organizer", badge: "Organizer", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    staff: { label: "Check-in Staff", badge: "Gate Staff", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    venue_owner: { label: "Venue Provider", badge: "Venue Partner", color: "bg-amber-50 text-amber-700 border-amber-200" },
+    vendor: { label: "Service Vendor", badge: "Vendor", color: "bg-orange-50 text-orange-700 border-orange-200" },
+    sponsor: { label: "Corporate Sponsor", badge: "Sponsor Partner", color: "bg-violet-50 text-violet-700 border-violet-200" },
+    attendee: { label: "Event Attendee", badge: "Attendee", color: "bg-teal-50 text-teal-700 border-teal-200" },
   };
 
   const currentRoleInfo = roleLabelMap[role] || roleLabelMap.attendee;
@@ -150,13 +158,22 @@ export function ProfilePage() {
                   <img
                     src={avatarUrl}
                     alt={displayName || "User"}
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
                     className="size-24 sm:size-28 rounded-2xl object-cover border-2 border-line shadow-sm"
                   />
-                ) : (
-                  <div className="flex size-24 sm:size-28 items-center justify-center rounded-2xl bg-brand-600 text-3xl font-extrabold text-white shadow-sm">
-                    {displayName ? displayName.slice(0, 2).toUpperCase() : "US"}
-                  </div>
-                )}
+                ) : null}
+                <div
+                  className={cn(
+                    "size-24 sm:size-28 items-center justify-center rounded-2xl bg-brand-600 text-3xl font-extrabold text-white shadow-sm",
+                    avatarUrl ? "hidden" : "flex"
+                  )}
+                >
+                  {displayName ? displayName.slice(0, 2).toUpperCase() : "US"}
+                </div>
                 <div className="absolute -bottom-2 -right-2 flex size-7 items-center justify-center rounded-full bg-brand-600 text-white shadow-xs">
                   <ShieldCheck className="size-4" />
                 </div>
@@ -199,7 +216,7 @@ export function ProfilePage() {
                     <span>My Ticket Wallet</span>
                   </Link>
 
-                  {role === "organizer" && (
+                  {(role === "organizer" || role === "admin" || isSuperAdmin) && (
                     <Link
                       to="/organizer"
                       className="inline-flex items-center gap-1.5 rounded-btn border border-line bg-canvas-alt px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-surface transition shadow-2xs"
@@ -209,12 +226,33 @@ export function ProfilePage() {
                     </Link>
                   )}
 
+                  {(role === "venue_owner" || role === "vendor" || role === "admin" || isSuperAdmin) && (
+                    <Link
+                      to="/provider"
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-line bg-canvas-alt px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-surface transition shadow-2xs"
+                    >
+                      <Store className="size-3.5 text-amber-600" />
+                      <span>Provider Workspace</span>
+                    </Link>
+                  )}
+
+                  {(role === "sponsor" || role === "admin" || isSuperAdmin) && (
+                    <Link
+                      to="/sponsor"
+                      className="inline-flex items-center gap-1.5 rounded-btn border border-line bg-canvas-alt px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-surface transition shadow-2xs"
+                    >
+                      <Sparkles className="size-3.5 text-violet-600" />
+                      <span>Sponsor Hub</span>
+                    </Link>
+                  )}
+
                   {isSuperAdmin && (
                     <Link
                       to="/admin"
                       className="inline-flex items-center gap-1.5 rounded-btn border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition shadow-2xs"
                     >
-                      <span>👑 Admin Console</span>
+                      <ShieldAlert className="size-3.5 text-purple-600" />
+                      <span>Admin Console</span>
                     </Link>
                   )}
                 </div>
@@ -350,6 +388,28 @@ export function ProfilePage() {
                     <p className="text-[11px] text-ink-muted mt-1">
                       Direct link to an image. If left blank, your Google account avatar or initials are displayed.
                     </p>
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <span className="text-[11px] font-semibold text-ink-muted">Quick presets:</span>
+                      {[
+                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&h=256&q=80",
+                        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&h=256&q=80",
+                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&h=256&q=80",
+                        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80",
+                      ].map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setAvatarUrl(preset)}
+                          className={cn(
+                            "size-7 rounded-full overflow-hidden border-2 transition hover:scale-110",
+                            avatarUrl === preset ? "border-brand-600 ring-2 ring-brand-500/30" : "border-line"
+                          )}
+                          title={`Select avatar preset ${idx + 1}`}
+                        >
+                          <img src={preset} alt={`Preset ${idx + 1}`} className="size-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Event Interests */}
@@ -366,13 +426,20 @@ export function ProfilePage() {
                             type="button"
                             onClick={() => toggleInterest(tag)}
                             className={cn(
-                              "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 active:scale-95",
+                              "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 active:scale-95",
                               selected
                                 ? "bg-brand-600 text-white shadow-xs"
                                 : "border border-line bg-canvas-alt text-ink-muted hover:border-brand-300 hover:text-ink"
                             )}
                           >
-                            {selected ? `✓ ${tag}` : `+ ${tag}`}
+                            {selected ? (
+                              <>
+                                <Check className="size-3" />
+                                <span>{tag}</span>
+                              </>
+                            ) : (
+                              <span>+ {tag}</span>
+                            )}
                           </button>
                         );
                       })}

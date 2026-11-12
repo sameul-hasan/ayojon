@@ -23,6 +23,8 @@ export interface UserAccountMenuProps {
     email?: string | null;
     displayName?: string | null;
     display_name?: string;
+    photoURL?: string | null;
+    avatar_url?: string;
     role?: string;
   };
   role: NormalizedRole;
@@ -88,7 +90,7 @@ export function UserAccountMenu({
     venue_owner: { tab: "provider", label: "Provider Studio", icon: Building },
     vendor: { tab: "provider", label: "Provider Studio", icon: Building },
     admin: { tab: "admin", label: "Admin Console", icon: ShieldAlert },
-    super_admin: { tab: "admin", label: "👑 Super Admin", icon: ShieldAlert },
+    super_admin: { tab: "admin", label: "Super Admin", icon: ShieldAlert },
   };
 
   const currentRoleConfig = roleConfig[role] || roleConfig.attendee;
@@ -109,7 +111,24 @@ export function UserAccountMenu({
         aria-label="User account menu"
         className="flex items-center gap-2 rounded-btn border border-line bg-surface py-1.5 pl-2 pr-2.5 text-xs font-semibold text-ink hover:bg-canvas-alt shadow-xs transition focus-visible:outline-2 focus-visible:outline-brand-600"
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 text-xs shrink-0 border border-brand-200">
+        {user.photoURL || user.avatar_url ? (
+          <img
+            src={(user.photoURL || user.avatar_url)!}
+            alt={displayName}
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+            className="size-7 rounded-full object-cover shrink-0 border border-brand-200"
+          />
+        ) : null}
+        <span
+          className={cn(
+            "size-7 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 text-xs shrink-0 border border-brand-200",
+            user.photoURL || user.avatar_url ? "hidden" : "flex"
+          )}
+        >
           {userInitials || <User className="size-3.5" />}
         </span>
         <div className="flex flex-col text-left">

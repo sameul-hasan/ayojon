@@ -280,9 +280,9 @@ export function MarketplaceView({
 
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1 text-xs font-semibold text-brand-700 shadow-xs">
-            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+            <Sparkles className="h-3.5 w-3.5 text-brand-600" />
             <span>
-              Aayojon • Bangladesh&apos;s All-in-One Event Discovery, Promotion & QR Ticketing Platform
+              Event Discovery & QR Ticketing Platform
             </span>
           </div>
 

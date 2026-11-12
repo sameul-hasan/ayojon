@@ -164,10 +164,10 @@ export function SuperAdminConsolePage() {
   );
 
   return (
-    <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-      <div className="flex min-h-screen flex-col bg-canvas text-ink">
-        <PublicNavbar activeHref="/admin" />
+    <div className="flex min-h-screen flex-col bg-canvas text-ink">
+      <PublicNavbar activeHref="/admin" />
 
+      <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
         <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
           {/* HEADER BANNER */}
           <div className="rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-lg mb-8">
@@ -194,7 +194,8 @@ export function SuperAdminConsolePage() {
                 <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-right">
                   <div className="text-xs text-purple-300 font-medium">Logged in as</div>
                   <div className="text-sm font-bold text-white flex items-center gap-1.5 justify-end">
-                    <span>👑 Super Admin</span>
+                    <ShieldAlert className="size-4 text-purple-300" />
+                    <span>Super Admin</span>
                   </div>
                   <div className="text-[11px] text-purple-300/80">{currentUser?.email}</div>
                 </div>
@@ -564,9 +565,9 @@ export function SuperAdminConsolePage() {
             </div>
           )}
         </main>
+      </ProtectedRoute>
 
-        <PublicFooter />
-      </div>
-    </ProtectedRoute>
+      <PublicFooter />
+    </div>
   );
 }

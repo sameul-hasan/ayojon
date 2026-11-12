@@ -1,23 +1,6 @@
 {
   "profiles": [
     {
-      "id": "usr-superadmin",
-      "email": "superadmin@aayojon.bd",
-      "display_name": "Super Administrator (প্রধান নিয়ন্ত্রক)",
-      "phone": "+8801700000001",
-      "platform_role": "SUPER_ADMIN",
-      "organization_label": "Aayojon Platform Core Trust & Security",
-      "mfa_enabled": true,
-      "interests": [
-        "conferences",
-        "tech-workshops",
-        "startup-business",
-        "cultural-festivals"
-      ],
-      "preferred_city": "Dhaka",
-      "created_at": "2026-09-01T00:00:00Z"
-    },
-    {
       "id": "usr-attendee-rafiq",
       "email": "rafiq@student.buet.ac.bd",
       "display_name": "Rafiqul Islam",
@@ -95,6 +78,23 @@
       "created_at": "2026-10-18T12:00:00Z"
     },
     {
+      "id": "usr-superadmin",
+      "email": "superadmin@aayojon.bd",
+      "display_name": "Super Administrator (প্রধান নিয়ন্ত্রক)",
+      "phone": "+8801700000001",
+      "platform_role": "SUPER_ADMIN",
+      "organization_label": "Aayojon Platform Core Trust & Security",
+      "mfa_enabled": true,
+      "interests": [
+        "conferences",
+        "tech-workshops",
+        "startup-business",
+        "cultural-festivals"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-09-01T00:00:00Z"
+    },
+    {
       "id": "usr-admin-tariq",
       "email": "admin@aayojon.bd",
       "display_name": "Tariq Mahmud",
@@ -109,6 +109,38 @@
       ],
       "preferred_city": "Dhaka",
       "created_at": "2026-09-25T06:00:00Z"
+    },
+    {
+      "id": "usr-venue-kamal",
+      "email": "kamal@kib-auditorium.org.bd",
+      "display_name": "Kamal Hossain",
+      "phone": "+8801711234567",
+      "platform_role": "VENUE_OWNER",
+      "organization_label": "Krishibid Institution Bangladesh (KIB)",
+      "mfa_enabled": true,
+      "interests": [
+        "conferences",
+        "university-clubs",
+        "cultural-festivals"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-10T08:00:00Z"
+    },
+    {
+      "id": "usr-vendor-tariq",
+      "email": "tariq@soundcraft.com.bd",
+      "display_name": "Tariqul Islam",
+      "phone": "+8801811998877",
+      "platform_role": "VENDOR",
+      "organization_label": "SoundCraft BD & Master Catering",
+      "mfa_enabled": true,
+      "interests": [
+        "concerts",
+        "conferences",
+        "tech-workshops"
+      ],
+      "preferred_city": "Dhaka",
+      "created_at": "2026-10-12T09:30:00Z"
     }
   ],
   "organizations": [
@@ -171,7 +203,7 @@
     {
       "id": "cat-uni",
       "name": "University & Campus Clubs",
-      "name_bn": "বিশ্ববিদ্যালয় ও ক্যাম্পাস ক্লাব",
+      "name_bn": "University & Campus Clubs",
       "slug": "university-clubs",
       "icon": "GraduationCap",
       "active": true
@@ -179,7 +211,7 @@
     {
       "id": "cat-tech",
       "name": "Tech & AI Workshops",
-      "name_bn": "প্রযুক্তি ও এআই ওয়ার্কশপ",
+      "name_bn": "Tech & AI Workshops",
       "slug": "tech-workshops",
       "icon": "Cpu",
       "active": true
@@ -187,7 +219,7 @@
     {
       "id": "cat-conf",
       "name": "Conferences & Summits",
-      "name_bn": "কনফারেন্স ও সামিট",
+      "name_bn": "Conferences & Summits",
       "slug": "conferences",
       "icon": "Presentation",
       "active": true
@@ -195,7 +227,7 @@
     {
       "id": "cat-startup",
       "name": "Startup & Business",
-      "name_bn": "স্টার্টআপ ও বিজনেস",
+      "name_bn": "Startup & Business",
       "slug": "startup-business",
       "icon": "Rocket",
       "active": true
@@ -203,7 +235,7 @@
     {
       "id": "cat-design",
       "name": "Design & Creative",
-      "name_bn": "ডিজাইন ও সৃজনশীলতা",
+      "name_bn": "Design & Creative",
       "slug": "design-arts",
       "icon": "Palette",
       "active": true
@@ -211,7 +243,7 @@
     {
       "id": "cat-culture",
       "name": "Cultural & Music Fest",
-      "name_bn": "সাংস্কৃতিক ও সংগীত উৎসব",
+      "name_bn": "Cultural & Music Fest",
       "slug": "cultural-festivals",
       "icon": "Music",
       "active": true
@@ -278,7 +310,7 @@
       "id": "pkg-basic",
       "code": "BASIC",
       "name": "Basic",
-      "name_bn": "বেসিক",
+      "name_bn": "Basic",
       "price_minor": 79900,
       "currency": "BDT",
       "summary": "Publish event, registration, attendee list, basic analytics",
@@ -295,7 +327,7 @@
       "id": "pkg-promoted",
       "code": "PROMOTED",
       "name": "Promoted",
-      "name_bn": "প্রমোটেড",
+      "name_bn": "Promoted",
       "price_minor": 149900,
       "currency": "BDT",
       "summary": "Basic plus boosted listing and campaign tools",
@@ -311,7 +343,7 @@
       "id": "pkg-plus",
       "code": "PLUS",
       "name": "Plus",
-      "name_bn": "প্লাস",
+      "name_bn": "Plus",
       "price_minor": 269900,
       "currency": "BDT",
       "summary": "Promoted plus advanced analytics and custom branding",
@@ -327,7 +359,7 @@
       "id": "pkg-premium",
       "code": "PREMIUM",
       "name": "Premium",
-      "name_bn": "প্রিমিয়াম",
+      "name_bn": "Premium",
       "price_minor": 499900,
       "currency": "BDT",
       "summary": "Plus plus premium promotion options and priority support",
@@ -343,7 +375,7 @@
       "id": "pkg-featured-addon",
       "code": "FEATURED_ADDON",
       "name": "Featured Placement Add-on",
-      "name_bn": "ফিচার্ড প্লেসমেন্ট অ্যাড-অন",
+      "name_bn": "Featured Placement Add-on",
       "price_minor": 50000,
       "currency": "BDT",
       "summary": "Additional featured carousel placement for 14 days",
@@ -719,6 +751,243 @@
       "updated_at": "2026-11-03T10:00:00Z"
     },
     {
+      "id": "evt-dhaka-indie-music",
+      "organization_id": "org-nsu-yes",
+      "category_id": "cat-design",
+      "venue_id": "ven-emk",
+      "title": "Dhaka Indie Music & Acoustic Fest 2026",
+      "slug": "dhaka-indie-music-acoustic-fest",
+      "tagline": "An intimate live evening celebrating indie bands, folk fusion, and acoustic songwriters.",
+      "description": "Experience a soulful acoustic night in Dhaka featuring 6 emerging indie bands and folk-fusion vocalists at EMK Center, Gulshan. Seating is strictly limited to ensure an exceptional live listening experience with state-of-the-art studio sound.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-11-29T18:00:00Z",
+      "ends_at": "2026-11-29T22:30:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 180,
+      "is_online": false,
+      "cover_gradient": "from-rose-900 via-pink-900 to-slate-950",
+      "brand_theme": "#E11D48",
+      "agenda": [
+        {
+          "time": "05:30 PM",
+          "title": "Gates Open & Acoustical Check-In",
+          "speaker": "EMK Auditorium"
+        },
+        {
+          "time": "06:30 PM",
+          "title": "Opening Acoustic Sets: Folk & Indie Solos",
+          "speaker": "Guest Songwriters"
+        },
+        {
+          "time": "08:30 PM",
+          "title": "Headliner Performance & Jam Session",
+          "speaker": "Dhaka Indie Collective"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Arnob & Friends",
+          "role": "Special Guest Performer",
+          "org": "Bengal Music Lab"
+        },
+        {
+          "name": "Tanvir Ahmed",
+          "role": "Event Curator",
+          "org": "Aayojon Culture Hub"
+        }
+      ],
+      "tags": [
+        "Music",
+        "Concert",
+        "Indie",
+        "Acoustic",
+        "Dhaka"
+      ],
+      "package_code": "PREMIUM",
+      "is_featured": true,
+      "views_count": 2150,
+      "saves_count": 420,
+      "refund_policy": "Refunds available up to 48 hours before the concert.",
+      "contact_email": "tanvir@nsu-yes.org",
+      "created_at": "2026-11-01T10:00:00Z",
+      "updated_at": "2026-11-10T12:00:00Z"
+    },
+    {
+      "id": "evt-bangladesh-fintech-summit",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-conf",
+      "venue_id": "ven-kib",
+      "title": "Bangladesh FinTech & Digital Banking Summit 2026",
+      "slug": "bangladesh-fintech-digital-banking-summit",
+      "tagline": "Connecting mobile financial services, central bank regulators, and payment architects.",
+      "description": "The premier annual summit on Bangladesh financial infrastructure. Deep dive into MFS interoperability, national QR payments, real-time fraud defense, and agent banking networks with industry executives and engineering leaders.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-12-08T09:00:00Z",
+      "ends_at": "2026-12-08T18:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 350,
+      "is_online": false,
+      "cover_gradient": "from-blue-950 via-slate-900 to-teal-950",
+      "brand_theme": "#2563EB",
+      "agenda": [
+        {
+          "time": "09:00 AM",
+          "title": "Delegate Registration & Morning Networking",
+          "speaker": "KIB Grand Lobby"
+        },
+        {
+          "time": "10:30 AM",
+          "title": "Keynote: The Future of Interoperable Micro-Payments",
+          "speaker": "Central Banking Forum"
+        },
+        {
+          "time": "02:00 PM",
+          "title": "Panel: AI-Powered Fraud Detection at MFS Scale",
+          "speaker": "Security Engineering Leads"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Syed Almas Kabir",
+          "role": "Keynote Speaker",
+          "org": "FinTech Alliance BD"
+        },
+        {
+          "name": "Nusrat Jahan",
+          "role": "FinTech Coordinator",
+          "org": "BUET Tech Collective"
+        }
+      ],
+      "tags": [
+        "FinTech",
+        "bKash",
+        "Banking",
+        "Payments",
+        "Conference"
+      ],
+      "package_code": "PREMIUM",
+      "is_featured": true,
+      "views_count": 1720,
+      "saves_count": 290,
+      "refund_policy": "Full refund up to 7 days before event start.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-11-03T11:00:00Z",
+      "updated_at": "2026-11-08T14:00:00Z"
+    },
+    {
+      "id": "evt-sylhet-ai-winter-camp",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-tech",
+      "venue_id": "ven-emk",
+      "title": "Sylhet AI & Machine Learning Winter Camp",
+      "slug": "sylhet-ai-machine-learning-winter-camp",
+      "tagline": "Hands-on PyTorch, computer vision, and generative AI pipelines for students and developers.",
+      "description": "A weekend boot camp bringing world-class AI engineering curriculum to Sylhet. Learn transformer models, local dataset fine-tuning, and production deployment with GPU acceleration.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-12-14T10:00:00Z",
+      "ends_at": "2026-12-15T17:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 120,
+      "is_online": false,
+      "cover_gradient": "from-teal-950 via-emerald-900 to-zinc-950",
+      "brand_theme": "#059669",
+      "agenda": [
+        {
+          "time": "10:00 AM",
+          "title": "PyTorch Deep Learning Foundations",
+          "speaker": "Lab 1"
+        },
+        {
+          "time": "02:00 PM",
+          "title": "Fine-tuning Small Language Models for Bangla",
+          "speaker": "Lab 2"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Dr. Kazi Tanvir",
+          "role": "Associate Professor",
+          "org": "SUST CSE"
+        }
+      ],
+      "tags": [
+        "AI",
+        "Sylhet",
+        "Machine Learning",
+        "PyTorch",
+        "Workshop"
+      ],
+      "package_code": "PROMOTED",
+      "is_featured": false,
+      "views_count": 890,
+      "saves_count": 140,
+      "refund_policy": "Refundable up to 72 hours before workshop start.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-11-05T09:00:00Z",
+      "updated_at": "2026-11-09T10:00:00Z"
+    },
+    {
+      "id": "evt-national-bangla-nlp-hackathon",
+      "organization_id": "org-buet-cc",
+      "category_id": "cat-uni",
+      "venue_id": "ven-buet",
+      "title": "National Bangla NLP & Open LLM Hackathon 2026",
+      "slug": "national-bangla-nlp-open-llm-hackathon",
+      "tagline": "30-hour national hackathon building open Bangla datasets, tokenizers, and language applications.",
+      "description": "Gathering university teams from across the nation to solve real-world Bangla language processing challenges in healthcare, legal tech, and education. Mentored by industry AI researchers.",
+      "status": "PUBLISHED",
+      "visibility": "PUBLIC",
+      "starts_at": "2026-12-20T08:00:00Z",
+      "ends_at": "2026-12-21T18:00:00Z",
+      "timezone": "Asia/Dhaka",
+      "capacity": 220,
+      "is_online": false,
+      "cover_gradient": "from-violet-950 via-purple-900 to-slate-950",
+      "brand_theme": "#7C3AED",
+      "agenda": [
+        {
+          "time": "08:00 AM",
+          "title": "Team Check-In & Challenge Briefing",
+          "speaker": "BUET ECE Auditorium"
+        },
+        {
+          "time": "11:00 AM",
+          "title": "Dataset Release & Coding Sprint Begins",
+          "speaker": "Hackathon Arena"
+        },
+        {
+          "time": "03:00 PM (Day 2)",
+          "title": "Final Product Demos & Jury Deliberation",
+          "speaker": "Jury Panel"
+        }
+      ],
+      "speakers": [
+        {
+          "name": "Prof. Dr. Ashikur Rahman",
+          "role": "Jury Chair",
+          "org": "Dept. of CSE, BUET"
+        }
+      ],
+      "tags": [
+        "Bangla NLP",
+        "Hackathon",
+        "Open Source",
+        "BUET",
+        "Students"
+      ],
+      "package_code": "PLUS",
+      "is_featured": true,
+      "views_count": 1640,
+      "saves_count": 310,
+      "refund_policy": "Team registration fee is refundable if withdrawn before team verification.",
+      "contact_email": "nusrat@buetcs.org",
+      "created_at": "2026-11-06T14:00:00Z",
+      "updated_at": "2026-11-10T16:00:00Z"
+    },
+    {
       "id": "evt-draft-cyber-ctf",
       "organization_id": "org-buet-cc",
       "category_id": "cat-uni",
@@ -911,7 +1180,7 @@
       "price_minor": 50000,
       "currency": "BDT",
       "capacity": 200,
-      "sold_count": 142,
+      "sold_count": 143,
       "sales_start": "2026-10-10T00:00:00Z",
       "sales_end": "2026-11-21T23:59:59Z"
     },
@@ -923,7 +1192,7 @@
       "price_minor": 150000,
       "currency": "BDT",
       "capacity": 200,
-      "sold_count": 89,
+      "sold_count": 88,
       "sales_start": "2026-10-10T00:00:00Z",
       "sales_end": "2026-11-21T23:59:59Z"
     },
@@ -988,6 +1257,78 @@
       "sales_end": "2026-11-12T18:30:00Z"
     },
     {
+      "id": "tt-music-general",
+      "event_id": "evt-dhaka-indie-music",
+      "name": "General Admission Pass",
+      "description": "Full concert entry, acoustic lounge access & welcome refreshment.",
+      "price_minor": 45000,
+      "currency": "BDT",
+      "capacity": 120,
+      "sold_count": 65,
+      "sales_start": "2026-11-01T00:00:00Z",
+      "sales_end": "2026-11-29T17:00:00Z"
+    },
+    {
+      "id": "tt-music-vip",
+      "event_id": "evt-dhaka-indie-music",
+      "name": "VIP Front Row & Backstage Meet",
+      "description": "Front-row reserved seating, artist merchandise & post-concert meet-and-greet.",
+      "price_minor": 120000,
+      "currency": "BDT",
+      "capacity": 60,
+      "sold_count": 38,
+      "sales_start": "2026-11-01T00:00:00Z",
+      "sales_end": "2026-11-29T17:00:00Z"
+    },
+    {
+      "id": "tt-fintech-standard",
+      "event_id": "evt-bangladesh-fintech-summit",
+      "name": "Summit Delegate Pass",
+      "description": "Access to all keynote stages, exhibition hall, lunch buffet & certificate.",
+      "price_minor": 180000,
+      "currency": "BDT",
+      "capacity": 250,
+      "sold_count": 142,
+      "sales_start": "2026-11-03T00:00:00Z",
+      "sales_end": "2026-12-07T23:59:59Z"
+    },
+    {
+      "id": "tt-fintech-student",
+      "event_id": "evt-bangladesh-fintech-summit",
+      "name": "University Student Delegate (ID Req.)",
+      "description": "Subsidized pass for university students to attend executive keynote tracks.",
+      "price_minor": 60000,
+      "currency": "BDT",
+      "capacity": 100,
+      "sold_count": 75,
+      "sales_start": "2026-11-03T00:00:00Z",
+      "sales_end": "2026-12-07T23:59:59Z"
+    },
+    {
+      "id": "tt-sylhet-bootcamp",
+      "event_id": "evt-sylhet-ai-winter-camp",
+      "name": "2-Day Bootcamp Lab Pass",
+      "description": "Includes cloud GPU lab environment, workshop materials & certificate.",
+      "price_minor": 75000,
+      "currency": "BDT",
+      "capacity": 120,
+      "sold_count": 45,
+      "sales_start": "2026-11-05T00:00:00Z",
+      "sales_end": "2026-12-13T23:59:59Z"
+    },
+    {
+      "id": "tt-bangla-nlp-team",
+      "event_id": "evt-national-bangla-nlp-hackathon",
+      "name": "Hackathon Team Pass (Up to 4 Members)",
+      "description": "Team registration, 30-hour lab facility, meals & dataset API access.",
+      "price_minor": 100000,
+      "currency": "BDT",
+      "capacity": 55,
+      "sold_count": 32,
+      "sales_start": "2026-11-06T00:00:00Z",
+      "sales_end": "2026-12-19T23:59:59Z"
+    },
+    {
       "id": "tt-ctf-student",
       "event_id": "evt-draft-cyber-ctf",
       "name": "CTF Contestant Pass",
@@ -1002,21 +1343,21 @@
   ],
   "orders": [
     {
-      "id": "ord-9daeea91",
-      "buyer_user_id": "usr-attendee-rafiq",
+      "id": "ord-c06b65ea",
+      "buyer_user_id": "usr-superadmin",
       "event_id": "evt-dhaka-ai-summit",
       "order_type": "TICKET",
       "status": "PAID",
-      "subtotal_minor": 150000,
-      "fee_minor": 3750,
-      "total_minor": 153750,
+      "subtotal_minor": 50000,
+      "fee_minor": 1250,
+      "total_minor": 51250,
       "currency": "BDT",
-      "idempotency_key": "test-checkout-flow-1794392055094",
-      "attendee_name": "Test Checkout",
-      "attendee_email": "testcheckout@example.com",
+      "idempotency_key": "ui-ord-evt-dhaka-ai-summit-tt-ai-student-1-sameulhasanbd@gmail.com-5f53dbb7-9128-4eb0-aacc-9f6bb3947437",
+      "attendee_name": "Sameul Hasan",
+      "attendee_email": "sameulhasanbd@gmail.com",
       "attendee_phone": "",
       "institute_or_company": "",
-      "created_at": "2026-11-11T10:14:15.094Z"
+      "created_at": "2026-11-12T14:12:44.242Z"
     },
     {
       "id": "ord-pkg-ai-summit",
@@ -1102,28 +1443,28 @@
       "line_total_minor": 50000
     },
     {
-      "id": "oi-b22016a7",
-      "order_id": "ord-9daeea91",
-      "ticket_type_id": "tt-ai-pro",
+      "id": "oi-f8de838c",
+      "order_id": "ord-c06b65ea",
+      "ticket_type_id": "tt-ai-student",
       "package_id": null,
-      "description": "Professional Engineer Pass",
+      "description": "Student Early-Bird Pass (ID Required)",
       "quantity": 1,
-      "unit_price_minor": 150000,
-      "line_total_minor": 150000
+      "unit_price_minor": 50000,
+      "line_total_minor": 50000
     }
   ],
   "payments": [
     {
-      "id": "pay-8921f644",
-      "order_id": "ord-9daeea91",
-      "provider": "BKASH_SANDBOX",
-      "provider_reference": "BKASH-TEST-1794392055099",
-      "webhook_event_id": "wh-test-1794392055099",
-      "amount_minor": 153750,
+      "id": "pay-10056348",
+      "order_id": "ord-c06b65ea",
+      "provider": "SSLCOMMERZ_SANDBOX",
+      "provider_reference": "SSLCOMMERZ_SANDBOX-REF-957463",
+      "webhook_event_id": "wh-sbx-4383297f",
+      "amount_minor": 51250,
       "currency": "BDT",
       "status": "VERIFIED",
-      "verified_at": "2026-11-11T10:14:15.100Z",
-      "created_at": "2026-11-11T10:14:15.100Z"
+      "verified_at": "2026-11-12T14:12:55.962Z",
+      "created_at": "2026-11-12T14:12:55.962Z"
     },
     {
       "id": "pay-1",
@@ -1164,18 +1505,18 @@
   ],
   "registrations": [
     {
-      "id": "reg-9ea0da47",
+      "id": "reg-b397137a",
       "event_id": "evt-dhaka-ai-summit",
-      "user_id": "usr-attendee-rafiq",
-      "order_id": "ord-9daeea91",
-      "ticket_type_id": "tt-ai-pro",
-      "attendee_name": "Test Checkout",
-      "attendee_email": "testcheckout@example.com",
+      "user_id": "usr-superadmin",
+      "order_id": "ord-c06b65ea",
+      "ticket_type_id": "tt-ai-student",
+      "attendee_name": "Sameul Hasan",
+      "attendee_email": "sameulhasanbd@gmail.com",
       "attendee_phone": "",
       "institute_or_company": "",
       "marketing_consent": true,
       "status": "CONFIRMED",
-      "created_at": "2026-11-11T10:14:15.100Z"
+      "created_at": "2026-11-12T14:12:55.962Z"
     },
     {
       "id": "reg-rafiq-cse",
@@ -1238,17 +1579,17 @@
   ],
   "tickets": [
     {
-      "id": "tkt-1b216c99",
-      "registration_id": "reg-9ea0da47",
+      "id": "tkt-9b4aa60e",
+      "registration_id": "reg-b397137a",
       "event_id": "evt-dhaka-ai-summit",
-      "ticket_type_id": "tt-ai-pro",
-      "attendee_name": "Test Checkout",
-      "attendee_email": "testcheckout@example.com",
-      "ticket_type_name": "Professional Engineer Pass",
-      "qr_token": "AAYOJON-TKT-EVT-DHAKA-AI-SUMMIT-4941B2ABB191",
-      "token_hash": "004596abe3ee72708ab8543ae3713ce0d41c31bd59927d286fddee5437d5fb43",
+      "ticket_type_id": "tt-ai-student",
+      "attendee_name": "Sameul Hasan",
+      "attendee_email": "sameulhasanbd@gmail.com",
+      "ticket_type_name": "Student Early-Bird Pass (ID Required)",
+      "qr_token": "AAYOJON-TKT-EVT-DHAKA-AI-SUMMIT-05C5E22D2CC7",
+      "token_hash": "a6fb01a11aa3d05aa77052662286aacf04df32233c34bb98a3ac3794883d5807",
       "status": "VALID",
-      "issued_at": "2026-11-11T10:14:15.100Z"
+      "issued_at": "2026-11-12T14:12:55.962Z"
     },
     {
       "id": "tkt-1",
@@ -1359,17 +1700,17 @@
   ],
   "notifications": [
     {
-      "id": "notif-0afc142f",
-      "user_id": "usr-attendee-rafiq",
-      "destination": "testcheckout@example.com",
+      "id": "notif-73da11b3",
+      "user_id": "usr-superadmin",
+      "destination": "sameulhasanbd@gmail.com",
       "channel": "EMAIL",
       "template": "TICKET_ISSUED_CONFIRMATION",
       "subject": "Your QR Ticket for Dhaka AI & Cloud Engineering Summit 2026",
       "status": "SENT",
       "retry_count": 0,
-      "idempotency_key": "notif-ord-ord-9daeea91",
-      "sent_at": "2026-11-11T10:14:15.100Z",
-      "created_at": "2026-11-11T10:14:15.100Z"
+      "idempotency_key": "notif-ord-ord-c06b65ea",
+      "sent_at": "2026-11-12T14:12:55.962Z",
+      "created_at": "2026-11-12T14:12:55.962Z"
     },
     {
       "id": "notif-1",
@@ -1470,29 +1811,29 @@
   ],
   "analytics_events": [
     {
-      "id": "ae-0be32768",
+      "id": "ae-08f7e6bd",
       "event_name": "payment_succeeded",
       "event_id": "evt-dhaka-ai-summit",
-      "order_id": "ord-9daeea91",
+      "order_id": "ord-c06b65ea",
       "session_id": "webhook-callback",
       "properties": {
-        "provider": "BKASH_SANDBOX",
-        "amount_minor": 153750,
+        "provider": "SSLCOMMERZ_SANDBOX",
+        "amount_minor": 51250,
         "currency": "BDT"
       },
-      "timestamp": "2026-11-11T10:14:15.100Z"
+      "timestamp": "2026-11-12T14:12:55.962Z"
     },
     {
-      "id": "ae-f6dc5941",
+      "id": "ae-ccf65638",
       "event_name": "checkout_started",
       "event_id": "evt-dhaka-ai-summit",
-      "order_id": "ord-9daeea91",
+      "order_id": "ord-c06b65ea",
       "session_id": "server-session",
       "properties": {
         "currency": "BDT",
-        "total_minor": 153750
+        "total_minor": 51250
       },
-      "timestamp": "2026-11-11T10:14:15.094Z"
+      "timestamp": "2026-11-12T14:12:44.242Z"
     },
     {
       "id": "ae-1",
@@ -1937,7 +2278,7 @@
       "id": "role-super-admin",
       "code": "SUPER_ADMIN",
       "name": "Super Administrator",
-      "name_bn": "সর্বোচ্চ প্ল্যাটফর্ম প্রশাসক",
+      "name_bn": "Super Administrator",
       "description": "Unrestricted platform control: manage database roles, grant permissions, system configuration, audit logs, financial escrow, and dispute resolution.",
       "permissions": [
         "event.create",
@@ -1988,7 +2329,7 @@
       "id": "role-admin",
       "code": "ADMIN",
       "name": "Platform Administrator",
-      "name_bn": "প্ল্যাটফর্ম প্রশাসক",
+      "name_bn": "Platform Administrator",
       "description": "Operational management, content moderation, organizer support, and audit log inspection.",
       "permissions": [
         "event.create",
@@ -2037,7 +2378,7 @@
       "id": "role-organizer",
       "code": "ORGANIZER",
       "name": "Event Organizer",
-      "name_bn": "ইভেন্ট আয়োজক",
+      "name_bn": "Event Organizer",
       "description": "Create, publish, and host events, manage tickets, export attendee rosters, submit venue/vendor RFQs.",
       "permissions": [
         "event.read.public",
@@ -2070,7 +2411,7 @@
       "id": "role-staff",
       "code": "STAFF",
       "name": "Check-in Staff",
-      "name_bn": "প্রবেশ নিরীক্ষক",
+      "name_bn": "Check-in Staff",
       "description": "Scan QR passes, validate attendee entry at event gates, prevent duplicate scans.",
       "permissions": [
         "event.read.public",
@@ -2087,7 +2428,7 @@
       "id": "role-sponsor",
       "code": "SPONSOR",
       "name": "Corporate Sponsor",
-      "name_bn": "স্পন্সর পার্টনার",
+      "name_bn": "Corporate Sponsor",
       "description": "Discover verified university and tech events, submit sponsorship proposals, view engagement metrics.",
       "permissions": [
         "event.read.public",
@@ -2106,7 +2447,7 @@
       "id": "role-venue-owner",
       "code": "VENUE_OWNER",
       "name": "Venue Provider",
-      "name_bn": "ভেন্যু প্রোভাইডার",
+      "name_bn": "Venue Provider",
       "description": "List auditoriums and spaces, respond to organizer RFQs with itemized quotations, lock booking dates.",
       "permissions": [
         "event.read.public",
@@ -2129,7 +2470,7 @@
       "id": "role-vendor",
       "code": "VENDOR",
       "name": "Service Vendor",
-      "name_bn": "সেবা সরবরাহকারী",
+      "name_bn": "Service Vendor",
       "description": "Manage sound, light, photography, and catering listings, bid on event RFQs, track bookings.",
       "permissions": [
         "event.read.public",
@@ -2152,7 +2493,7 @@
       "id": "role-attendee",
       "code": "ATTENDEE",
       "name": "Event Attendee",
-      "name_bn": "অংশগ্রহণকারী",
+      "name_bn": "Event Attendee",
       "description": "Discover public events, purchase tickets via bKash/Nagad/Cards, access offline digital ticket wallet.",
       "permissions": [
         "event.read.public",
@@ -2172,7 +2513,7 @@
       "id": "role-guest",
       "code": "GUEST",
       "name": "Guest Visitor",
-      "name_bn": "দর্শনার্থী",
+      "name_bn": "Guest Visitor",
       "description": "Public event discovery, search, and catalog exploration.",
       "permissions": [
         "event.read.public",

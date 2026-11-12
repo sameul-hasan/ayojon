@@ -1496,10 +1496,10 @@ export function OrganizerWorkspaceView({
                   <p className="text-sm font-bold text-ink">{wizTitle}</p>
                   <p className="text-ink-muted">{wizDescription}</p>
                   <div className="flex flex-wrap gap-4 pt-2 text-brand-700 font-medium">
-                    <span>✓ Title & Schedule Validated</span>
-                    <span>✓ Capacity: {wizCapacity} seats</span>
-                    <span>
-                      ✓ Ticket Price:{" "}
+                    <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-emerald-600" /> Title & Schedule Validated</span>
+                    <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="size-3.5 text-emerald-600" /> Capacity: {wizCapacity} seats</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <CheckCircle2 className="size-3.5 text-emerald-600" /> Ticket Price:{" "}
                       {wizTicketPriceBDT === 0
                         ? "Free (৳0)"
                         : `৳${wizTicketPriceBDT}`}

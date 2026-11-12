@@ -201,7 +201,7 @@ export function DesktopNavigation({ activeHref, role, isSuperAdmin }: DesktopNav
           )}
         >
           <ShieldAlert className="size-3.5 text-purple-600" />
-          <span>👑 Super Admin</span>
+          <span>Super Admin</span>
         </Link>
       )}
     </nav>

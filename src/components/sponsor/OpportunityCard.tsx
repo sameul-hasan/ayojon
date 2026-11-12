@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Users, CalendarDays, MapPin, Building2, Award, ArrowRight } from "lucide-react";
+import { Users, CalendarDays, MapPin, Building2, Award, ArrowRight, CheckCircle2 } from "lucide-react";
 import type { EventRecord, Organization } from "@/lib/types";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/ui/cn";
@@ -54,7 +54,9 @@ export function OpportunityCard({
                 <Building2 className="size-3.5" />
                 <span>{org?.name || "Host Organization"}</span>
                 {org?.verified_badge && (
-                  <span className="text-brand-600 font-bold" title="Verified Host">✓</span>
+                  <span title="Verified Host" className="inline-flex items-center">
+                    <CheckCircle2 className="size-3.5 text-brand-600 inline" />
+                  </span>
                 )}
               </div>
               <h3 className="mt-0.5 text-base font-bold text-ink leading-snug line-clamp-1">{event.title}</h3>

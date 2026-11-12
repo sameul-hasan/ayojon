@@ -164,14 +164,19 @@ export function AccessDeniedView({
         )}
 
         <div className="pt-2 flex flex-col gap-2">
+          <Link href="/profile">
+            <Button variant="primary" className="w-full gap-2">
+              <Sparkles className="size-4" /> Manage / Upgrade Role in Profile
+            </Button>
+          </Link>
           <Link href="/">
-            <Button variant="primary" className="w-full">
+            <Button variant="outline" size="sm" className="w-full">
               Return to Homepage
             </Button>
           </Link>
           <Link href="/login">
-            <Button variant="outline" size="sm" className="w-full">
-              Sign In with Authorized Account
+            <Button variant="ghost" size="sm" className="w-full text-xs text-ink-muted">
+              Sign In with Another Account
             </Button>
           </Link>
         </div>

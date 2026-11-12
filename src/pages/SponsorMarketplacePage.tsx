@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SponsorMarketplaceView } from "@/components/SponsorMarketplaceView";
 import { useAuth } from "@/lib/firebase/auth-context";
@@ -53,10 +54,10 @@ export function SponsorMarketplacePage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["sponsor", "admin", "super_admin"]}>
-      <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
-        <Navbar activeHref="/sponsor" />
+    <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
+      <Navbar activeHref="/sponsor" />
 
+      <ProtectedRoute allowedRoles={["sponsor", "admin", "super_admin"]}>
         <div className="border-b border-line bg-surface py-5 px-4 sm:px-6 lg:px-8 shadow-xs">
           <div className="mx-auto max-w-7xl flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -84,8 +85,10 @@ export function SponsorMarketplacePage() {
             />
           )}
         </main>
-      </div>
-    </ProtectedRoute>
+      </ProtectedRoute>
+
+      <PublicFooter />
+    </div>
   );
 }
 

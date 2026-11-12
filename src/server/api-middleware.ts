@@ -19,7 +19,7 @@ import {
   DomainError,
 } from "../lib/db";
 import { canAccessResource } from "../lib/permissions/rbac";
-import { formatBDT } from "../lib/seed";
+import { formatBDT, hashToken } from "../lib/seed";
 import type { DatabaseState, RoleDefinition } from "../lib/types";
 
 function createApiMiddleware() {
@@ -498,7 +498,7 @@ function createApiMiddleware() {
             idempotencyKey,
           });
           saveDb(db);
-          return sendJson(200, { order });
+          return sendJson(200, { order, data: order });
         }
 
         // 12. POST /api/v1/payments/sandbox-confirm (bKash/Nagad Sandbox Confirm)
@@ -522,6 +522,54 @@ function createApiMiddleware() {
           });
           saveDb(db);
           return sendJson(200, { success: true, result: webhookResult });
+        }
+
+        // 13. GET /api/v1/me/orders (Orders lookup)
+        if (pathname === "/api/v1/me/orders" && method === "GET") {
+          return sendJson(200, { data: db.orders, orders: db.orders });
+        }
+
+        // 14. POST /api/v1/events/:slugOrId/registrations (Free Community Registration)
+        const eventRegMatch = pathname.match(/^\/api\/v1\/events\/([^/]+)\/registrations$/);
+        if (eventRegMatch && method === "POST") {
+          const slugOrId = decodeURIComponent(eventRegMatch[1]);
+          const event = db.events.find((e) => e.slug === slugOrId || e.id === slugOrId);
+          if (!event) return sendJson(404, { error: "Event not found" });
+          const { ticketTypeId, attendeeName, attendeeEmail, attendeePhone } = JSON.parse(body || "{}");
+          const tt = db.ticket_types.find((t) => t.id === ticketTypeId);
+          if (!tt) return sendJson(404, { error: "Ticket type not found" });
+
+          const regId = `reg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+          const tktId = `tkt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+          const rawSecret = `AAYOJON-TKT-${event.slug.toUpperCase()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
+
+          const newReg = {
+            id: regId,
+            event_id: event.id,
+            user_id: actorUserId,
+            status: "CONFIRMED" as const,
+            registered_at: new Date().toISOString(),
+          };
+          const newTkt = {
+            id: tktId,
+            event_id: event.id,
+            registration_id: regId,
+            ticket_type_id: tt.id,
+            qr_token_hash: hashToken(rawSecret),
+            qr_raw_secret: rawSecret,
+            status: "ISSUED" as const,
+            attendee_name: attendeeName || "Attendee",
+            attendee_email: attendeeEmail || "attendee@ayojon.select",
+            attendee_phone: attendeePhone || "+8801700000000",
+            issued_at: new Date().toISOString(),
+          };
+
+          db.registrations.push(newReg as any);
+          db.tickets.push(newTkt as any);
+          tt.sold_count = (tt.sold_count || 0) + 1;
+          saveDb(db);
+
+          return sendJson(200, { success: true, data: { registration: newReg, ticket: newTkt } });
         }
 
         return sendJson(404, { error: "API endpoint not found" });

@@ -12,6 +12,7 @@ import {
   Building2,
   ScanLine,
   ShieldAlert,
+  ShieldCheck,
   ChevronDown,
   LogOut,
   User,
@@ -23,6 +24,9 @@ import {
   CheckCircle2,
   Radio,
   ExternalLink,
+  Crown,
+  QrCode,
+  Wrench,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/ui/cn";
@@ -135,7 +139,7 @@ export function Navbar({
     if (isUserSuperAdmin || role === "admin") {
       return [
         {
-          label: "👑 Super Admin Console",
+          label: "Super Admin Console",
           href: "/admin",
           icon: ShieldAlert,
           badge: "Root",
@@ -226,26 +230,28 @@ export function Navbar({
       return {
         label: "Super Admin",
         className: "bg-purple-100 text-purple-800 border-purple-300 ring-1 ring-purple-400/40",
-        icon: "👑",
+        icon: Crown,
       };
     }
     switch (role) {
       case "organizer":
-        return { label: "Organizer", className: "bg-blue-100 text-blue-800 border-blue-200", icon: "🎪" };
+        return { label: "Organizer", className: "bg-blue-100 text-blue-800 border-blue-200", icon: Calendar };
       case "staff":
-        return { label: "Gate Staff", className: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: "📱" };
+        return { label: "Gate Staff", className: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: QrCode };
       case "venue_owner":
-        return { label: "Venue Partner", className: "bg-amber-100 text-amber-800 border-amber-200", icon: "🏛️" };
+        return { label: "Venue Partner", className: "bg-amber-100 text-amber-800 border-amber-200", icon: Building2 };
       case "vendor":
-        return { label: "Vendor", className: "bg-orange-100 text-orange-800 border-orange-200", icon: "🔊" };
+        return { label: "Vendor", className: "bg-orange-100 text-orange-800 border-orange-200", icon: Wrench };
       case "sponsor":
-        return { label: "Sponsor", className: "bg-indigo-100 text-indigo-800 border-indigo-200", icon: "💼" };
+        return { label: "Sponsor", className: "bg-indigo-100 text-indigo-800 border-indigo-200", icon: Briefcase };
       case "admin":
-        return { label: "Admin", className: "bg-purple-100 text-purple-800 border-purple-200", icon: "🛡️" };
+        return { label: "Admin", className: "bg-purple-100 text-purple-800 border-purple-200", icon: ShieldCheck };
       default:
-        return { label: "Attendee", className: "bg-teal-100 text-teal-800 border-teal-200", icon: "🎟️" };
+        return { label: "Attendee", className: "bg-teal-100 text-teal-800 border-teal-200", icon: Ticket };
     }
   }, [role, isUserSuperAdmin]);
+
+  const RoleBadgeIcon = roleBadgeConfig.icon;
 
   return (
     <>
@@ -257,17 +263,17 @@ export function Navbar({
             : "border-b border-line/60 bg-canvas py-1"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-          {/* 1. BRAND LOGO */}
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          {/* 1. BRAND LOGO (IMAGE ONLY, NO TEXT) */}
           <div className="flex items-center gap-3 shrink-0">
-            <Link to="/" className="flex items-center gap-2 group transition-transform duration-200 active:scale-95">
-              {/* Desktop / Tablet: Big Logo with text */}
+            <Link to="/" className="flex items-center group transition-transform duration-200 hover:scale-[1.02] active:scale-95" aria-label="Aayojon Home">
+              {/* Desktop / Tablet: Big Logo image only */}
               <div className="hidden sm:block">
-                <Logo size="lg" showText={true} />
+                <Logo size="xl" variant="full" showText={false} />
               </div>
-              {/* Mobile: Big ONLY LOGO ICON (NO TEXT) */}
+              {/* Mobile: Extra Big Logo image only */}
               <div className="block sm:hidden">
-                <Logo size="lg" variant="icon" showText={false} />
+                <Logo size="lg" variant="full" showText={false} imageClassName="h-14 sm:h-16 w-auto max-h-[64px]" />
               </div>
             </Link>
           </div>
@@ -362,23 +368,32 @@ export function Navbar({
                   aria-expanded={accountMenuOpen}
                   aria-label="User navigation and role switcher"
                 >
-                  {currentUser.photoURL ? (
+                  {currentUser.photoURL || currentUser.avatar_url ? (
                     <img
-                      src={currentUser.photoURL}
+                      src={(currentUser.photoURL || currentUser.avatar_url)!}
                       alt={currentUser.displayName || "User"}
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
                       className="size-7 rounded-full object-cover shadow-xs border border-line"
                     />
-                  ) : (
-                    <div className="flex size-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
-                      {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
-                    </div>
-                  )}
+                  ) : null}
+                  <div
+                    className={cn(
+                      "size-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs",
+                      currentUser.photoURL || currentUser.avatar_url ? "hidden" : "flex"
+                    )}
+                  >
+                    {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
+                  </div>
                   <div className="hidden sm:flex flex-col text-left">
                     <span className="text-xs font-bold text-ink leading-tight line-clamp-1">
                       {currentUser.displayName || currentUser.display_name || "User"}
                     </span>
-                    <span className="text-[10px] text-ink-muted leading-none">
-                      {roleBadgeConfig.icon} {roleBadgeConfig.label}
+                    <span className="text-[10px] text-ink-muted leading-none inline-flex items-center gap-1">
+                      <RoleBadgeIcon className="size-3 shrink-0" /> {roleBadgeConfig.label}
                     </span>
                   </div>
                   <ChevronDown className="size-3.5 text-ink-muted" />
@@ -389,18 +404,38 @@ export function Navbar({
                   <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-line bg-surface p-2 shadow-pop z-50 animate-in fade-in-50 zoom-in-95">
                     {/* User Profile Header */}
                     <div className="p-3 border-b border-line/60 bg-canvas-alt/50 rounded-xl mb-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-ink">{currentUser.displayName}</span>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold",
-                            roleBadgeConfig.className
-                          )}
-                        >
-                          {roleBadgeConfig.icon} {roleBadgeConfig.label}
-                        </span>
+                      <div className="flex items-center gap-2.5">
+                        {currentUser.photoURL || currentUser.avatar_url ? (
+                          <img
+                            src={(currentUser.photoURL || currentUser.avatar_url)!}
+                            alt={currentUser.displayName || "User"}
+                            referrerPolicy="no-referrer"
+                            crossOrigin="anonymous"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                            className="size-9 rounded-full object-cover shrink-0 border border-line shadow-2xs"
+                          />
+                        ) : (
+                          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
+                            {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-xs font-bold text-ink truncate">{currentUser.displayName}</span>
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold shrink-0",
+                                roleBadgeConfig.className
+                              )}
+                            >
+                              <RoleBadgeIcon className="size-2.5 shrink-0" /> {roleBadgeConfig.label}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-ink-muted truncate mt-0.5">{currentUser.email}</p>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-ink-muted truncate mt-0.5">{currentUser.email}</p>
                     </div>
 
                     {/* Dynamic Role Quick Links */}
@@ -430,7 +465,7 @@ export function Navbar({
                           className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition"
                         >
                           <ShieldAlert className="size-3.5 text-purple-600" />
-                          <span>👑 Super Admin Console</span>
+                          <span>Super Admin Console</span>
                         </Link>
                       )}
 
@@ -532,8 +567,8 @@ export function Navbar({
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-canvas/98 backdrop-blur-xl lg:hidden animate-in slide-in-from-right duration-300 ease-out">
           {/* Mobile Drawer Header */}
-          <div className="flex h-16 items-center justify-between border-b border-line px-4 sm:px-6">
-            <Logo size="lg" variant="icon" showText={false} />
+          <div className="flex h-20 items-center justify-between border-b border-line px-4 sm:px-6">
+            <Logo size="lg" variant="full" showText={false} imageClassName="h-14 w-auto max-h-[58px]" />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
@@ -562,17 +597,26 @@ export function Navbar({
               <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    {currentUser.photoURL ? (
+                    {currentUser.photoURL || currentUser.avatar_url ? (
                       <img
-                        src={currentUser.photoURL}
+                        src={(currentUser.photoURL || currentUser.avatar_url)!}
                         alt={currentUser.displayName || "User"}
-                        className="size-9 rounded-full object-cover shrink-0 border border-line"
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                        className="size-9 rounded-full object-cover shrink-0 border border-line shadow-2xs"
                       />
-                    ) : (
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs">
-                        {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
-                      </div>
-                    )}
+                    ) : null}
+                    <div
+                      className={cn(
+                        "size-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white shadow-xs",
+                        currentUser.photoURL || currentUser.avatar_url ? "hidden" : "flex"
+                      )}
+                    >
+                      {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
+                    </div>
                     <div className="min-w-0">
                       <h4 className="text-sm font-bold text-ink truncate">{currentUser.displayName || currentUser.display_name || "User"}</h4>
                       <p className="text-xs text-ink-muted truncate">{currentUser.email}</p>
@@ -584,7 +628,7 @@ export function Navbar({
                       roleBadgeConfig.className
                     )}
                   >
-                    {roleBadgeConfig.icon} {roleBadgeConfig.label}
+                    <RoleBadgeIcon className="size-3 shrink-0" /> {roleBadgeConfig.label}
                   </span>
                 </div>
                 <div className="border-t border-line/60 pt-2 flex items-center gap-2">

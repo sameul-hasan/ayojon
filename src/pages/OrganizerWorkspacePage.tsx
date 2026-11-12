@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OrganizerWorkspaceView } from "@/components/OrganizerWorkspaceView";
 import { useAuth } from "@/lib/firebase/auth-context";
@@ -53,10 +54,10 @@ export function OrganizerWorkspacePage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["attendee", "organizer", "staff", "sponsor", "venue_owner", "vendor", "admin", "super_admin"]}>
-      <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
-        <Navbar activeHref="/organizer" />
+    <div className="min-h-screen flex flex-col bg-canvas-alt text-ink">
+      <Navbar activeHref="/organizer" />
 
+      <ProtectedRoute allowedRoles={["organizer", "admin", "super_admin"]}>
         <div className="border-b border-line bg-surface py-5 px-4 sm:px-6 lg:px-8 shadow-xs">
           <div className="mx-auto max-w-7xl flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -84,8 +85,10 @@ export function OrganizerWorkspacePage() {
             />
           )}
         </main>
-      </div>
-    </ProtectedRoute>
+      </ProtectedRoute>
+
+      <PublicFooter />
+    </div>
   );
 }
 

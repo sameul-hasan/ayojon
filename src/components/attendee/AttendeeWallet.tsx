@@ -709,13 +709,14 @@ export function AttendeeWallet({
                               setSelectedInterests([...selectedInterests, cat]);
                             }
                           }}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                             selected
                               ? "bg-brand-600 text-white shadow-xs"
                               : "bg-canvas-alt text-ink-muted hover:text-ink"
                           }`}
                         >
-                          {cat} {selected && "✓"}
+                          <span>{cat}</span>
+                          {selected && <Check className="size-3" />}
                         </button>
                       );
                     })}

@@ -348,6 +348,7 @@ function createDefaultAuthUser(params: {
     mfa_enabled: false,
     created_at: new Date().toISOString(), // Guaranteed non-optional ISO timestamp
     photoURL: params.photoURL || null,
+    avatar_url: params.photoURL || undefined,
     isAnonymous: !!params.isAnonymous,
     tenantId: params.tenantId,
   };
@@ -716,9 +717,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (updates: Partial<Profile>): Promise<void> => {
       if (!currentUser) return;
 
+      const newRole = updates.platform_role ? toUserRole(updates.platform_role) : currentUser.role;
+      const newPlatformRole = updates.platform_role ? toPlatformRole(updates.platform_role) : currentUser.platform_role;
+
       const updatedUser: AuthUser = {
         ...currentUser,
         ...updates,
+        role: newRole,
+        platform_role: newPlatformRole,
         displayName: updates.display_name !== undefined ? updates.display_name : currentUser.displayName,
         display_name: updates.display_name !== undefined ? updates.display_name : currentUser.display_name,
         photoURL: updates.avatar_url !== undefined ? updates.avatar_url : currentUser.photoURL,
@@ -726,6 +732,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       setCurrentUser(updatedUser);
+      setActiveRole(newRole);
       persistUserState(updatedUser);
 
       // Sync directly to Cloud Firestore (/profiles/{uid})
