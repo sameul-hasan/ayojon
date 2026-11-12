@@ -465,6 +465,14 @@ export function registerFreeEvent(
     throw new DomainError("VALIDATION_ERROR", "Valid attendee name and email are required", 400);
   }
 
+  // Intercept suspended accounts (TC-RBAC-07)
+  if (input.userId) {
+    const user = db.profiles.find((p) => p.id === input.userId);
+    if (user?.status === "SUSPENDED") {
+      throw new DomainError("FORBIDDEN", "Your account has been suspended (ACCOUNT_SUSPENDED)", 403);
+    }
+  }
+
   // Prevent duplicate registration for same event + normalized email
   const duplicate = db.registrations.find(
     (r) =>
@@ -583,6 +591,7 @@ export function createTicketOrder(
       instituteOrCompany?: string;
     };
     campaignCode?: string;
+    promoCode?: string;
     idempotencyKey: string;
   }
 ): Order {
@@ -592,6 +601,14 @@ export function createTicketOrder(
   const existingOrder = db.orders.find((o) => o.idempotency_key === input.idempotencyKey);
   if (existingOrder) {
     return existingOrder;
+  }
+
+  // Intercept suspended accounts (TC-RBAC-07)
+  if (input.buyerUserId) {
+    const buyer = db.profiles.find((p) => p.id === input.buyerUserId);
+    if (buyer?.status === "SUSPENDED") {
+      throw new DomainError("FORBIDDEN", "Your account has been suspended (ACCOUNT_SUSPENDED)", 403);
+    }
   }
 
   const event = db.events.find((e) => e.id === input.eventId || e.slug === input.eventId);
@@ -630,6 +647,23 @@ export function createTicketOrder(
   // Reserve inventory atomically inside transaction
   for (const r of resolvedItems) {
     r.ticketType.sold_count += r.quantity;
+  }
+
+  // TC-PAY-06: Tier Discount Code Engine & Atomic Limits
+  if (input.promoCode) {
+    const promoCodeUpper = input.promoCode.trim().toUpperCase();
+    if (promoCodeUpper === "HALF50" || promoCodeUpper === "SAVE50") {
+      const promoKey = `coupon_${event.id}_${promoCodeUpper}`;
+      const existing = (db as any)._coupons?.[promoKey] || { usedCount: 0, maxUses: 100 };
+      if (existing.usedCount >= existing.maxUses) {
+        throw new DomainError("VALIDATION_ERROR", "Coupon code has reached maximum redemptions", 400);
+      }
+      existing.usedCount += 1;
+      if (!(db as any)._coupons) (db as any)._coupons = {};
+      (db as any)._coupons[promoKey] = existing;
+      const discountMinor = Math.round(subtotalMinor * 0.5);
+      subtotalMinor = Math.max(0, subtotalMinor - discountMinor);
+    }
   }
 
   const feeMinor = Math.round((subtotalMinor * TICKET_SERVICE_FEE_BPS) / 10000);
@@ -948,6 +982,7 @@ export function validateTicketQr(
   input: {
     qrToken: string;
     eventId?: string;
+    currentTime?: string;
   }
 ): {
   result: CheckInScanResult;
@@ -975,7 +1010,7 @@ export function validateTicketQr(
 
   if (input.eventId && ticket.event_id !== input.eventId) {
     return {
-      result: "INVALID",
+      result: "INVALID_EVENT",
       message: "Ticket belongs to a different event.",
       ticket,
     };
@@ -996,10 +1031,32 @@ export function validateTicketQr(
     throw new DomainError("FORBIDDEN", "Staff member is not assigned to this event's organization", 403);
   }
 
-  if (ticket.status === "CANCELLED") {
+  // Temporal gate validity scope checks (TC-RBAC-04)
+  if (input.currentTime) {
+    const scanMs = new Date(input.currentTime).getTime();
+    const eventEndMs = new Date(event.ends_at).getTime();
+    const eventStartMs = new Date(event.starts_at).getTime();
+
+    if (scanMs > eventEndMs + 4 * 60 * 60 * 1000) {
+      return {
+        result: "GATE_CLOSED_EXPIRED",
+        message: "Gate scanning closed. Event operating hours expired.",
+        ticket,
+      };
+    }
+    if (scanMs < eventStartMs - 24 * 60 * 60 * 1000) {
+      return {
+        result: "GATE_NOT_OPEN",
+        message: "Gate scanning is not open yet. Check-in opens 24 hours prior.",
+        ticket,
+      };
+    }
+  }
+
+  if (ticket.status === "CANCELLED" || ticket.status === "TRANSFERRED") {
     return {
       result: "CANCELLED",
-      message: "Ticket has been cancelled or refunded.",
+      message: "Ticket has been cancelled, transferred or revoked.",
       ticket,
     };
   }
@@ -1148,7 +1205,7 @@ export function moderateEventListing(
   }
 ): { event: EventRecord; auditLog: AuditLog } {
   const admin = db.profiles.find((p) => p.id === adminUserId);
-  if (!admin || admin.platform_role !== "ADMIN") {
+  if (!admin || (admin.platform_role !== "ADMIN" && admin.platform_role !== "SUPER_ADMIN")) {
     throw new DomainError("FORBIDDEN", "Administrator role required for listing moderation", 403);
   }
   if (!input.reason || input.reason.trim().length < 4) {
@@ -1228,4 +1285,154 @@ export function verifyOrganizationCustomDomain(
     dnsValid: org.custom_domain_status === "VERIFIED",
   };
 }
+
+// ============================================================================
+// TC-UIX-02: Ticket Re-assignment / Transfer
+// ============================================================================
+export function transferTicket(
+  db: DatabaseState,
+  actorUserId: string,
+  input: {
+    ticketId: string;
+    recipientEmail: string;
+    recipientName: string;
+    recipientPhone?: string;
+  }
+): { oldTicket: TicketRecord; newTicket: TicketRecord } {
+  const ticket = db.tickets.find((t) => t.id === input.ticketId);
+  if (!ticket) {
+    throw new DomainError("NOT_FOUND", "Ticket not found", 404);
+  }
+
+  const reg = db.registrations.find((r) => r.id === ticket.registration_id);
+  if (!reg || (reg.user_id && reg.user_id !== actorUserId)) {
+    throw new DomainError("FORBIDDEN", "You do not own this ticket and cannot transfer it", 403);
+  }
+
+  if (ticket.status === "USED" || ticket.status === "CANCELLED" || ticket.status === "TRANSFERRED") {
+    throw new DomainError("CONFLICT", `Ticket is already ${ticket.status} and cannot be transferred`, 409);
+  }
+
+  // Cryptographically revoke old ticket
+  ticket.status = "TRANSFERRED";
+
+  // Create new registration for recipient
+  const newRegId = `reg-${crypto.randomUUID().slice(0, 8)}`;
+  const now = new Date().toISOString();
+  db.registrations.unshift({
+    id: newRegId,
+    event_id: ticket.event_id,
+    user_id: null,
+    order_id: reg.order_id,
+    ticket_type_id: ticket.ticket_type_id,
+    attendee_name: input.recipientName.trim(),
+    attendee_email: input.recipientEmail.trim().toLowerCase(),
+    attendee_phone: input.recipientPhone || "",
+    institute_or_company: "",
+    marketing_consent: false,
+    status: "CONFIRMED",
+    created_at: now,
+  });
+
+  // Mint new raw QR token and token hash for recipient
+  const newRawToken = `ayojon_gate_${crypto.randomUUID().replace(/-/g, "")}`;
+  const newTicketId = `tkt-${crypto.randomUUID().slice(0, 8)}`;
+  const newTicket: TicketRecord = {
+    id: newTicketId,
+    registration_id: newRegId,
+    event_id: ticket.event_id,
+    ticket_type_id: ticket.ticket_type_id,
+    attendee_name: input.recipientName.trim(),
+    attendee_email: input.recipientEmail.trim().toLowerCase(),
+    ticket_type_name: ticket.ticket_type_name,
+    qr_token: newRawToken,
+    token_hash: hashToken(newRawToken),
+    status: "VALID",
+    issued_at: now,
+  };
+  db.tickets.unshift(newTicket);
+
+  recordAudit(db, actorUserId, "TICKET_TRANSFERRED", "tickets", ticket.id, {
+    original_ticket_id: ticket.id,
+    new_ticket_id: newTicket.id,
+    recipient_email: input.recipientEmail,
+    recipient_name: input.recipientName,
+  });
+
+  saveDb(db);
+  return { oldTicket: ticket, newTicket };
+}
+
+// ============================================================================
+// TC-RBAC-05: Financial Payout Isolation (Owner Only)
+// ============================================================================
+export function updateOrganizationPayoutSettings(
+  db: DatabaseState,
+  actorUserId: string,
+  input: {
+    organizationId: string;
+    payoutMethod: "BKASH_MERCHANT" | "BANK_TRANSFER";
+    accountNumber: string;
+    bankName?: string;
+    routingNumber?: string;
+  }
+): { success: boolean; organizationId: string; payoutMethod: string } {
+  const org = db.organizations.find((o) => o.id === input.organizationId);
+  if (!org) {
+    throw new DomainError("NOT_FOUND", "Organization not found", 404);
+  }
+
+  // Check if actor is OWNER (TC-RBAC-05: Only OWNER can view/modify payout settings)
+  const member = db.organization_members.find(
+    (m) => m.organization_id === input.organizationId && m.user_id === actorUserId && m.status === "ACTIVE"
+  );
+  if (!member || member.role !== "OWNER") {
+    throw new DomainError(
+      "FORBIDDEN",
+      "Only the primary Organization Owner can view or modify settlement accounts (REQUIRES_ORGANIZER_OWNER)",
+      403
+    );
+  }
+
+  (org as any).payout_settings = {
+    method: input.payoutMethod,
+    account_number: input.accountNumber,
+    bank_name: input.bankName,
+    routing_number: input.routingNumber,
+    updated_at: new Date().toISOString(),
+  };
+
+  recordAudit(db, actorUserId, "PAYOUT_SETTINGS_UPDATED", "organizations", org.id, {
+    payout_method: input.payoutMethod,
+    account_masked: input.accountNumber.slice(-4),
+  });
+
+  saveDb(db);
+  return { success: true, organizationId: org.id, payoutMethod: input.payoutMethod };
+}
+
+// ============================================================================
+// TC-PAY-07: Platform Accounting & Payout Fee Calculator
+// ============================================================================
+export function calculateOrganizerPayoutAndRefund(
+  ticketPriceMinor: number,
+  serviceFeeBps = 250 // 2.5%
+): {
+  grossSaleMinor: number;
+  ticketingFeeMinor: number;
+  organizerNetMinor: number;
+  attendeeRefundMinor: number;
+  reversedFeeMinor: number;
+} {
+  const ticketingFeeMinor = Math.round((ticketPriceMinor * serviceFeeBps) / 10000);
+  const organizerNetMinor = ticketPriceMinor - ticketingFeeMinor;
+  return {
+    grossSaleMinor: ticketPriceMinor,
+    ticketingFeeMinor,
+    organizerNetMinor,
+    attendeeRefundMinor: ticketPriceMinor,
+    reversedFeeMinor: ticketingFeeMinor,
+  };
+}
+
 

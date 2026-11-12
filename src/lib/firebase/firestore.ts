@@ -69,24 +69,27 @@ export async function loadFirestoreState(): Promise<DatabaseState | null> {
       return initialSeed;
     }
 
-    // 1. Events from Firestore
-    const events: EventRecord[] = [];
-    eventsSnapshot.forEach((d) => {
-      events.push(d.data() as EventRecord);
-    });
-
     const seed = createInitialSeed();
 
-    // 2. Ticket types from Firestore
+    // 1. Events from Firestore (overlay onto seed catalog)
+    const eventsMap = new Map<string, EventRecord>();
+    seed.events.forEach((e) => eventsMap.set(e.id, e));
+    eventsSnapshot.forEach((d) => {
+      const ev = d.data() as EventRecord;
+      eventsMap.set(ev.id, ev);
+    });
+    const events = Array.from(eventsMap.values());
+
+    // 2. Ticket types from Firestore (overlay onto seed ticket types)
     try {
       const ticketsSnapshot = await getDocs(collection(fs, "ticket_types"));
-      const ticketTypes: TicketType[] = [];
+      const ticketMap = new Map<string, TicketType>();
+      seed.ticket_types.forEach((t) => ticketMap.set(t.id, t));
       ticketsSnapshot.forEach((d) => {
-        ticketTypes.push(d.data() as TicketType);
+        const tt = d.data() as TicketType;
+        ticketMap.set(tt.id, tt);
       });
-      if (ticketTypes.length > 0) {
-        seed.ticket_types = ticketTypes;
-      }
+      seed.ticket_types = Array.from(ticketMap.values());
     } catch {
       // Use fallback
     }

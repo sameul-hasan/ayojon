@@ -10,6 +10,7 @@
 import { runFirebaseAuthSuite } from "./firebase-auth.test";
 import { runMarketplaceRfqTests } from "./marketplace-rfq.test";
 import { runRbacTestSuite } from "./rbac.test";
+import { runPersonaBehavioralTestSuite } from "./persona-behavioral-matrix.test";
 
 async function main() {
   console.log("==================================================");
@@ -19,7 +20,7 @@ async function main() {
   let allPassed = true;
 
   // 1. Run Domain QA Invariant Suite (14 Invariant Tests)
-  console.log("\n--- [Suite 1/4] Domain QA Invariants ---");
+  console.log("\n--- [Suite 1/5] Domain QA Invariants ---");
   try {
     require("./qa-suite.test");
   } catch (err) {
@@ -28,7 +29,7 @@ async function main() {
   }
 
   // 2. Run Firebase Authentication Suite (8 Security/Auth Suites)
-  console.log("\n--- [Suite 2/4] Firebase Authentication & Middleware ---");
+  console.log("\n--- [Suite 2/5] Firebase Authentication & Middleware ---");
   try {
     const authPassed = await runFirebaseAuthSuite();
     if (!authPassed) allPassed = false;
@@ -38,6 +39,7 @@ async function main() {
   }
 
   // 3. Run Venue & Services Marketplace Suite (8 Tests)
+  console.log("\n--- [Suite 3/5] Venue & Services Marketplace ---");
   try {
     await runMarketplaceRfqTests();
   } catch (err) {
@@ -46,11 +48,21 @@ async function main() {
   }
 
   // 4. Run Centralized RBAC Suite (15 Security Tests)
+  console.log("\n--- [Suite 4/5] Centralized RBAC Security Suite ---");
   try {
     const rbacPassed = await runRbacTestSuite();
     if (!rbacPassed) allPassed = false;
   } catch (err) {
     console.error("RBAC suite encountered an unhandled error:", err);
+    allPassed = false;
+  }
+
+  // 5. Run Persona Matrix & Behavioral End-to-End Suite (38 Tests)
+  try {
+    const personaPassed = await runPersonaBehavioralTestSuite();
+    if (!personaPassed) allPassed = false;
+  } catch (err) {
+    console.error("Persona Behavioral suite encountered an unhandled error:", err);
     allPassed = false;
   }
 

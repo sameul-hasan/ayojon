@@ -266,16 +266,14 @@ export function Navbar({
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           {/* 1. BRAND LOGO (IMAGE ONLY, NO TEXT) */}
           <div className="flex items-center gap-3 shrink-0">
-            <Link to="/" className="flex items-center group transition-transform duration-200 hover:scale-[1.02] active:scale-95" aria-label="Aayojon Home">
-              {/* Desktop / Tablet: Big Logo image only */}
-              <div className="hidden sm:block">
-                <Logo size="xl" variant="full" showText={false} />
-              </div>
-              {/* Mobile: Extra Big Logo image only */}
-              <div className="block sm:hidden">
-                <Logo size="lg" variant="full" showText={false} imageClassName="h-14 sm:h-16 w-auto max-h-[64px]" />
-              </div>
-            </Link>
+            {/* Desktop / Tablet: Big Logo image only */}
+            <div className="hidden sm:block">
+              <Logo size="xl" variant="full" showText={false} href="/" />
+            </div>
+            {/* Mobile: Extra Big Logo image only */}
+            <div className="block sm:hidden">
+              <Logo size="lg" variant="full" showText={false} imageClassName="h-14 sm:h-16 w-auto max-h-[64px]" href="/" />
+            </div>
           </div>
 
           {/* 2. DYNAMIC RBAC DESKTOP NAVIGATION */}

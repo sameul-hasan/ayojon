@@ -422,6 +422,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mockFbUser = createMockFirebaseUser(persona);
       setFirebaseUser(mockFbUser);
       persistUserState(persona);
+      try {
+        localStorage.setItem(LOCAL_STORAGE_PERSONA_KEY, personaUserId);
+      } catch {
+        // Storage error ignored
+      }
     },
     [persistUserState]
   );
@@ -500,35 +505,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Synchronize with Cloud Firestore to guarantee DB persistence
             syncUserProfileToFirestore(mappedUser);
           } else {
-            // User is signed out: do NOT restore arbitrary mock personas if Firebase is configured
-            if (isFirebaseConfigured()) {
+            // Restore local session or active persona if saved
+            let restored = false;
+            try {
+              const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+              if (saved) {
+                const parsed = JSON.parse(saved) as AuthUser;
+                if (parsed && parsed.uid) {
+                  setCurrentUser(parsed);
+                  setActiveRole(parsed.role);
+                  setFirebaseUser(createMockFirebaseUser(parsed));
+                  persistUserState(parsed);
+                  restored = true;
+                }
+              }
+
+              if (!restored) {
+                const personaKey = localStorage.getItem(LOCAL_STORAGE_PERSONA_KEY);
+                if (personaKey && DEMO_PERSONAS[personaKey]) {
+                  const persona = DEMO_PERSONAS[personaKey];
+                  setCurrentUser(persona);
+                  setActiveRole(persona.role);
+                  setFirebaseUser(createMockFirebaseUser(persona));
+                  persistUserState(persona);
+                  restored = true;
+                }
+              }
+            } catch {
+              // Ignore parse errors
+            }
+
+            if (!restored) {
               setCurrentUser(null);
               setFirebaseUser(null);
               setActiveRole("attendee");
               persistUserState(null);
-            } else {
-              // Only restore local mock session in offline-only test mode
-              let restored = false;
-              try {
-                const saved = localStorage.getItem(SESSION_STORAGE_KEY);
-                if (saved) {
-                  const parsed = JSON.parse(saved) as AuthUser;
-                  if (parsed && parsed.uid) {
-                    setCurrentUser(parsed);
-                    setActiveRole(parsed.role);
-                    setFirebaseUser(createMockFirebaseUser(parsed));
-                    restored = true;
-                  }
-                }
-              } catch {
-                // Ignore parse errors
-              }
-
-              if (!restored) {
-                setCurrentUser(null);
-                setFirebaseUser(null);
-                setActiveRole("attendee");
-              }
             }
           }
           setLoading(false);
@@ -705,6 +716,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (authInstance) {
       await signOut(authInstance);
     }
+
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_PERSONA_KEY);
+    } catch {}
 
     setCurrentUser(null);
     setFirebaseUser(null);

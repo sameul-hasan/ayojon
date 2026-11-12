@@ -446,6 +446,110 @@ export function ProfilePage() {
                     </div>
                   </div>
 
+                  {/* Account Role & Workspace Access */}
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+                        Account Role & Workspace Access
+                      </label>
+                      <span className="text-[11px] font-semibold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">
+                        Current: {currentRoleInfo.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-ink-muted mb-3">
+                      Select your primary role. Upgrading your role grants direct access to dedicated workspace studios and publisher tools.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        {
+                          id: "attendee" as UserRole,
+                          title: "Event Attendee",
+                          badge: "Public Access",
+                          desc: "Explore public events, buy tickets, and manage passes in your ticket wallet.",
+                          icon: Ticket,
+                        },
+                        {
+                          id: "organizer" as UserRole,
+                          title: "Event Organizer",
+                          badge: "Studio Access",
+                          desc: "Unlock Organizer Studio (/organizer) to create events, configure ticket tiers, and view real-time sales.",
+                          icon: Calendar,
+                        },
+                        {
+                          id: "venue_owner" as UserRole,
+                          title: "Venue Provider",
+                          badge: "Provider Workspace",
+                          desc: "List halls, convention centers & venues, accept booking inquiries, and respond to quotes (/provider).",
+                          icon: Store,
+                        },
+                        {
+                          id: "vendor" as UserRole,
+                          title: "Service Vendor",
+                          badge: "Vendor Workspace",
+                          desc: "Offer catering, AV sound, stage, photography, or security services to event organizers.",
+                          icon: Briefcase,
+                        },
+                        {
+                          id: "sponsor" as UserRole,
+                          title: "Corporate Sponsor",
+                          badge: "Sponsor Hub",
+                          desc: "Browse sponsorship opportunities, submit brand activation proposals, and track partnerships.",
+                          icon: Sparkles,
+                        },
+                      ].map((item) => {
+                        const isSelected = selectedRole === item.id;
+                        const Icon = item.icon;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => setSelectedRole(item.id)}
+                            className={cn(
+                              "cursor-pointer rounded-2xl border p-3.5 transition-all text-left relative",
+                              isSelected
+                                ? "border-brand-600 bg-brand-50/40 shadow-xs ring-1 ring-brand-500/20"
+                                : "border-line bg-canvas-alt hover:border-brand-300 hover:bg-surface"
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={cn(
+                                    "size-8 rounded-xl flex items-center justify-center border",
+                                    isSelected
+                                      ? "bg-brand-600 text-white border-brand-700"
+                                      : "bg-surface text-ink-muted border-line"
+                                  )}
+                                >
+                                  <Icon className="size-4" />
+                                </div>
+                                <div>
+                                  <h4 className="text-xs font-bold text-ink">{item.title}</h4>
+                                  <span className="text-[10px] font-semibold text-brand-700">
+                                    {item.badge}
+                                  </span>
+                                </div>
+                              </div>
+                              <div
+                                className={cn(
+                                  "size-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5",
+                                  isSelected
+                                    ? "border-brand-600 bg-brand-600 text-white"
+                                    : "border-line bg-surface"
+                                )}
+                              >
+                                {isSelected && <Check className="size-2.5 stroke-[3]" />}
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-ink-muted mt-2 leading-relaxed">
+                              {item.desc}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Submit Button */}
                   <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                     <button

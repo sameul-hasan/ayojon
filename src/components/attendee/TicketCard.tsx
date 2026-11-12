@@ -30,6 +30,10 @@ function ticketTone(status: TicketRecord["status"]): BadgeTone {
       return "info";
     case "CANCELLED":
       return "danger";
+    case "TRANSFERRED":
+      return "neutral";
+    default:
+      return "neutral";
   }
 }
 

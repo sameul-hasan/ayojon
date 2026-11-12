@@ -140,28 +140,6 @@ function Hero({ cities }: { cities: string[] }) {
         {/* Search Container */}
         <div className="mx-auto mt-6 sm:mt-8 max-w-4xl text-left">
           <EventSearch cities={cities} />
-
-          {/* Quick-Tap Category Discovery Chips for Mobile */}
-          <div className="mt-3.5 flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-xs">
-            <span className="text-ink-muted text-[11px] font-semibold flex items-center gap-1">
-              <Sparkles className="size-3 text-amber-500" /> Popular:
-            </span>
-            {[
-              { label: "Tech & AI", href: "/events?q=AI" },
-              { label: "Concerts", href: "/events?q=Music" },
-              { label: "Hackathons", href: "/events?q=Hackathon" },
-              { label: "Free Events", href: "/events?price=free" },
-              { label: "Venues", href: "/venues" },
-            ].map((chip) => (
-              <Link
-                key={chip.label}
-                to={chip.href}
-                className="rounded-full border border-line bg-surface/90 px-2.5 py-1 text-[11px] font-medium text-ink hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50/50 transition shadow-2xs active:scale-95"
-              >
-                {chip.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </section>
@@ -194,6 +172,22 @@ export function HomePage() {
   const popular = [...events].sort((a, b) => b.popularity - a.popularity).slice(0, 6);
   const soonest = [...events].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()).slice(0, 6);
 
+  // Curate 4 featured categories for the homepage showcase
+  const prioritySlugs = ["tech-workshops", "conferences", "university-clubs", "cultural-festivals"];
+  const homeCategories = React.useMemo(() => {
+    if (!categories.length) return [];
+    const prioritized = prioritySlugs
+      .map((slug) => categories.find((c) => c.slug === slug))
+      .filter((c): c is typeof categories[0] => Boolean(c));
+
+    if (prioritized.length < 4) {
+      const remaining = categories.filter((c) => !prioritySlugs.includes(c.slug));
+      prioritized.push(...remaining.slice(0, 4 - prioritized.length));
+    }
+
+    return prioritized.slice(0, 4);
+  }, [categories]);
+
   return (
     <div className="min-h-screen bg-canvas text-ink">
       <PublicNavbar activeHref="/" />
@@ -203,17 +197,26 @@ export function HomePage() {
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12 py-10">
         {/* CATEGORIES SECTION */}
         <section id="categories" className="scroll-mt-20">
-          <div className="mb-5 flex items-end justify-between">
+          <div className="mb-4 flex items-end justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-ink">Browse by Category</h2>
-              <p className="mt-1 text-sm text-ink-muted">Explore verified events across all categories</p>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">
+                Browse by Category
+              </h2>
+              <p className="mt-0.5 text-xs sm:text-sm text-ink-muted">
+                Explore verified events across all categories
+              </p>
             </div>
-            <Link to="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700">
-              All events <ArrowRight className="size-4" />
+            <Link
+              to="/events"
+              className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-700 group transition"
+            >
+              <span>All events</span>
+              <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-            {categories.map((c) => (
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {homeCategories.map((c) => (
               <CategoryCard key={c.id} category={c} />
             ))}
           </div>

@@ -27,8 +27,15 @@ export type OrderStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLE
 export type PaymentProvider = "SSLCOMMERZ_SANDBOX" | "BKASH_SANDBOX" | "NAGAD_SANDBOX";
 export type PaymentStatus = "INITIATED" | "VERIFIED" | "FAILED" | "REFUNDED";
 
-export type TicketStatus = "VALID" | "USED" | "CANCELLED";
-export type CheckInScanResult = "VALID" | "ALREADY_USED" | "INVALID" | "CANCELLED";
+export type TicketStatus = "VALID" | "USED" | "CANCELLED" | "TRANSFERRED";
+export type CheckInScanResult =
+  | "VALID"
+  | "ALREADY_USED"
+  | "INVALID"
+  | "CANCELLED"
+  | "GATE_CLOSED_EXPIRED"
+  | "GATE_NOT_OPEN"
+  | "INVALID_EVENT";
 
 export interface Profile {
   id: string;
@@ -38,6 +45,7 @@ export interface Profile {
   avatar_url?: string;
   platform_role: PlatformRole;
   organization_label?: string;
+  status?: "ACTIVE" | "SUSPENDED";
   mfa_enabled: boolean;
   interests: string[];
   preferred_city: string;

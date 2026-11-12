@@ -375,7 +375,8 @@ export type ResourceType =
   | "RFQ"
   | "QUOTATION"
   | "MESSAGE"
-  | "BOOKING";
+  | "BOOKING"
+  | "ATTENDEE_ROSTER";
 
 export interface ResourceAccessResult {
   allowed: boolean;
@@ -553,6 +554,34 @@ export function canAccessResource(
         allowed: false,
         code: "FORBIDDEN",
         message: "You are not authorized to view this booking voucher.",
+      };
+    }
+
+    case "ATTENDEE_ROSTER": {
+      const event = db.events.find((e) => e.id === resourceId);
+      if (!event) return { allowed: false, code: "NOT_FOUND", message: "Event not found" };
+
+      // Sponsors explicitly forbidden from downloading unredacted attendee rosters (TC-RBAC-06)
+      if (role === "sponsor") {
+        return {
+          allowed: false,
+          code: "FORBIDDEN",
+          message: "Sponsors can only view aggregate demographics. Raw attendee rosters and PII are restricted.",
+        };
+      }
+
+      const isOrganizer = db.organization_members.some(
+        (m) =>
+          m.organization_id === event.organization_id &&
+          m.user_id === actorUserId &&
+          m.status === "ACTIVE" &&
+          (m.role === "OWNER" || m.role === "EVENT_MANAGER")
+      );
+      if (isOrganizer) return { allowed: true, code: "OK" };
+      return {
+        allowed: false,
+        code: "FORBIDDEN",
+        message: "You are not authorized to view attendee rosters for this event.",
       };
     }
 

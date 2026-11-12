@@ -445,8 +445,8 @@ export function transformDbToCatalog(db: DatabaseState): PublicCatalog {
         minPriceMinor: prices.length ? Math.min(...prices) : null,
         organizerName: org?.name ?? "Aayojon Organizer",
         organizerVerified: !!org?.verified_badge,
-        isFeatured: false,
-        popularity: 100,
+        isFeatured: Boolean(e.is_featured),
+        popularity: e.views_count || 100,
       };
     });
 
