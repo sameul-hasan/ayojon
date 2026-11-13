@@ -175,23 +175,27 @@ async function runEmpiricalSuite() {
     exp: Math.floor(Date.now() / 1000) + 3600,
   };
   const c1B64 = Buffer.from(JSON.stringify(c1Payload)).toString("base64url");
-  const c1User = await verifyAuthToken(`mock-jwt.${c1B64}.sig`);
-  if (c1User && c1User.uid === undefined) {
-    findings.push({
-      id: "CHALLENGE-004",
-      category: "C: Tampered Payload",
-      title: "Missing uid field in mock-jwt returns undefined uid violating AuthenticatedUser contract",
-      severity: "MEDIUM",
-      reproductionCode:
-        'verifyAuthToken(mockJwtWithPayload({ role: "organizer" }))',
-      observedOutput: c1User,
-      expectedOutput: "Rejection (401: Invalid or missing user ID in token payload)",
-      verdict: "BUG",
-    });
-    console.log(
-      "  [C1] FINDING [MEDIUM]: Mock-jwt with missing uid accepted, returning uid: undefined:",
-      c1User
-    );
+  try {
+    const c1User = await verifyAuthToken(`mock-jwt.${c1B64}.sig`);
+    if (c1User && c1User.uid === undefined) {
+      findings.push({
+        id: "CHALLENGE-004",
+        category: "C: Tampered Payload",
+        title: "Missing uid field in mock-jwt returns undefined uid violating AuthenticatedUser contract",
+        severity: "MEDIUM",
+        reproductionCode:
+          'verifyAuthToken(mockJwtWithPayload({ role: "organizer" }))',
+        observedOutput: c1User,
+        expectedOutput: "Rejection (401: Invalid or missing user ID in token payload)",
+        verdict: "BUG",
+      });
+      console.log(
+        "  [C1] FINDING [MEDIUM]: Mock-jwt with missing uid accepted, returning uid: undefined:",
+        c1User
+      );
+    }
+  } catch (err: any) {
+    console.log("  [C1] PASSED: Missing uid rejected cleanly ->", err.message);
   }
 
   // C2: Whitespace-only uid in mock-firebase-token
@@ -313,24 +317,28 @@ async function runEmpiricalSuite() {
   const f2Req = new NextRequest("https://aayojon.bd/api/v1/test", {
     headers: { "x-user-id": "usr-admin-tariq" },
   });
-  const f2Res = await f2Handler(f2Req);
-  const f2Json = await f2Res.json();
-  if (f2Res.status === 401 && f2Json.error.code === "UNAUTHENTICATED") {
-    findings.push({
-      id: "CHALLENGE-007",
-      category: "F: withAuth Error Propagation",
-      title: "withAuth catches downstream handler errors and masks them as 401 UNAUTHENTICATED",
-      severity: "MEDIUM",
-      reproductionCode:
-        'withAuth(async () => { throw new Error("Database error"); })(req)',
-      observedOutput: { status: f2Res.status, json: f2Json },
-      expectedOutput: "HTTP 500 INTERNAL_SERVER_ERROR or uncaught rethrow",
-      verdict: "BUG",
-    });
-    console.log(
-      "  [F2] FINDING [MEDIUM]: Downstream handler error masked as 401 UNAUTHENTICATED:",
-      f2Json
-    );
+  try {
+    const f2Res = await f2Handler(f2Req);
+    const f2Json = await f2Res.json();
+    if (f2Res.status === 401 && f2Json.error.code === "UNAUTHENTICATED") {
+      findings.push({
+        id: "CHALLENGE-007",
+        category: "F: withAuth Error Propagation",
+        title: "withAuth catches downstream handler errors and masks them as 401 UNAUTHENTICATED",
+        severity: "MEDIUM",
+        reproductionCode:
+          'withAuth(async () => { throw new Error("Database error"); })(req)',
+        observedOutput: { status: f2Res.status, json: f2Json },
+        expectedOutput: "HTTP 500 INTERNAL_SERVER_ERROR or uncaught rethrow",
+        verdict: "BUG",
+      });
+      console.log(
+        "  [F2] FINDING [MEDIUM]: Downstream handler error masked as 401 UNAUTHENTICATED:",
+        f2Json
+      );
+    }
+  } catch (err: any) {
+    console.log("  [F2] PASS: Downstream handler error propagated cleanly ->", err.message);
   }
 
   // -------------------------------------------------------------------------

@@ -169,7 +169,7 @@ export function OrganizerWorkspaceView({
   const [showAiModal, setShowAiModal] = useState(false);
   const [activeChatRfq, setActiveChatRfq] = useState<VenueRequest | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState<
-    "ALL" | "PAID" | "PENDING" | "FAILED"
+    "ALL" | "AWAITING_VERIFICATION" | "PAID" | "PENDING" | "FAILED"
   >("ALL");
   const [attendeeSearchQuery, setAttendeeSearchQuery] = useState("");
 
@@ -592,6 +592,32 @@ export function OrganizerWorkspaceView({
       )}
 
       {/* Sub-Navigation Pills (8 Modules) */}
+      {orgOrders.some((o) => o.status === "AWAITING_VERIFICATION") && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-card border border-amber-300 bg-amber-50 p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-950">
+                {orgOrders.filter((o) => o.status === "AWAITING_VERIFICATION").length} Payment(s) Awaiting Verification
+              </p>
+              <p className="text-xs text-amber-800">
+                Attendees have submitted MFS/Card Transaction IDs. Verify to mint and deliver their QR tickets.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOrderStatusFilter("AWAITING_VERIFICATION");
+              setSubTab("ORDERS");
+            }}
+            className="shrink-0 rounded-btn bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition cursor-pointer"
+          >
+            Review &amp; Verify Now
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2 border-b border-line pb-3 overflow-x-auto">
         {(
           [
@@ -1623,25 +1649,56 @@ export function OrganizerWorkspaceView({
                 }}
                 onClickCapture={async (e) => {
                   e.preventDefault();
-                  const res = await fetch(
-                    `/api/v1/events/${selectedEventId}/attendees?format=csv`,
-                    {
-                      headers: { "x-user-id": actorForOrg },
+                  let csvText: string | null = null;
+                  try {
+                    const res = await fetch(
+                      `/api/v1/events/${selectedEventId}/attendees?format=csv`,
+                      {
+                        headers: {
+                          "x-user-id": actorForOrg,
+                          "x-actor-user-id": actorForOrg,
+                        },
+                      }
+                    );
+                    const ct = res.headers.get("content-type") || "";
+                    if (res.ok && ct.includes("text/csv")) {
+                      csvText = await res.text();
                     }
-                  );
-                  if (res.ok) {
-                    const csvText = await res.text();
-                    const blob = new Blob([csvText], { type: "text/csv" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `attendees-${selectedEventId}.csv`;
-                    a.click();
-                    setStatusBanner({
-                      type: "success",
-                      text: "Attendee CSV exported and export action recorded in audit_logs!",
-                    });
+                  } catch {
+                    // Static hosting fallback below
                   }
+
+                  if (!csvText) {
+                    const esc = (v: string) => `"${(v || "").replace(/"/g, '""')}"`;
+                    const regs = (db.registrations || []).filter((r) => r.event_id === selectedEventId);
+                    const header = "Registration ID,Name,Email,Phone,Institute/Company,Ticket Tier,Status,Registered At";
+                    const rows = regs.map((r) => {
+                      const tt = (db.ticket_types || []).find((t) => t.id === r.ticket_type_id);
+                      return [
+                        esc(r.id),
+                        esc(r.attendee_name),
+                        esc(r.attendee_email),
+                        esc(r.attendee_phone || ""),
+                        esc(r.institute_or_company || ""),
+                        esc(tt?.name || r.ticket_type_id),
+                        esc(r.status),
+                        esc(r.created_at),
+                      ].join(",");
+                    });
+                    csvText = [header, ...rows].join("\n");
+                  }
+
+                  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `attendees-${selectedEventId}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setStatusBanner({
+                    type: "success",
+                    text: "Attendee CSV exported successfully!",
+                  });
                 }}
                 className="inline-flex items-center gap-1.5 rounded-btn bg-brand-50 border border-emerald-300 px-3.5 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition cursor-pointer shadow-sm"
               >
@@ -1723,21 +1780,31 @@ export function OrganizerWorkspaceView({
               <p className="text-xs text-ink-muted">All booking transactions processed for your events</p>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              {(["ALL", "PAID", "PENDING", "FAILED"] as const).map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setOrderStatusFilter(st)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                    orderStatusFilter === st
-                      ? "bg-brand-600 text-white"
-                      : "bg-canvas-alt text-ink-muted hover:text-ink"
-                  }`}
-                >
-                  {st === "ALL" ? "All Orders" : st}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(["ALL", "AWAITING_VERIFICATION", "PAID", "PENDING", "FAILED"] as const).map((st) => {
+                const pendingCount =
+                  st === "AWAITING_VERIFICATION"
+                    ? orgOrders.filter((o) => o.status === "AWAITING_VERIFICATION").length
+                    : 0;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setOrderStatusFilter(st)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                      orderStatusFilter === st
+                        ? "bg-brand-600 text-white"
+                        : "bg-canvas-alt text-ink-muted hover:text-ink"
+                    }`}
+                  >
+                    {st === "ALL"
+                      ? "All Orders"
+                      : st === "AWAITING_VERIFICATION"
+                      ? `Needs Verification (${pendingCount})`
+                      : st}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1748,9 +1815,10 @@ export function OrganizerWorkspaceView({
                   <th className="px-4 py-3">Order Ref</th>
                   <th className="px-4 py-3">Buyer Name & Email</th>
                   <th className="px-4 py-3">Target Event</th>
-                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Payment / TrxID</th>
                   <th className="px-4 py-3 text-right">Amount</th>
                   <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-right">Verification</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1758,6 +1826,7 @@ export function OrganizerWorkspaceView({
                   .filter((o) => orderStatusFilter === "ALL" || o.status === orderStatusFilter)
                   .map((o) => {
                     const evt = db.events.find((e) => e.id === o.event_id);
+                    const needsVerify = o.status === "AWAITING_VERIFICATION" || o.status === "PENDING";
                     return (
                       <tr key={o.id} className="hover:bg-canvas-alt/60 transition">
                         <td className="px-4 py-3 font-mono font-bold text-brand-700">#{o.id}</td>
@@ -1765,12 +1834,24 @@ export function OrganizerWorkspaceView({
                           <div className="font-bold text-ink">{o.attendee_name}</div>
                           <div className="text-[11px] text-ink-muted">{o.attendee_email}</div>
                         </td>
-                        <td className="px-4 py-3 text-ink max-w-[220px] truncate">{evt?.title ?? o.event_id}</td>
-                        <td className="px-4 py-3 text-ink-muted">
-                          {new Date(o.created_at).toLocaleString("en-GB", {
-                            dateStyle: "medium",
-                            timeZone: "Asia/Dhaka",
-                          })}
+                        <td className="px-4 py-3 text-ink max-w-[200px] truncate">{evt?.title ?? o.event_id}</td>
+                        <td className="px-4 py-3">
+                          {o.payment_reference ? (
+                            <div>
+                              <span className="font-mono font-bold text-ink">{o.payment_reference}</span>
+                              <div className="text-[11px] text-ink-muted">
+                                {(o.payment_provider || "MFS").replace(/_SANDBOX/g, "")}
+                                {o.sender_number ? ` · ${o.sender_number}` : ""}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-ink-muted">
+                              {new Date(o.created_at).toLocaleString("en-GB", {
+                                dateStyle: "medium",
+                                timeZone: "Asia/Dhaka",
+                              })}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-right font-mono font-bold text-ink">
                           {formatBDT(o.total_minor)}
@@ -1780,13 +1861,57 @@ export function OrganizerWorkspaceView({
                             className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                               o.status === "PAID"
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : o.status === "PENDING"
+                                : o.status === "AWAITING_VERIFICATION" || o.status === "PENDING"
                                 ? "bg-amber-50 text-amber-700 border border-amber-200"
                                 : "bg-red-50 text-danger border border-red-200"
                             }`}
                           >
-                            {o.status}
+                            {o.status === "AWAITING_VERIFICATION" ? "VERIFY NEEDED" : o.status}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {needsVerify ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await onAction(
+                                    "VERIFY_ORDER_PAYMENT",
+                                    { orderId: o.id, approve: true },
+                                    actorForOrg
+                                  );
+                                  setStatusBanner({
+                                    type: "success",
+                                    text: `Payment verified for #${o.id} — QR ticket issued to ${o.attendee_email}!`,
+                                  });
+                                }}
+                                className="rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 transition cursor-pointer"
+                              >
+                                Accept &amp; Verify
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await onAction(
+                                    "VERIFY_ORDER_PAYMENT",
+                                    { orderId: o.id, approve: false },
+                                    actorForOrg
+                                  );
+                                  setStatusBanner({
+                                    type: "error",
+                                    text: `Order #${o.id} rejected and reserved seats released.`,
+                                  });
+                                }}
+                                className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-ink-muted">
+                              {o.status === "PAID" ? "Ticket Issued" : "Closed"}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );

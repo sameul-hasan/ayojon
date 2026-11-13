@@ -242,35 +242,73 @@ export async function dispatchStateAction(
           }
         }
       }
-    } else if (action === "REGISTER_FREE") {
+    } else if (action === "REGISTER_FREE" || action === "BUY_TICKET") {
       const p = payload as any;
       if (!cachedDb) cachedDb = createInitialSeed();
       const ticketType =
         cachedDb.ticket_types.find((t) => t.id === p.ticketTypeId) ||
         cachedDb.ticket_types.find((t) => t.event_id === p.eventId);
+      const isPaid = action === "BUY_TICKET";
+      const orderId = isPaid
+        ? `ord-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+        : null;
       const regId = `reg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-      const orderId = `ord-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
       const ticketId = `tkt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
       const qrToken = `AAYOJON-TKT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      const now = new Date().toISOString();
+      const attendeeName = (p.attendeeName || "Attendee").trim();
+      const attendeeEmail = (p.attendeeEmail || "attendee@ayojon.select").trim().toLowerCase();
 
-      const newReg: any = {
+      let newOrder: Order | null = null;
+      if (isPaid && orderId) {
+        const subtotal = ticketType ? ticketType.price_minor : 0;
+        const fee = Math.round(subtotal * 0.025);
+        newOrder = {
+          id: orderId,
+          buyer_user_id: actorUserId || null,
+          event_id: p.eventId,
+          order_type: "TICKET",
+          status: "PAID",
+          subtotal_minor: subtotal,
+          fee_minor: fee,
+          total_minor: subtotal + fee,
+          currency: "BDT",
+          idempotency_key: `client-${orderId}`,
+          attendee_name: attendeeName,
+          attendee_email: attendeeEmail,
+          attendee_phone: p.phone || "",
+          created_at: now,
+        };
+        cachedDb.orders = [newOrder, ...cachedDb.orders];
+      }
+
+      const newReg: Registration = {
         id: regId,
         order_id: orderId,
         event_id: p.eventId,
-        ticket_type_id: ticketType?.id || "tt-free",
-        attendee_user_id: actorUserId || "usr-attendee-current",
-        attendee_name: p.attendeeName || "Attendee",
-        attendee_email: p.attendeeEmail || "attendee@ayojon.select",
+        user_id: actorUserId || null,
+        ticket_type_id: ticketType?.id || (isPaid ? "tt-gen" : "tt-free"),
+        attendee_name: attendeeName,
+        attendee_email: attendeeEmail,
         attendee_phone: p.phone || "",
-        created_at: new Date().toISOString(),
+        institute_or_company: p.instituteOrCompany || "",
+        marketing_consent: false,
+        status: "CONFIRMED",
+        created_at: now,
       };
 
-      const newTicket: any = {
+      const newTicket: TicketRecord = {
         id: ticketId,
         registration_id: regId,
+        event_id: p.eventId,
+        ticket_type_id: newReg.ticket_type_id,
+        attendee_name: attendeeName,
+        attendee_email: attendeeEmail,
+        ticket_type_name: ticketType?.name || (isPaid ? "General Admission" : "Free Pass"),
         qr_token: qrToken,
-        status: "ISSUED",
-        created_at: new Date().toISOString(),
+        token_hash: await browserSha256(qrToken),
+        status: "VALID",
+        issued_at: now,
       };
 
       cachedDb.registrations = [newReg, ...cachedDb.registrations];
@@ -279,70 +317,14 @@ export async function dispatchStateAction(
         ticketType.sold_count = (ticketType.sold_count || 0) + 1;
       }
 
+      if (newOrder) await saveOrderToFirestore(newOrder);
       await saveRegistrationToFirestore(newReg);
       await saveTicketToFirestore(newTicket);
 
       resultData = {
         success: true,
         data: { ...cachedDb },
-        result: { registration: newReg, ticket: newTicket },
-      };
-    } else if (action === "BUY_TICKET") {
-      const p = payload as any;
-      if (!cachedDb) cachedDb = createInitialSeed();
-      const ticketType =
-        cachedDb.ticket_types.find((t) => t.id === p.ticketTypeId) ||
-        cachedDb.ticket_types.find((t) => t.event_id === p.eventId);
-      const orderId = `ord-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-      const regId = `reg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-      const ticketId = `tkt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-      const qrToken = `AAYOJON-TKT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-
-      const newOrder: any = {
-        id: orderId,
-        user_id: actorUserId || "usr-attendee-current",
-        total_minor: ticketType ? ticketType.price_minor : 0,
-        currency: "BDT",
-        status: "PAID",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const newReg: any = {
-        id: regId,
-        order_id: orderId,
-        event_id: p.eventId,
-        ticket_type_id: ticketType?.id || "tt-gen",
-        attendee_user_id: actorUserId || "usr-attendee-current",
-        attendee_name: p.attendeeName || "Attendee",
-        attendee_email: p.attendeeEmail || "attendee@ayojon.select",
-        attendee_phone: p.phone || "",
-        created_at: new Date().toISOString(),
-      };
-
-      const newTicket: any = {
-        id: ticketId,
-        registration_id: regId,
-        qr_token: qrToken,
-        status: "ISSUED",
-        created_at: new Date().toISOString(),
-      };
-
-      cachedDb.orders = [newOrder, ...cachedDb.orders];
-      cachedDb.registrations = [newReg, ...cachedDb.registrations];
-      cachedDb.tickets = [newTicket, ...cachedDb.tickets];
-      if (ticketType) {
-        ticketType.sold_count = (ticketType.sold_count || 0) + 1;
-      }
-
-      await saveOrderToFirestore(newOrder);
-      await saveRegistrationToFirestore(newReg);
-      await saveTicketToFirestore(newTicket);
-
-      resultData = {
-        success: true,
-        data: { ...cachedDb },
-        result: { order: newOrder, registration: newReg, ticket: newTicket },
+        result: newOrder ? { order: newOrder, registration: newReg, ticket: newTicket } : { registration: newReg, ticket: newTicket },
       };
     } else if (action === "SUBMIT_VENUE_RFQ" || action === "CREATE_VENUE_RFQ") {
       const p = payload as any;
@@ -420,6 +402,91 @@ export async function dispatchStateAction(
         data: { ...cachedDb },
         result: newVp,
       };
+    } else if (action === "SCAN_TICKET_QR" && !resultData?.result) {
+      const p = payload as any;
+      if (!cachedDb) cachedDb = await fetchDatabaseState();
+      const trimmed = String(p.qrToken || "").trim();
+      const hashed = await browserSha256(trimmed);
+      const ticket = cachedDb.tickets.find(
+        (t) => t.token_hash === hashed || t.qr_token.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (!ticket) {
+        resultData = {
+          success: true,
+          data: { ...cachedDb },
+          result: { result: "INVALID", message: "Unrecognized or forged QR token." },
+        };
+      } else if (p.eventId && ticket.event_id !== p.eventId) {
+        resultData = {
+          success: true,
+          data: { ...cachedDb },
+          result: { result: "INVALID_EVENT", message: "Ticket belongs to a different event.", ticket },
+        };
+      } else if (ticket.status === "CANCELLED" || ticket.status === "TRANSFERRED") {
+        resultData = {
+          success: true,
+          data: { ...cachedDb },
+          result: { result: "CANCELLED", message: `Ticket is ${ticket.status.toLowerCase()} and cannot be used.`, ticket },
+        };
+      } else if (ticket.status === "USED") {
+        const prev = cachedDb.check_ins.find((c) => c.ticket_id === ticket.id);
+        resultData = {
+          success: true,
+          data: { ...cachedDb },
+          result: {
+            result: "ALREADY_USED",
+            message: "Ticket has already been checked in.",
+            ticket,
+            previousCheckIn: prev
+              ? { checkedInAt: prev.checked_in_at, staffName: prev.staff_name }
+              : undefined,
+          },
+        };
+      } else {
+        const now = new Date().toISOString();
+        ticket.status = "USED";
+        const staffProfile = cachedDb.profiles.find((pr) => pr.id === actorUserId);
+        cachedDb.check_ins.unshift({
+          id: `chk-${Date.now().toString(36)}`,
+          ticket_id: ticket.id,
+          event_id: ticket.event_id,
+          staff_user_id: actorUserId || "usr-staff-tanvir",
+          staff_name: staffProfile?.display_name || "Gate Staff",
+          checked_in_at: now,
+        });
+        await saveTicketToFirestore(ticket);
+        resultData = {
+          success: true,
+          data: { ...cachedDb },
+          result: {
+            result: "VALID",
+            message: "Check-in confirmed! Gate entry granted.",
+            ticket,
+            checkedInAt: now,
+          },
+        };
+      }
+    } else if (action === "SUBMIT_PAYMENT_PROOF") {
+      const p = payload as any;
+      const updated = await clientSubmitPaymentProof({
+        orderId: p.orderId,
+        provider: p.provider || "BKASH_SANDBOX",
+        trxId: p.trxId || "",
+        senderNumber: p.senderNumber,
+      });
+      if (cachedDb) {
+        resultData = { success: true, data: { ...cachedDb }, result: updated };
+      }
+    } else if (action === "VERIFY_ORDER_PAYMENT") {
+      const p = payload as any;
+      const res = await clientVerifyOrderPayment({
+        orderId: p.orderId,
+        actorUserId: actorUserId || "usr-superadmin",
+        approve: p.approve !== false,
+        reason: p.reason,
+      });
+      cachedDb = res.db;
+      resultData = { success: true, data: { ...res.db }, result: res.order };
     }
   } catch (err: any) {
     console.warn("[Firestore] Action sync notice:", err?.message);
@@ -668,6 +735,7 @@ export async function clientCreateTicketOrder(input: {
     phone?: string;
     instituteOrCompany?: string;
   };
+  promoCode?: string;
   idempotencyKey?: string;
 }): Promise<Order> {
   const db = await fetchDatabaseState();
@@ -703,8 +771,13 @@ export async function clientCreateTicketOrder(input: {
     pendingItems.push({ ticketType: tt, quantity: qty, lineTotal });
   }
 
-  const feeMinor = Math.round(subtotalMinor * 0.025);
-  const totalMinor = subtotalMinor + feeMinor;
+  let discountMinor = 0;
+  if (input.promoCode?.trim().toUpperCase() === "HALF50") {
+    discountMinor = Math.round(subtotalMinor * 0.5);
+  }
+  const discountedSubtotal = Math.max(0, subtotalMinor - discountMinor);
+  const feeMinor = Math.round(discountedSubtotal * 0.025);
+  const totalMinor = discountedSubtotal + feeMinor;
   const orderId = `ord-${Date.now().toString(36)}-${browserRandomHex(3).toLowerCase()}`;
   const now = new Date().toISOString();
 
@@ -895,4 +968,167 @@ export async function clientRegisterFreeEvent(input: {
 export async function clientGetMyOrders(buyerUserId: string): Promise<Order[]> {
   const db = await fetchDatabaseState();
   return db.orders.filter((o) => o.buyer_user_id === buyerUserId || !buyerUserId);
+}
+
+export async function clientSubmitPaymentProof(input: {
+  orderId: string;
+  provider: string;
+  trxId: string;
+  senderNumber?: string;
+}): Promise<Order> {
+  const db = await fetchDatabaseState();
+  const order = db.orders.find((o) => o.id === input.orderId);
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+  if (order.status === "PAID") {
+    return order;
+  }
+  const cleanTrx = input.trxId.trim().toUpperCase();
+  if (cleanTrx.length < 4) {
+    throw new Error("Please enter a valid Transaction ID (TrxID).");
+  }
+
+  const now = new Date().toISOString();
+  order.status = "AWAITING_VERIFICATION";
+  order.payment_provider = input.provider;
+  order.payment_reference = cleanTrx;
+  order.sender_number = input.senderNumber?.trim() || "";
+  order.payment_submitted_at = now;
+
+  const event = db.events.find((e) => e.id === order.event_id);
+  const orgMembers = event
+    ? db.organization_members.filter(
+        (m) =>
+          m.organization_id === event.organization_id &&
+          (m.role === "OWNER" || m.role === "EVENT_MANAGER" || m.role === "CHECKIN_STAFF")
+      )
+    : [];
+  const admins = db.profiles.filter(
+    (p) => p.platform_role === "ADMIN" || p.platform_role === "SUPER_ADMIN"
+  );
+
+  const recipientIds = new Set<string>([
+    ...orgMembers.map((m) => m.user_id),
+    ...admins.map((a) => a.id),
+  ]);
+
+  db.notifications = db.notifications || [];
+  for (const uid of recipientIds) {
+    const profile = db.profiles.find((p) => p.id === uid);
+    db.notifications.unshift({
+      id: `notif-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+      user_id: uid,
+      destination: profile?.email || uid,
+      channel: "EMAIL",
+      template: "PAYMENT_VERIFICATION_REQUIRED",
+      subject: `Verify payment ${cleanTrx} for ${event?.title || order.event_id} (${order.id})`,
+      status: "QUEUED",
+      retry_count: 0,
+      idempotency_key: `notif-pay-${order.id}-${uid}`,
+      sent_at: null,
+      created_at: now,
+    });
+  }
+
+  cachedDb = db;
+  await saveOrderToFirestore(order);
+  return order;
+}
+
+export async function clientVerifyOrderPayment(input: {
+  orderId: string;
+  actorUserId: string;
+  approve: boolean;
+  reason?: string;
+}): Promise<{ order: Order; db: DatabaseState }> {
+  const db = await fetchDatabaseState();
+  const order = db.orders.find((o) => o.id === input.orderId);
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  const actor = db.profiles.find((p) => p.id === input.actorUserId);
+  const event = db.events.find((e) => e.id === order.event_id);
+  const isAdmin = actor?.platform_role === "ADMIN" || actor?.platform_role === "SUPER_ADMIN";
+  const isOrgStaffOrOwner =
+    event &&
+    db.organization_members.some(
+      (m) =>
+        m.organization_id === event.organization_id &&
+        m.user_id === input.actorUserId &&
+        (m.role === "OWNER" || m.role === "EVENT_MANAGER" || m.role === "CHECKIN_STAFF")
+    );
+
+  if (!isAdmin && !isOrgStaffOrOwner) {
+    throw new Error("Only the event organizer, dedicated staff, or platform admin can verify payments.");
+  }
+
+  const now = new Date().toISOString();
+  if (input.approve) {
+    order.verified_by_user_id = input.actorUserId;
+    order.verified_at = now;
+    const paidOrder = await clientSandboxConfirmPayment({
+      orderId: order.id,
+      provider: order.payment_provider,
+    });
+    db.notifications = db.notifications || [];
+    db.notifications.unshift({
+      id: `notif-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+      user_id: order.buyer_user_id,
+      destination: order.attendee_email,
+      channel: "EMAIL",
+      template: "TICKET_ISSUED",
+      subject: `Payment verified! Your QR ticket for ${event?.title || order.event_id} is ready.`,
+      status: "QUEUED",
+      retry_count: 0,
+      idempotency_key: `notif-tkt-${order.id}`,
+      sent_at: null,
+      created_at: now,
+    });
+    db.audit_logs = db.audit_logs || [];
+    db.audit_logs.unshift({
+      id: `aud-${Date.now().toString(36)}`,
+      actor_id: input.actorUserId,
+      actor_name: actor?.display_name || input.actorUserId,
+      actor_role: actor?.platform_role || "STAFF",
+      action: "PAYMENT_VERIFIED_AND_TICKET_ISSUED",
+      resource_type: "orders",
+      resource_id: order.id,
+      metadata: {
+        trxId: order.payment_reference || "SANDBOX",
+        provider: order.payment_provider || "MFS",
+        amountMinor: order.total_minor,
+      },
+      created_at: now,
+    });
+    cachedDb = db;
+    return { order: paidOrder, db };
+  }
+
+  // Reject payment & release reserved inventory
+  order.status = "FAILED";
+  order.rejection_reason = input.reason?.trim() || "Transaction ID could not be verified.";
+  const items = db.order_items.filter((oi) => oi.order_id === order.id);
+  for (const item of items) {
+    const tt = db.ticket_types.find((t) => t.id === item.ticket_type_id);
+    if (tt) {
+      tt.sold_count = Math.max(0, tt.sold_count - item.quantity);
+    }
+  }
+  db.audit_logs = db.audit_logs || [];
+  db.audit_logs.unshift({
+    id: `aud-${Date.now().toString(36)}`,
+    actor_id: input.actorUserId,
+    actor_name: actor?.display_name || input.actorUserId,
+    actor_role: actor?.platform_role || "STAFF",
+    action: "PAYMENT_REJECTED",
+    resource_type: "orders",
+    resource_id: order.id,
+    metadata: { reason: order.rejection_reason },
+    created_at: now,
+  });
+  cachedDb = db;
+  await saveOrderToFirestore(order);
+  return { order, db };
 }

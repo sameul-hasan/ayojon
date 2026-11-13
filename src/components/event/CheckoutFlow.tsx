@@ -25,6 +25,9 @@ import {
   Ticket,
   User,
   XCircle,
+  BellRing,
+  Smartphone,
+  Copy,
 } from "lucide-react";
 import { Stepper } from "@/components/ui/Stepper";
 import { Button } from "@/components/ui/Button";
@@ -39,6 +42,7 @@ import {
   clientGetMyOrders,
   clientRegisterFreeEvent,
   clientSandboxConfirmPayment,
+  clientSubmitPaymentProof,
 } from "@/lib/client-api";
 
 function isStaticHostingFallback(res: Response): boolean {
@@ -60,12 +64,15 @@ interface CheckoutEvent {
   isOnline: boolean;
 }
 
-type OrderStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+type OrderStatus = "PENDING" | "AWAITING_VERIFICATION" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
 
 interface OrderLite {
   id: string;
   status: OrderStatus;
   total_minor: number;
+  payment_reference?: string;
+  sender_number?: string;
+  rejection_reason?: string;
 }
 
 type ProviderChoice = "BKASH_SANDBOX" | "NAGAD_SANDBOX" | "SSLCOMMERZ_SANDBOX";
@@ -143,6 +150,14 @@ export function CheckoutFlow({
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<OrderLite | null>(null);
   const [freeDone, setFreeDone] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [reservationSecondsLeft, setReservationSecondsLeft] = useState(15 * 60);
+  const [trxId, setTrxId] = useState("");
+  const [senderPhone, setSenderPhone] = useState("");
+  const [submittingProof, setSubmittingProof] = useState(false);
+  const [copiedRef, setCopiedRef] = useState(false);
   const inFlight = useRef(false);
 
   const selected = tickets.find((t) => t.id === ticketId);
@@ -150,7 +165,43 @@ export function CheckoutFlow({
   const isFree = selected?.priceMinor === 0;
   // Free registration issues exactly one ticket per registration
   const safeQty = isFree ? 1 : Math.min(qty, maxQty);
-  const totals = selected ? computeTotals(selected.priceMinor, safeQty) : null;
+  const baseTotals = selected ? computeTotals(selected.priceMinor, safeQty) : null;
+  const discountMinor =
+    baseTotals && appliedPromo === "HALF50" ? Math.round(baseTotals.subtotalMinor * 0.5) : 0;
+  const discountedSubtotal = baseTotals ? Math.max(0, baseTotals.subtotalMinor - discountMinor) : 0;
+  const effectiveFeeMinor = isFree ? 0 : Math.round(discountedSubtotal * 0.025);
+  const totals = baseTotals
+    ? {
+        subtotalMinor: baseTotals.subtotalMinor,
+        discountMinor,
+        feeMinor: effectiveFeeMinor,
+        totalMinor: isFree ? 0 : discountedSubtotal + effectiveFeeMinor,
+      }
+    : null;
+
+  const applyPromoCode = () => {
+    const code = promoInput.trim().toUpperCase();
+    setPromoError(null);
+    if (!code) {
+      setAppliedPromo(null);
+      return;
+    }
+    if (code === "HALF50") {
+      setAppliedPromo("HALF50");
+    } else {
+      setAppliedPromo(null);
+      setPromoError("Invalid or expired promo code. Try HALF50 for 50% off.");
+    }
+  };
+
+  useEffect(() => {
+    if (!order || (order.status !== "PENDING" && order.status !== "AWAITING_VERIFICATION")) return;
+    setReservationSecondsLeft(15 * 60);
+    const timer = window.setInterval(() => {
+      setReservationSecondsLeft((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [order?.id, order?.status]);
 
   const errors = {
     name: form.name.trim().length < 2 ? "Please enter your full name" : "",
@@ -176,7 +227,7 @@ export function CheckoutFlow({
   const orderId = order?.id;
   const orderStatus = order?.status;
   useEffect(() => {
-    if (!orderId || orderStatus !== "PENDING") return;
+    if (!orderId || (orderStatus !== "PENDING" && orderStatus !== "AWAITING_VERIFICATION")) return;
     let cancelled = false;
     const tick = async () => {
       try {
@@ -194,13 +245,20 @@ export function CheckoutFlow({
         }
         const fresh = ordersList.find((o) => o.id === orderId);
         if (fresh && !cancelled) {
-          setOrder({ id: fresh.id, status: fresh.status, total_minor: fresh.total_minor });
+          setOrder({
+            id: fresh.id,
+            status: fresh.status,
+            total_minor: fresh.total_minor,
+            payment_reference: fresh.payment_reference,
+            sender_number: fresh.sender_number,
+            rejection_reason: fresh.rejection_reason,
+          });
         }
       } catch {
         /* keep waiting */
       }
     };
-    const id = window.setInterval(tick, 4000);
+    const id = window.setInterval(tick, 3000);
     return () => {
       cancelled = true;
       window.clearInterval(id);
@@ -224,10 +282,48 @@ export function CheckoutFlow({
       }
       const fresh = ordersList.find((o) => o.id === orderId);
       if (fresh) {
-        setOrder({ id: fresh.id, status: fresh.status, total_minor: fresh.total_minor });
+        setOrder({
+          id: fresh.id,
+          status: fresh.status,
+          total_minor: fresh.total_minor,
+          payment_reference: fresh.payment_reference,
+          sender_number: fresh.sender_number,
+          rejection_reason: fresh.rejection_reason,
+        });
       }
     } catch {
       setError("Couldn't check payment status right now. Please try again.");
+    }
+  };
+
+  const submitPaymentProof = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!orderId || submittingProof) return;
+    const cleanTrx = trxId.trim().toUpperCase();
+    if (cleanTrx.length < 4) {
+      setError("Please enter a valid Transaction ID (TrxID) of at least 4 characters.");
+      return;
+    }
+    setError(null);
+    setSubmittingProof(true);
+    try {
+      const updated = await clientSubmitPaymentProof({
+        orderId,
+        provider: selectedProvider,
+        trxId: cleanTrx,
+        senderNumber: senderPhone.trim() || form.phone.trim(),
+      });
+      setOrder({
+        id: updated.id,
+        status: updated.status,
+        total_minor: updated.total_minor,
+        payment_reference: updated.payment_reference,
+        sender_number: updated.sender_number,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not submit payment proof.");
+    } finally {
+      setSubmittingProof(false);
     }
   };
 
@@ -264,6 +360,10 @@ export function CheckoutFlow({
 
   const submit = async () => {
     if (!selected || inFlight.current || submitting) return;
+    if (freeDone || order?.status === "PAID" || order?.status === "PENDING") {
+      setStep(5);
+      return;
+    }
     inFlight.current = true;
     setSubmitting(true);
     setError(null);
@@ -321,6 +421,7 @@ export function CheckoutFlow({
               eventId: event.id,
               items: [{ ticketTypeId: selected.id, quantity: safeQty }],
               attendee,
+              promoCode: appliedPromo || undefined,
             }),
           });
           if (!isStaticHostingFallback(res)) {
@@ -339,6 +440,7 @@ export function CheckoutFlow({
             buyerUserId: buyerId,
             items: [{ ticketTypeId: selected.id, quantity: safeQty }],
             attendee,
+            promoCode: appliedPromo || undefined,
             idempotencyKey: key,
           });
           createdOrder = {
@@ -427,6 +529,12 @@ export function CheckoutFlow({
               </dt>
               <dd className="font-semibold text-ink">{isFree ? "৳ 0" : formatBDT(totals.subtotalMinor)}</dd>
             </div>
+            {totals.discountMinor > 0 && (
+              <div className="flex justify-between text-emerald-700">
+                <dt>Promo Discount ({appliedPromo})</dt>
+                <dd className="font-semibold">- {formatBDT(totals.discountMinor)}</dd>
+              </div>
+            )}
             {totals.feeMinor > 0 && (
               <div className="flex justify-between text-ink-muted">
                 <dt>Platform Service Fee (2.5%)</dt>
@@ -482,7 +590,8 @@ export function CheckoutFlow({
               <legend className="sr-only">Ticket Type</legend>
               {tickets.map((t) => {
                 const out = t.remaining <= 0;
-                const isUrgent = !out && t.remaining > 0 && t.remaining <= 10;
+                const isCritical = !out && t.remaining <= 5;
+                const isUrgent = !out && t.remaining > 5 && t.remaining <= 10;
                 const active = t.id === ticketId;
 
                 return (
@@ -517,8 +626,10 @@ export function CheckoutFlow({
                       <span className="mt-2.5 flex items-center gap-2">
                         {out ? (
                           <Badge tone="danger">Sold Out</Badge>
+                        ) : isCritical ? (
+                          <Badge tone="danger">Only {t.remaining} left — Selling fast!</Badge>
                         ) : isUrgent ? (
-                          <Badge tone="warning">Only {t.remaining} tickets left</Badge>
+                          <Badge tone="warning">Low stock ({t.remaining} left)</Badge>
                         ) : (
                           <span className="text-xs text-ink-muted font-medium">{t.remaining} available</span>
                         )}
@@ -714,12 +825,44 @@ export function CheckoutFlow({
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-ink">{isFree ? "Free" : formatBDT(totals?.subtotalMinor ?? 0)}</p>
+                  {totals && totals.discountMinor > 0 && (
+                    <p className="text-[11px] font-semibold text-emerald-700">
+                      - {formatBDT(totals.discountMinor)} ({appliedPromo})
+                    </p>
+                  )}
                   {totals && totals.feeMinor > 0 && (
                     <p className="text-[11px] text-ink-muted">+ ৳ {Math.round(totals.feeMinor / 100)} fee</p>
                   )}
                 </div>
               </div>
             </div>
+
+            {!isFree && (
+              <div className="rounded-xl border border-line bg-canvas-alt/40 p-4 space-y-2">
+                <label htmlFor="promo-code-input" className="block text-xs font-bold uppercase tracking-wider text-ink-muted">
+                  Promo / Discount Code
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    id="promo-code-input"
+                    type="text"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value)}
+                    placeholder="Enter code (e.g. HALF50)"
+                    className="h-10 flex-1 rounded-btn border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={applyPromoCode} className="h-10 px-4">
+                    {appliedPromo ? "Update" : "Apply Code"}
+                  </Button>
+                </div>
+                {appliedPromo && (
+                  <p className="text-xs font-semibold text-emerald-700">
+                    Code {appliedPromo} applied — 50% off ticket subtotal!
+                  </p>
+                )}
+                {promoError && <p className="text-xs font-medium text-danger">{promoError}</p>}
+              </div>
+            )}
 
             {/* Total Highlight */}
             <div className="flex items-center justify-between rounded-xl bg-brand-50/60 p-4 border border-brand-200">
@@ -891,6 +1034,41 @@ export function CheckoutFlow({
                   </p>
                 </div>
               </>
+            ) : order?.status === "AWAITING_VERIFICATION" ? (
+              <>
+                <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-sm">
+                  <BellRing className="size-9 animate-pulse" aria-hidden />
+                </div>
+                <div>
+                  <Badge tone="warning">
+                    <Clock className="mr-1 size-3.5" aria-hidden /> Awaiting Organizer / Staff Verification
+                  </Badge>
+                  <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-3xl">Payment Proof Submitted!</h2>
+                  <p className="mt-2 text-sm text-ink-muted max-w-md mx-auto leading-relaxed">
+                    Your transaction <strong className="font-mono text-ink">{order.payment_reference}</strong> for Order{" "}
+                    <strong className="text-ink">{order.id}</strong> has been received. Your QR ticket will be issued
+                    automatically as soon as it is verified.
+                  </p>
+                </div>
+
+                <div className="mx-auto max-w-md rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-left space-y-2.5 text-xs">
+                  <div className="flex items-center gap-2 font-bold text-amber-900">
+                    <ShieldCheck className="size-4 text-amber-700 shrink-0" />
+                    <span>Verification Notifications Dispatched</span>
+                  </div>
+                  <p className="text-amber-800 leading-relaxed">
+                    Live notifications have been sent to the <strong>Event Organizer</strong>,{" "}
+                    <strong>Dedicated Verification Staff</strong>, and <strong>Platform Admin</strong>. This page
+                    updates automatically once approved.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <Button variant="outline" size="lg" onClick={refreshNow} className="gap-1.5">
+                    <RefreshCw className="size-4" /> Check Verification Status
+                  </Button>
+                </div>
+              </>
             ) : order && order.status !== "PENDING" ? (
               <>
                 <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-red-100 text-danger shadow-sm">
@@ -900,8 +1078,9 @@ export function CheckoutFlow({
                   <Badge tone="danger">Order {order.status}</Badge>
                   <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-3xl">Payment Not Completed</h2>
                   <p className="mt-2 text-sm text-ink-muted max-w-md mx-auto">
-                    Order <strong className="text-ink">{order.id}</strong> was {order.status.toLowerCase()}. No ticket was
-                    issued and no funds were settled.
+                    {order.rejection_reason
+                      ? order.rejection_reason
+                      : `Order ${order.id} was ${order.status.toLowerCase()}. No ticket was issued and no funds were settled.`}
                   </p>
                 </div>
                 <div className="pt-2">
@@ -919,32 +1098,128 @@ export function CheckoutFlow({
             ) : (
               <>
                 <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 shadow-sm">
-                  <Loader2 className="size-10 animate-spin" aria-hidden />
+                  <Smartphone className="size-9" aria-hidden />
                 </div>
                 <div>
                   <Badge tone="warning">
-                    <Clock className="mr-1 size-3.5" aria-hidden /> Awaiting Payment Confirmation
+                    <Clock className="mr-1 size-3.5" aria-hidden /> Reserved ·{" "}
+                    {String(Math.floor(reservationSecondsLeft / 60)).padStart(2, "0")}:
+                    {String(reservationSecondsLeft % 60).padStart(2, "0")} left
                   </Badge>
-                  <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-3xl">Order Reserved</h2>
+                  <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-3xl">Complete Your Payment</h2>
                   <p className="mt-2 text-sm text-ink-muted max-w-md mx-auto leading-relaxed">
-                    Order <strong className="text-ink">{order?.id}</strong> is placed. Aayojon is awaiting payment webhook
-                    verification from {selectedProvider.replace(/_/g, " ")}. Your ticket pass unlocks immediately upon server
-                    confirmation.
+                    Send{" "}
+                    <strong className="text-ink">
+                      {formatBDT(order?.total_minor ?? totals?.totalMinor ?? 0)}
+                    </strong>{" "}
+                    via{" "}
+                    <strong className="text-ink">
+                      {selectedProvider === "BKASH_SANDBOX"
+                        ? "bKash"
+                        : selectedProvider === "NAGAD_SANDBOX"
+                        ? "Nagad"
+                        : "SSLCommerz"}
+                    </strong>{" "}
+                    and enter your Transaction ID below for instant organizer/admin verification.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <form
+                  onSubmit={submitPaymentProof}
+                  className="mx-auto max-w-md rounded-2xl border border-line bg-canvas-alt/60 p-5 text-left space-y-4"
+                >
+                  <div className="flex items-center justify-between text-xs border-b border-line pb-3">
+                    <div>
+                      <span className="block text-[11px] font-semibold text-ink-muted uppercase">
+                        {selectedProvider === "SSLCOMMERZ_SANDBOX" ? "Gateway Order Ref" : "Merchant Wallet"}
+                      </span>
+                      <span className="font-mono text-sm font-bold text-ink">
+                        {selectedProvider === "BKASH_SANDBOX"
+                          ? "01711-000000 (bKash)"
+                          : selectedProvider === "NAGAD_SANDBOX"
+                          ? "01811-000000 (Nagad)"
+                          : order?.id}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(order?.id || "");
+                        setCopiedRef(true);
+                        setTimeout(() => setCopiedRef(false), 1800);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2.5 py-1 text-[11px] font-semibold text-ink hover:bg-canvas-alt"
+                    >
+                      <Copy className="size-3" /> {copiedRef ? "Copied!" : `Ref: ${order?.id}`}
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="sender-phone" className="block text-xs font-bold text-ink mb-1">
+                        Sender Mobile Number
+                      </label>
+                      <input
+                        id="sender-phone"
+                        type="tel"
+                        value={senderPhone || form.phone}
+                        onChange={(e) => setSenderPhone(e.target.value)}
+                        placeholder="017XXXXXXXX"
+                        className="h-10 w-full rounded-btn border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label htmlFor="trx-id-input" className="block text-xs font-bold text-ink">
+                          Transaction ID (TrxID) <span className="text-danger">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setTrxId(`TRX${Math.random().toString(36).slice(2, 8).toUpperCase()}`)
+                          }
+                          className="text-[11px] font-semibold text-brand-600 hover:underline"
+                        >
+                          Fill Demo TrxID
+                        </button>
+                      </div>
+                      <input
+                        id="trx-id-input"
+                        type="text"
+                        required
+                        value={trxId}
+                        onChange={(e) => setTrxId(e.target.value)}
+                        placeholder="e.g. BKA9X2M7Q4"
+                        className="h-10 w-full rounded-btn border border-line bg-surface px-3 font-mono text-sm uppercase text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    loading={submittingProof}
+                    className="w-full gap-2"
+                  >
+                    <Check className="size-4" /> Submit Payment for Verification (
+                    {formatBDT(order?.total_minor ?? totals?.totalMinor ?? 0)})
+                  </Button>
+                </form>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                   <Button variant="outline" size="sm" onClick={refreshNow} className="gap-1.5">
-                    <RefreshCw className="size-3.5" /> Check Status Now
+                    <RefreshCw className="size-3.5" /> Check Status
                   </Button>
                   <Button
-                    variant="primary"
+                    variant="ghost"
                     size="sm"
                     loading={verifyingSandbox}
                     onClick={simulateSandboxPayment}
-                    className="gap-1.5"
+                    className="gap-1.5 text-ink-muted"
                   >
-                    <Check className="size-3.5" /> Confirm Sandbox Payment
+                    Instant Sandbox Confirm
                   </Button>
                 </div>
               </>
@@ -952,12 +1227,14 @@ export function CheckoutFlow({
 
             {/* CTAs */}
             <div className="flex flex-wrap justify-center gap-3 border-t border-line/80 pt-6">
-              <Link
-                href="/wallet"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-95"
-              >
-                <Ticket className="size-4" /> Go to My Tickets
-              </Link>
+              {(freeDone || order?.status === "PAID") && (
+                <Link
+                  href="/wallet"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-95"
+                >
+                  <Ticket className="size-4" /> Go to My Tickets
+                </Link>
+              )}
               <Link
                 href="/events"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-btn border border-line bg-surface px-6 text-sm font-semibold text-ink shadow-sm transition hover:bg-canvas-alt active:scale-95"

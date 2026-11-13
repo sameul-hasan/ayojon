@@ -998,7 +998,7 @@ export function validateTicketQr(
   const trimmed = input.qrToken.trim();
   const hashed = hashToken(trimmed);
   const ticket = db.tickets.find(
-    (t) => t.token_hash === hashed || t.qr_token.toLowerCase() === trimmed.toLowerCase() || t.id === trimmed
+    (t) => t.token_hash === hashed || t.qr_token.toLowerCase() === trimmed.toLowerCase()
   );
 
   if (!ticket) {

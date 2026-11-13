@@ -64,7 +64,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      navigate(returnUrl || getRoleDestination(role));
+      // Navigation handled by currentUser useEffect using the resolved user role
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") {
         setErrorMsg(err?.message || "Google sign-in failed. Please try again.");
@@ -82,10 +82,11 @@ export function LoginPage() {
     try {
       if (mode === "signin") {
         await signInWithEmail(email, password);
+        // Navigation handled by currentUser useEffect using the resolved user role
       } else {
         await signUpWithEmail(email, password, name, role);
+        navigate(returnUrl || getRoleDestination(role));
       }
-      navigate(returnUrl || getRoleDestination(role));
     } catch (err: any) {
       setErrorMsg(err?.message || "Authentication failed. Please verify credentials.");
     } finally {

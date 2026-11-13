@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { Card, StatCard } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatBDT } from "@/lib/seed";
 
 export interface CheckInScannerProps {
   db: DatabaseState;
@@ -81,9 +82,58 @@ export function CheckInScanner({
           previousCheckIn?: { checkedInAt: string; staffName: string };
         };
       };
-      setLastScanResult(res.result);
+      if (res?.result) {
+        setLastScanResult(res.result);
+      } else {
+        setLastScanResult({
+          result: "INVALID",
+          message: "Unable to validate ticket QR right now. Please retry.",
+        });
+      }
+    } catch (err: any) {
+      setLastScanResult({
+        result: "INVALID",
+        message: err?.message || "Gate validation failed. Please check connection.",
+      });
     } finally {
       setIsScanning(false);
+    }
+  };
+
+  const [verifyingOrderId, setVerifyingOrderId] = useState<string | null>(null);
+  const [staffVerifyNotice, setStaffVerifyNotice] = useState<string | null>(null);
+
+  const pendingStaffOrders = db.orders.filter(
+    (o) =>
+      o.status === "AWAITING_VERIFICATION" &&
+      (selectedEventId === "ALL" || o.event_id === selectedEventId)
+  );
+
+  const handleStaffVerifyOrder = async (orderId: string, approve: boolean) => {
+    setVerifyingOrderId(orderId);
+    setStaffVerifyNotice(null);
+    try {
+      await onAction(
+        "VERIFY_ORDER_PAYMENT",
+        {
+          orderId,
+          approve,
+          reason: approve
+            ? undefined
+            : "Payment proof rejected by dedicated event staff",
+        },
+        "usr-staff-tanvir"
+      );
+      setStaffVerifyNotice(
+        approve
+          ? `Verified payment for ${orderId}. QR tickets have been issued to the attendee.`
+          : `Rejected payment for ${orderId} and released ticket inventory.`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Verification failed";
+      setStaffVerifyNotice(`Verification error for ${orderId}: ${msg}`);
+    } finally {
+      setVerifyingOrderId(null);
     }
   };
 
@@ -118,6 +168,99 @@ export function CheckInScanner({
           </div>
         </div>
       </div>
+
+      {/* DEDICATED STAFF: PENDING PAYMENT VERIFICATIONS */}
+      {staffVerifyNotice && (
+        <div className="rounded-btn border border-brand-200 bg-brand-50 px-4 py-3 text-xs font-medium text-brand-800 flex items-center justify-between gap-2">
+          <span>{staffVerifyNotice}</span>
+          <button
+            type="button"
+            onClick={() => setStaffVerifyNotice(null)}
+            className="text-brand-700 font-bold hover:underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {pendingStaffOrders.length > 0 && (
+        <Card className="p-5 border-amber-300 bg-amber-50/70 shadow-card space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="size-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-sm font-bold text-amber-950">
+                  Dedicated Staff: Pending Payment Verifications ({pendingStaffOrders.length})
+                </h2>
+                <p className="text-xs text-amber-800">
+                  Verify attendee MFS / Gateway payment proofs to issue their QR gate passes.
+                </p>
+              </div>
+            </div>
+            <Badge tone="warning" className="self-start sm:self-center">
+              Action Required
+            </Badge>
+          </div>
+
+          <div className="space-y-2">
+            {pendingStaffOrders.map((order) => {
+              const ev = db.events.find((e) => e.id === order.event_id);
+              const buyer = order.buyer_user_id
+                ? db.profiles.find((p) => p.id === order.buyer_user_id)
+                : undefined;
+              const isBusy = verifyingOrderId === order.id;
+              return (
+                <div
+                  key={order.id}
+                  className="rounded-btn border border-amber-200 bg-surface p-3 flex flex-col md:flex-row md:items-center justify-between gap-3"
+                >
+                  <div className="space-y-1 text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono font-bold text-ink">{order.id}</span>
+                      <Badge tone="brand" className="text-[10px]">
+                        {order.payment_provider || "MFS"}
+                      </Badge>
+                      <span className="font-mono font-semibold text-ink">
+                        TrxID: {order.payment_reference || "—"}
+                      </span>
+                      <span className="font-bold text-ink">
+                        {formatBDT(order.total_minor)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ink-muted">
+                      Attendee: <strong className="text-ink">{buyer?.display_name || order.attendee_name || order.buyer_user_id || "Guest"}</strong>
+                      {order.sender_number ? ` · Sender: ${order.sender_number}` : ""}
+                      {ev ? ` · Event: ${ev.title}` : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={isBusy}
+                      onClick={() => handleStaffVerifyOrder(order.id, true)}
+                    >
+                      <CheckCircle2 className="size-3.5 mr-1" />
+                      Accept &amp; Verify
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isBusy}
+                      onClick={() => handleStaffVerifyOrder(order.id, false)}
+                      className="text-danger border-danger/30 hover:bg-danger/10"
+                    >
+                      <XCircle className="size-3.5 mr-1" />
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* METRIC OVERVIEW */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

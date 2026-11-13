@@ -14,6 +14,7 @@ function orderTone(status: Order["status"]): BadgeTone {
     case "PAID":
       return "success";
     case "PENDING":
+    case "AWAITING_VERIFICATION":
       return "warning";
     case "FAILED":
     case "CANCELLED":

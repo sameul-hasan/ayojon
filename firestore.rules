@@ -1,4 +1,80 @@
 rules_version = '2';
+
+// =============================================================================
+// Assumed Data Model (Aayojon Platform)
+// =============================================================================
+//
+// Collection: profiles/{userId}
+//   - id: string (required, <= 128)
+//   - email: string (required, <= 320)
+//   - display_name: string (optional, <= 120)
+//   - platform_role: string (enum: ATTENDEE, ORGANIZER_OWNER, EVENT_MANAGER,
+//                    CHECKIN_STAFF, SPONSOR, ADMIN, SUPER_ADMIN, VENUE_OWNER, VENDOR;
+//                    admin-only for ADMIN/SUPER_ADMIN and immutable for non-admins)
+//   - role: string (optional; admin-only and immutable for non-admins)
+//   - status: string (optional, enum: ACTIVE, SUSPENDED; admin-only)
+//   - is_suspended: bool (optional; admin-only)
+//   - avatar_url: string|null (optional, <= 500)
+//   - phone: string|null (optional, <= 40)
+//   - organization_label: string|null (optional, <= 160)
+//   - preferred_city: string|null (optional, <= 100)
+//   - interests: list (optional, <= 50 items)
+//   - mfa_enabled: bool (optional)
+//   - created_at: string (optional, <= 64)
+//   - updated_at: string (optional, <= 64)
+//
+// Collection: orders/{orderId}
+//   - id: string (required, <= 128, immutable)
+//   - buyer_user_id: string|null (optional, <= 128, immutable)
+//   - user_id: string|null (optional, <= 128, immutable)
+//   - event_id: string (required, <= 128, immutable)
+//   - order_type: string (required, enum: TICKET, PACKAGE, PROMOTION, VENUE_BOOKING_DEPOSIT, immutable)
+//   - status: string (required, enum: PENDING, PAID, FAILED, REFUNDED, CANCELLED)
+//   - subtotal_minor: number (required, >= 0, immutable for non-admins)
+//   - fee_minor: number (required, >= 0, immutable for non-admins)
+//   - total_minor: number (required, >= 0, immutable for non-admins)
+//   - currency: string (required, == 'BDT', immutable)
+//   - attendee_name: string (optional, <= 160)
+//   - attendee_email: string (optional, <= 320, immutable)
+//   - attendee_phone: string (optional, <= 40)
+//   - institute_or_company: string (optional, <= 200)
+//   - idempotency_key: string (optional, <= 128)
+//   - campaign_code: string (optional, <= 64)
+//   - created_at: string (optional, <= 64, immutable)
+//
+// Collection: registrations/{regId}
+//   - id: string (required, <= 128, immutable)
+//   - event_id: string (required, <= 128, immutable)
+//   - user_id: string|null (optional, <= 128, immutable)
+//   - buyer_user_id: string|null (optional, <= 128, immutable)
+//   - order_id: string|null (optional, <= 128)
+//   - ticket_type_id: string (required, <= 128, immutable)
+//   - attendee_name: string (required, <= 160)
+//   - attendee_email: string (required, <= 320, immutable)
+//   - attendee_phone: string (optional, <= 40)
+//   - institute_or_company: string (optional, <= 200)
+//   - marketing_consent: bool (optional)
+//   - status: string (required, enum: PENDING, CONFIRMED, CANCELLED, WAITLISTED)
+//   - campaign_code: string (optional, <= 64)
+//   - created_at: string (optional, <= 64, immutable)
+//
+// Collection: tickets/{ticketId}
+//   - id: string (required, <= 128, immutable)
+//   - registration_id: string (required, <= 128, immutable)
+//   - event_id: string (required, <= 128, immutable)
+//   - ticket_type_id: string (required, <= 128, immutable)
+//   - user_id: string|null (optional, <= 128, immutable)
+//   - buyer_user_id: string|null (optional, <= 128, immutable)
+//   - attendee_name: string (required, <= 160)
+//   - attendee_email: string (required, <= 320, immutable)
+//   - ticket_type_name: string (optional, <= 160)
+//   - qr_token: string (optional, <= 512, immutable for non-admins)
+//   - token_hash: string (optional, <= 256, immutable for non-admins)
+//   - status: string (required, enum: VALID, USED, CANCELLED, TRANSFERRED)
+//   - issued_at: string (optional, <= 64, immutable)
+//
+// =============================================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -22,58 +98,213 @@ service cloud.firestore {
       return hasProfile() ? get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data : {};
     }
 
+    function isProfileActive(data) {
+      return (!('status' in data) || data.status != 'SUSPENDED') &&
+             (!('is_suspended' in data) || data.is_suspended != true);
+    }
+
+    function isNotSuspended() {
+      return !hasProfile() || isProfileActive(getUserData());
+    }
+
+    // Verified admin check: uses Firebase Auth custom claims OR existing
+    // server-managed profile role (without any hardcoded email backdoors).
     function isAdmin() {
+      let profile = getUserData();
       return isAuthenticated() && (
-        request.auth.token.role == 'admin' ||
-        request.auth.token.role == 'super_admin' ||
-        getUserData().platform_role == 'ADMIN' ||
-        getUserData().platform_role == 'SUPER_ADMIN' ||
-        request.auth.token.email == 'superadmin@ayojon.select' ||
-        request.auth.token.email == 'superadmin@aayojon.bd' ||
-        request.auth.token.email == 'admin@ayojon.select' ||
-        request.auth.token.email == 'admin@aayojon.bd' ||
-        request.auth.token.email == 'bfos.info@gmail.com'
+        ('admin' in request.auth.token && request.auth.token.admin == true) ||
+        ('role' in request.auth.token && request.auth.token.role in ['admin', 'super_admin']) ||
+        ('platform_role' in profile &&
+         profile.platform_role in ['ADMIN', 'SUPER_ADMIN'] &&
+         isProfileActive(profile))
       );
     }
 
     function isOrganizer() {
+      let profile = getUserData();
       return isAuthenticated() && (
-        request.auth.token.role == 'organizer' ||
-        getUserData().platform_role == 'ORGANIZER_OWNER' ||
-        getUserData().platform_role == 'EVENT_MANAGER'
+        ('role' in request.auth.token && request.auth.token.role == 'organizer') ||
+        ('platform_role' in profile && profile.platform_role in ['ORGANIZER_OWNER', 'EVENT_MANAGER'])
       );
     }
 
     function isStaff() {
+      let profile = getUserData();
       return isAuthenticated() && (
-        request.auth.token.role == 'staff' ||
-        getUserData().platform_role == 'CHECKIN_STAFF'
+        ('role' in request.auth.token && request.auth.token.role == 'staff') ||
+        ('platform_role' in profile && profile.platform_role == 'CHECKIN_STAFF')
       );
     }
 
     function isSponsor() {
+      let profile = getUserData();
       return isAuthenticated() && (
-        request.auth.token.role == 'sponsor' ||
-        getUserData().platform_role == 'SPONSOR'
+        ('role' in request.auth.token && request.auth.token.role == 'sponsor') ||
+        ('platform_role' in profile && profile.platform_role == 'SPONSOR')
       );
     }
 
     function isVenueOwner() {
+      let profile = getUserData();
       return isAuthenticated() && (
-        request.auth.token.role == 'venue_owner' ||
-        getUserData().platform_role == 'VENUE_OWNER'
+        ('role' in request.auth.token && request.auth.token.role == 'venue_owner') ||
+        ('platform_role' in profile && profile.platform_role == 'VENUE_OWNER')
       );
     }
 
     function isVendor() {
+      let profile = getUserData();
       return isAuthenticated() && (
-        request.auth.token.role == 'vendor' ||
-        getUserData().platform_role == 'VENDOR'
+        ('role' in request.auth.token && request.auth.token.role == 'vendor') ||
+        ('platform_role' in profile && profile.platform_role == 'VENDOR')
       );
     }
 
-    function isNotSuspended() {
-      return !hasProfile() || getUserData().status != 'SUSPENDED';
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function isValidString(data, field, minLen, maxLen) {
+      return (field in data) &&
+             data[field] is string &&
+             data[field].size() >= minLen &&
+             data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalStringOrNull(data, field, maxLen) {
+      return !(field in data) ||
+             data[field] == null ||
+             (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidNonNegativeNumber(data, field, maxVal) {
+      return (field in data) &&
+             data[field] is number &&
+             data[field] >= 0 &&
+             data[field] <= maxVal;
+    }
+
+    // Ownership check for orders, registrations, and tickets
+    function isRecordOwner(data) {
+      return isAuthenticated() && (
+        ('user_id' in data && data.user_id == request.auth.uid) ||
+        ('buyer_user_id' in data && data.buyer_user_id == request.auth.uid) ||
+        ('attendee_email' in data &&
+         'email' in request.auth.token &&
+         request.auth.token.email != null &&
+         data.attendee_email == request.auth.token.email)
+      );
+    }
+
+    // Ownership check for creating orders, registrations, and tickets
+    function isCreatorOwner(data) {
+      return isAuthenticated() && (
+        ('buyer_user_id' in data && data.buyer_user_id == request.auth.uid) ||
+        ('user_id' in data && data.user_id == request.auth.uid)
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Domain Validators
+    // -------------------------------------------------------------------------
+
+    function isValidProfile(data) {
+      let validRoles = [
+        'ATTENDEE', 'ORGANIZER_OWNER', 'EVENT_MANAGER',
+        'CHECKIN_STAFF', 'SPONSOR', 'ADMIN', 'SUPER_ADMIN',
+        'VENUE_OWNER', 'VENDOR'
+      ];
+      return hasRequiredFields(['id', 'email']) &&
+             isValidString(data, 'id', 1, 128) &&
+             isValidString(data, 'email', 0, 320) &&
+             isValidOptionalStringOrNull(data, 'display_name', 120) &&
+             isValidOptionalStringOrNull(data, 'avatar_url', 500) &&
+             isValidOptionalStringOrNull(data, 'phone', 40) &&
+             isValidOptionalStringOrNull(data, 'organization_label', 160) &&
+             isValidOptionalStringOrNull(data, 'preferred_city', 100) &&
+             isValidOptionalStringOrNull(data, 'created_at', 64) &&
+             isValidOptionalStringOrNull(data, 'updated_at', 64) &&
+             (!('platform_role' in data) || data.platform_role in validRoles) &&
+             (!('status' in data) || data.status in ['ACTIVE', 'SUSPENDED']) &&
+             (!('is_suspended' in data) || data.is_suspended is bool) &&
+             (!('mfa_enabled' in data) || data.mfa_enabled is bool) &&
+             (!('interests' in data) || (data.interests is list && data.interests.size() <= 50));
+    }
+
+    function isNonAdminProfileCreateSafe(data) {
+      return (!('platform_role' in data) || !(data.platform_role in ['ADMIN', 'SUPER_ADMIN'])) &&
+             (!('role' in data) || !(data.role in ['admin', 'super_admin', 'ADMIN', 'SUPER_ADMIN'])) &&
+             (!('is_suspended' in data) || data.is_suspended == false) &&
+             (!('status' in data) || data.status == 'ACTIVE');
+    }
+
+    function isValidOrder(data) {
+      return hasRequiredFields([
+               'id', 'event_id', 'order_type', 'status',
+               'subtotal_minor', 'fee_minor', 'total_minor', 'currency'
+             ]) &&
+             isValidString(data, 'id', 1, 128) &&
+             isValidString(data, 'event_id', 1, 128) &&
+             isValidOptionalStringOrNull(data, 'buyer_user_id', 128) &&
+             isValidOptionalStringOrNull(data, 'user_id', 128) &&
+             data.order_type in ['TICKET', 'PACKAGE', 'PROMOTION', 'VENUE_BOOKING_DEPOSIT'] &&
+             data.status in ['PENDING', 'PAID', 'FAILED', 'REFUNDED', 'CANCELLED'] &&
+             isValidNonNegativeNumber(data, 'subtotal_minor', 100000000) &&
+             isValidNonNegativeNumber(data, 'fee_minor', 100000000) &&
+             isValidNonNegativeNumber(data, 'total_minor', 100000000) &&
+             data.currency == 'BDT' &&
+             isValidOptionalStringOrNull(data, 'idempotency_key', 128) &&
+             isValidOptionalStringOrNull(data, 'attendee_name', 160) &&
+             isValidOptionalStringOrNull(data, 'attendee_email', 320) &&
+             isValidOptionalStringOrNull(data, 'attendee_phone', 40) &&
+             isValidOptionalStringOrNull(data, 'institute_or_company', 200) &&
+             isValidOptionalStringOrNull(data, 'campaign_code', 64) &&
+             isValidOptionalStringOrNull(data, 'created_at', 64);
+    }
+
+    function isValidRegistration(data) {
+      return hasRequiredFields([
+               'id', 'event_id', 'ticket_type_id',
+               'attendee_name', 'attendee_email', 'status'
+             ]) &&
+             isValidString(data, 'id', 1, 128) &&
+             isValidString(data, 'event_id', 1, 128) &&
+             isValidString(data, 'ticket_type_id', 1, 128) &&
+             isValidOptionalStringOrNull(data, 'user_id', 128) &&
+             isValidOptionalStringOrNull(data, 'buyer_user_id', 128) &&
+             isValidOptionalStringOrNull(data, 'order_id', 128) &&
+             isValidString(data, 'attendee_name', 1, 160) &&
+             isValidString(data, 'attendee_email', 1, 320) &&
+             isValidOptionalStringOrNull(data, 'attendee_phone', 40) &&
+             isValidOptionalStringOrNull(data, 'institute_or_company', 200) &&
+             isValidOptionalStringOrNull(data, 'campaign_code', 64) &&
+             isValidOptionalStringOrNull(data, 'created_at', 64) &&
+             (!('marketing_consent' in data) || data.marketing_consent is bool) &&
+             data.status in ['PENDING', 'CONFIRMED', 'CANCELLED', 'WAITLISTED'];
+    }
+
+    function isValidTicket(data) {
+      return hasRequiredFields([
+               'id', 'registration_id', 'event_id', 'ticket_type_id',
+               'attendee_name', 'attendee_email', 'status'
+             ]) &&
+             isValidString(data, 'id', 1, 128) &&
+             isValidString(data, 'registration_id', 1, 128) &&
+             isValidString(data, 'event_id', 1, 128) &&
+             isValidString(data, 'ticket_type_id', 1, 128) &&
+             isValidOptionalStringOrNull(data, 'user_id', 128) &&
+             isValidOptionalStringOrNull(data, 'buyer_user_id', 128) &&
+             isValidString(data, 'attendee_name', 1, 160) &&
+             isValidString(data, 'attendee_email', 1, 320) &&
+             isValidOptionalStringOrNull(data, 'ticket_type_name', 160) &&
+             isValidOptionalStringOrNull(data, 'qr_token', 512) &&
+             isValidOptionalStringOrNull(data, 'token_hash', 256) &&
+             isValidOptionalStringOrNull(data, 'issued_at', 64) &&
+             data.status in ['VALID', 'USED', 'CANCELLED', 'TRANSFERRED'];
     }
 
     // -------------------------------------------------------------------------
@@ -83,8 +314,20 @@ service cloud.firestore {
       // Anyone can read profiles (needed for display names, avatars on events and comments)
       allow read: if true;
 
-      // Users can create and update their own profile; Admins have full access
-      allow create, update: if (isUser(userId) || isAdmin()) && isNotSuspended();
+      // Users can create their own non-privileged profile; Admins have full access
+      allow create: if isValidProfile(request.resource.data) && (
+        (isUser(userId) && isNotSuspended() && isNonAdminProfileCreateSafe(request.resource.data)) ||
+        isAdmin()
+      );
+
+      // Non-admin users cannot modify privileged or suspension fields
+      allow update: if isValidProfile(request.resource.data) && (
+        (isUser(userId) &&
+         isNotSuspended() &&
+         areImmutableFieldsUnchanged(['id', 'platform_role', 'role', 'is_suspended', 'status'])) ||
+        isAdmin()
+      );
+
       allow delete: if isAdmin();
     }
 
@@ -138,14 +381,49 @@ service cloud.firestore {
     // 5. Registrations & Orders (Financial & Ticketing)
     // -------------------------------------------------------------------------
     match /registrations/{regId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isNotSuspended();
+      allow read: if isRecordOwner(resource.data) || isAdmin();
+
+      allow create: if isAuthenticated() &&
+                       isNotSuspended() &&
+                       isValidRegistration(request.resource.data) &&
+                       (isCreatorOwner(request.resource.data) || isAdmin());
+
+      allow update: if isAuthenticated() &&
+                       isNotSuspended() &&
+                       isValidRegistration(request.resource.data) &&
+                       (
+                         isAdmin() ||
+                         (isRecordOwner(resource.data) &&
+                          areImmutableFieldsUnchanged([
+                            'id', 'event_id', 'user_id', 'buyer_user_id',
+                            'ticket_type_id', 'attendee_email', 'created_at'
+                          ]))
+                       );
+
       allow delete: if isAdmin();
     }
 
     match /orders/{orderId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isNotSuspended();
+      allow read: if isRecordOwner(resource.data) || isAdmin();
+
+      allow create: if isAuthenticated() &&
+                       isNotSuspended() &&
+                       isValidOrder(request.resource.data) &&
+                       (isCreatorOwner(request.resource.data) || isAdmin());
+
+      allow update: if isAuthenticated() &&
+                       isNotSuspended() &&
+                       isValidOrder(request.resource.data) &&
+                       (
+                         isAdmin() ||
+                         (isRecordOwner(resource.data) &&
+                          areImmutableFieldsUnchanged([
+                            'id', 'buyer_user_id', 'user_id', 'event_id',
+                            'order_type', 'subtotal_minor', 'fee_minor',
+                            'total_minor', 'currency', 'attendee_email', 'created_at'
+                          ]))
+                       );
+
       allow delete: if isAdmin();
     }
 
@@ -153,8 +431,26 @@ service cloud.firestore {
     // 6. Tickets & Digital Wallet Passes
     // -------------------------------------------------------------------------
     match /tickets/{ticketId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isNotSuspended();
+      allow read: if isRecordOwner(resource.data) || isAdmin();
+
+      allow create: if isAuthenticated() &&
+                       isNotSuspended() &&
+                       isValidTicket(request.resource.data) &&
+                       (isCreatorOwner(request.resource.data) || isAdmin());
+
+      allow update: if isAuthenticated() &&
+                       isNotSuspended() &&
+                       isValidTicket(request.resource.data) &&
+                       (
+                         isAdmin() ||
+                         (isRecordOwner(resource.data) &&
+                          areImmutableFieldsUnchanged([
+                            'id', 'registration_id', 'event_id', 'ticket_type_id',
+                            'user_id', 'buyer_user_id', 'attendee_email',
+                            'qr_token', 'token_hash', 'issued_at'
+                          ]))
+                       );
+
       allow delete: if isAdmin();
     }
 

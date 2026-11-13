@@ -60,7 +60,8 @@ function createApiMiddleware() {
     req.on("end", () => {
       try {
         const db = loadDb();
-        const actorUserId = (req.headers["x-actor-user-id"] as string) || "usr-superadmin";
+        const actorUserId =
+          ((req.headers["x-actor-user-id"] as string) || (req.headers["x-user-id"] as string) || "").trim();
 
         // 1. GET /api/v1/roles — Dynamic Database RBAC Roles
         if (pathname === "/api/v1/roles" && method === "GET") {
@@ -73,6 +74,13 @@ function createApiMiddleware() {
 
         // 2. POST /api/v1/admin/roles — Update Database Role Permissions
         if (pathname === "/api/v1/admin/roles" && method === "POST") {
+          if (!actorUserId) {
+            return sendJson(401, { success: false, error: "Authentication required" });
+          }
+          const adminProfile = db.profiles.find((p) => p.id === actorUserId);
+          if (!adminProfile || (adminProfile.platform_role !== "ADMIN" && adminProfile.platform_role !== "SUPER_ADMIN")) {
+            return sendJson(403, { success: false, error: "Administrator privileges required" });
+          }
           const payload = JSON.parse(body || "{}");
           const { roleCode, permissions, name, description } = payload;
           if (!roleCode || !permissions) {
@@ -114,7 +122,15 @@ function createApiMiddleware() {
 
           if (method === "POST") {
             const { action, actorUserId: reqActor, payload = {} } = JSON.parse(body || "{}");
-            const effectiveActorId = reqActor || actorUserId;
+            const effectiveActorId = (reqActor || actorUserId || "").trim();
+            if (!effectiveActorId && action !== "RESET_SEED") {
+              return sendJson(401, {
+                error: {
+                  code: "UNAUTHENTICATED",
+                  message: "Authentication required to perform state mutations",
+                },
+              });
+            }
             const actorProfile = db.profiles.find((p) => p.id === effectiveActorId);
 
             if (actorProfile && (actorProfile as any).status === "SUSPENDED" && action !== "RESET_SEED") {

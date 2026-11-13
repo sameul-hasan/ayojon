@@ -1,5 +1,5 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "@/components/ui/Link";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
@@ -12,6 +12,7 @@ import { usePublicCatalog } from "@/lib/client-api";
 import { cn } from "@/lib/ui/cn";
 
 export function EventsPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { catalog, loading } = usePublicCatalog();
 
@@ -105,7 +106,7 @@ export function EventsPage() {
               aria-label="Sort events"
               value={sort}
               onChange={(e) => {
-                window.location.href = sortHref(e.target.value);
+                navigate(sortHref(e.target.value));
               }}
               className="rounded-btn border border-line bg-surface px-2.5 py-1 text-xs font-medium text-ink focus:border-brand-600 focus:outline-none"
             >

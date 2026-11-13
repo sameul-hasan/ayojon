@@ -1490,7 +1490,7 @@
       "price_minor": 50000,
       "currency": "BDT",
       "capacity": 200,
-      "sold_count": 143,
+      "sold_count": 144,
       "sales_start": "2026-10-10T00:00:00Z",
       "sales_end": "2026-11-21T23:59:59Z"
     },
@@ -1773,6 +1773,23 @@
   ],
   "orders": [
     {
+      "id": "ord-ba16565d",
+      "buyer_user_id": "usr-attendee-rafiq",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_type": "TICKET",
+      "status": "PAID",
+      "subtotal_minor": 25000,
+      "fee_minor": 625,
+      "total_minor": 25625,
+      "currency": "BDT",
+      "idempotency_key": "ui-ord-evt-dhaka-ai-summit-tt-ai-student-1-tanvir@gmail.com-75e6dede-e609-4426-a98a-b3ce67ec91bd",
+      "attendee_name": "Tanvir Ahmed",
+      "attendee_email": "tanvir@gmail.com",
+      "attendee_phone": "01712345678",
+      "institute_or_company": "",
+      "created_at": "2026-11-13T03:20:38.723Z"
+    },
+    {
       "id": "ord-ef41e762",
       "buyer_user_id": "usr-superadmin",
       "event_id": "evt-bangladesh-fintech-summit",
@@ -1908,9 +1925,31 @@
       "quantity": 1,
       "unit_price_minor": 180000,
       "line_total_minor": 180000
+    },
+    {
+      "id": "oi-140b2389",
+      "order_id": "ord-ba16565d",
+      "ticket_type_id": "tt-ai-student",
+      "package_id": null,
+      "description": "Student Early-Bird Pass (ID Required)",
+      "quantity": 1,
+      "unit_price_minor": 50000,
+      "line_total_minor": 50000
     }
   ],
   "payments": [
+    {
+      "id": "pay-ffe04201",
+      "order_id": "ord-ba16565d",
+      "provider": "BKASH_SANDBOX",
+      "provider_reference": "BKASH_SANDBOX-REF-975EF2",
+      "webhook_event_id": "wh-sbx-43f51959",
+      "amount_minor": 25625,
+      "currency": "BDT",
+      "status": "VERIFIED",
+      "verified_at": "2026-11-13T03:20:57.714Z",
+      "created_at": "2026-11-13T03:20:57.714Z"
+    },
     {
       "id": "pay-eec8cfa3",
       "order_id": "ord-ef41e762",
@@ -1973,6 +2012,20 @@
     }
   ],
   "registrations": [
+    {
+      "id": "reg-4f68297a",
+      "event_id": "evt-dhaka-ai-summit",
+      "user_id": "usr-attendee-rafiq",
+      "order_id": "ord-ba16565d",
+      "ticket_type_id": "tt-ai-student",
+      "attendee_name": "Tanvir Ahmed",
+      "attendee_email": "tanvir@gmail.com",
+      "attendee_phone": "01712345678",
+      "institute_or_company": "",
+      "marketing_consent": true,
+      "status": "CONFIRMED",
+      "created_at": "2026-11-13T03:20:57.714Z"
+    },
     {
       "id": "reg-36b1ede0",
       "event_id": "evt-bangladesh-fintech-summit",
@@ -2061,6 +2114,19 @@
     }
   ],
   "tickets": [
+    {
+      "id": "tkt-c67868b5",
+      "registration_id": "reg-4f68297a",
+      "event_id": "evt-dhaka-ai-summit",
+      "ticket_type_id": "tt-ai-student",
+      "attendee_name": "Tanvir Ahmed",
+      "attendee_email": "tanvir@gmail.com",
+      "ticket_type_name": "Student Early-Bird Pass (ID Required)",
+      "qr_token": "AAYOJON-TKT-EVT-DHAKA-AI-SUMMIT-85412F6FFBAC",
+      "token_hash": "b77a298721df00a0d32f0bbf6da24f513a9f53f85d49249141ed50996ee64f4b",
+      "status": "VALID",
+      "issued_at": "2026-11-13T03:20:57.714Z"
+    },
     {
       "id": "tkt-0b9dc422",
       "registration_id": "reg-36b1ede0",
@@ -2196,6 +2262,19 @@
   ],
   "notifications": [
     {
+      "id": "notif-26554d33",
+      "user_id": "usr-attendee-rafiq",
+      "destination": "tanvir@gmail.com",
+      "channel": "EMAIL",
+      "template": "TICKET_ISSUED_CONFIRMATION",
+      "subject": "Your QR Ticket for Dhaka AI & Cloud Engineering Summit 2026",
+      "status": "SENT",
+      "retry_count": 0,
+      "idempotency_key": "notif-ord-ord-ba16565d",
+      "sent_at": "2026-11-13T03:20:57.715Z",
+      "created_at": "2026-11-13T03:20:57.715Z"
+    },
+    {
       "id": "notif-686303ca",
       "user_id": "usr-superadmin",
       "destination": "bfos.info@gmail.com",
@@ -2319,6 +2398,31 @@
     }
   ],
   "analytics_events": [
+    {
+      "id": "ae-a5032e12",
+      "event_name": "payment_succeeded",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_id": "ord-ba16565d",
+      "session_id": "webhook-callback",
+      "properties": {
+        "provider": "BKASH_SANDBOX",
+        "amount_minor": 25625,
+        "currency": "BDT"
+      },
+      "timestamp": "2026-11-13T03:20:57.714Z"
+    },
+    {
+      "id": "ae-5c2dbd17",
+      "event_name": "checkout_started",
+      "event_id": "evt-dhaka-ai-summit",
+      "order_id": "ord-ba16565d",
+      "session_id": "server-session",
+      "properties": {
+        "currency": "BDT",
+        "total_minor": 25625
+      },
+      "timestamp": "2026-11-13T03:20:38.723Z"
+    },
     {
       "id": "ae-eecd42c3",
       "event_name": "payment_succeeded",
@@ -3060,5 +3164,11 @@
       "created_at": "2026-09-01T00:00:00Z",
       "updated_at": "2026-09-01T00:00:00Z"
     }
-  ]
+  ],
+  "_coupons": {
+    "coupon_evt-dhaka-ai-summit_HALF50": {
+      "usedCount": 1,
+      "maxUses": 100
+    }
+  }
 }

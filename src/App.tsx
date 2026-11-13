@@ -1,25 +1,70 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { HomePage } from "@/pages/HomePage";
-import { EventsPage } from "@/pages/EventsPage";
-import { EventDetailPage } from "@/pages/EventDetailPage";
-import { CheckoutPage } from "@/pages/CheckoutPage";
-import { VenuesPage } from "@/pages/VenuesPage";
-import { VenueDetailPage } from "@/pages/VenueDetailPage";
-import { TicketDetailPage } from "@/pages/TicketDetailPage";
-import { AttendeeWalletPage } from "@/pages/AttendeeWalletPage";
-import { OrganizerWorkspacePage } from "@/pages/OrganizerWorkspacePage";
-import { CheckInScannerPage } from "@/pages/CheckInScannerPage";
-import { ProviderWorkspacePage } from "@/pages/ProviderWorkspacePage";
-import { SponsorMarketplacePage } from "@/pages/SponsorMarketplacePage";
-import { SuperAdminConsolePage } from "@/pages/SuperAdminConsolePage";
-import { ProfilePage } from "@/pages/ProfilePage";
-import { AboutPage } from "@/pages/AboutPage";
-import { AiAssistantPage } from "@/pages/AiAssistantPage";
-import { LoginPage } from "@/pages/LoginPage";
-import { DesignTokensPage } from "@/pages/DesignTokensPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
 import { useAuth } from "@/lib/firebase/auth-context";
+
+const EventsPage = lazy(() => import("@/pages/EventsPage").then((m) => ({ default: m.EventsPage })));
+const EventDetailPage = lazy(() => import("@/pages/EventDetailPage").then((m) => ({ default: m.EventDetailPage })));
+const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then((m) => ({ default: m.CheckoutPage })));
+const VenuesPage = lazy(() => import("@/pages/VenuesPage").then((m) => ({ default: m.VenuesPage })));
+const VenueDetailPage = lazy(() => import("@/pages/VenueDetailPage").then((m) => ({ default: m.VenueDetailPage })));
+const TicketDetailPage = lazy(() => import("@/pages/TicketDetailPage").then((m) => ({ default: m.TicketDetailPage })));
+const AttendeeWalletPage = lazy(() => import("@/pages/AttendeeWalletPage").then((m) => ({ default: m.AttendeeWalletPage })));
+const OrganizerWorkspacePage = lazy(() => import("@/pages/OrganizerWorkspacePage").then((m) => ({ default: m.OrganizerWorkspacePage })));
+const CheckInScannerPage = lazy(() => import("@/pages/CheckInScannerPage").then((m) => ({ default: m.CheckInScannerPage })));
+const ProviderWorkspacePage = lazy(() => import("@/pages/ProviderWorkspacePage").then((m) => ({ default: m.ProviderWorkspacePage })));
+const SponsorMarketplacePage = lazy(() => import("@/pages/SponsorMarketplacePage").then((m) => ({ default: m.SponsorMarketplacePage })));
+const SuperAdminConsolePage = lazy(() => import("@/pages/SuperAdminConsolePage").then((m) => ({ default: m.SuperAdminConsolePage })));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })));
+const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
+const AiAssistantPage = lazy(() => import("@/pages/AiAssistantPage").then((m) => ({ default: m.AiAssistantPage })));
+const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const DesignTokensPage = lazy(() => import("@/pages/DesignTokensPage").then((m) => ({ default: m.DesignTokensPage })));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
+
+class RouteErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; message: string }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: "" };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error?.message || "Unexpected rendering error" };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-4 text-center text-ink">
+          <h1 className="text-xl font-bold">Something went wrong</h1>
+          <p className="mt-2 max-w-md text-sm text-ink-muted">{this.state.message}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-5 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+          >
+            Reload page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center bg-canvas">
+      <div className="flex flex-col items-center gap-3">
+        <div className="size-8 animate-spin rounded-full border-3 border-brand-600 border-t-transparent" />
+        <p className="text-sm font-medium text-ink-muted">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 function PortalRedirect() {
   const [searchParams] = useSearchParams();
@@ -56,35 +101,39 @@ function PortalRedirect() {
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/events" element={<EventsPage />} />
-      <Route path="/events/:slug" element={<EventDetailPage />} />
-      <Route path="/events/:slug/checkout" element={<CheckoutPage />} />
-      <Route path="/checkout/:slug" element={<CheckoutPage />} />
-      <Route path="/venues" element={<VenuesPage />} />
-      <Route path="/venues/:slug" element={<VenueDetailPage />} />
-      <Route path="/tickets/:id" element={<TicketDetailPage />} />
+    <RouteErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/events/:slug" element={<EventDetailPage />} />
+          <Route path="/events/:slug/checkout" element={<CheckoutPage />} />
+          <Route path="/checkout/:slug" element={<CheckoutPage />} />
+          <Route path="/venues" element={<VenuesPage />} />
+          <Route path="/venues/:slug" element={<VenueDetailPage />} />
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
 
-      {/* DEDICATED ROLE-BASED ACCESS PAGES */}
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/wallet" element={<AttendeeWalletPage />} />
-      <Route path="/organizer" element={<OrganizerWorkspacePage />} />
-      <Route path="/scanner" element={<CheckInScannerPage />} />
-      <Route path="/provider" element={<ProviderWorkspacePage />} />
-      <Route path="/sponsor" element={<SponsorMarketplacePage />} />
-      <Route path="/admin" element={<SuperAdminConsolePage />} />
+          {/* DEDICATED ROLE-BASED ACCESS PAGES */}
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/wallet" element={<AttendeeWalletPage />} />
+          <Route path="/organizer" element={<OrganizerWorkspacePage />} />
+          <Route path="/scanner" element={<CheckInScannerPage />} />
+          <Route path="/provider" element={<ProviderWorkspacePage />} />
+          <Route path="/sponsor" element={<SponsorMarketplacePage />} />
+          <Route path="/admin" element={<SuperAdminConsolePage />} />
 
-      {/* LEGACY PORTAL REDIRECT */}
-      <Route path="/portal" element={<PortalRedirect />} />
-      <Route path="/portal/:tab" element={<PortalRedirect />} />
+          {/* LEGACY PORTAL REDIRECT */}
+          <Route path="/portal" element={<PortalRedirect />} />
+          <Route path="/portal/:tab" element={<PortalRedirect />} />
 
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/ai-event-assistant" element={<AiAssistantPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/design" element={<DesignTokensPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/ai-event-assistant" element={<AiAssistantPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/design" element={<DesignTokensPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </RouteErrorBoundary>
   );
 }
 

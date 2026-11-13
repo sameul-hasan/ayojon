@@ -111,9 +111,10 @@ export interface AdminConsoleProps {
 
 export function AdminConsole({ db, onAction }: AdminConsoleProps) {
   const [activeTab, setActiveTab] = useState<
-    "MODERATION" | "AUDIT" | "NOTIFICATIONS" | "QA_SPECS" | "VENUE_MARKETPLACE"
+    "MODERATION" | "PAYMENTS" | "AUDIT" | "NOTIFICATIONS" | "QA_SPECS" | "VENUE_MARKETPLACE"
   >("MODERATION");
   const [adminNotice, setAdminNotice] = useState<string | null>(null);
+  const [verifyingOrderId, setVerifyingOrderId] = useState<string | null>(null);
 
   const handleModerate = async (
     eventId: string,
@@ -148,6 +149,37 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
       `Dispatched retry queue: ${res.result.retried} notification job(s) processed.`
     );
   };
+
+  const handleVerifyOrder = async (orderId: string, approve: boolean) => {
+    setVerifyingOrderId(orderId);
+    try {
+      await onAction(
+        "VERIFY_ORDER_PAYMENT",
+        {
+          orderId,
+          approve,
+          reason: approve
+            ? undefined
+            : "Payment proof could not be verified by Platform Admin",
+        },
+        "usr-admin-salman"
+      );
+      setAdminNotice(
+        approve
+          ? `Order ${orderId} verified and QR tickets issued to the attendee.`
+          : `Order ${orderId} rejected and ticket inventory released.`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Verification failed";
+      setAdminNotice(`Failed to update order ${orderId}: ${msg}`);
+    } finally {
+      setVerifyingOrderId(null);
+    }
+  };
+
+  const pendingVerificationOrders = db.orders.filter(
+    (o) => o.status === "AWAITING_VERIFICATION"
+  );
 
   const totalRevenue = db.orders
     .filter((o) => o.status === "PAID")
@@ -224,10 +256,36 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
         </div>
       )}
 
+      {/* PENDING PAYMENT VERIFICATION ALERT */}
+      {pendingVerificationOrders.length > 0 && (
+        <div className="rounded-card border border-amber-300 bg-amber-50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="size-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-900">
+                {pendingVerificationOrders.length} payment{pendingVerificationOrders.length > 1 ? "s" : ""} awaiting Admin / Organizer verification
+              </p>
+              <p className="text-xs text-amber-800">
+                Attendees are waiting for payment proof approval before their QR tickets are issued.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setActiveTab("PAYMENTS")}
+            className="shrink-0"
+          >
+            Review &amp; Verify ({pendingVerificationOrders.length})
+          </Button>
+        </div>
+      )}
+
       {/* SUB-NAVIGATION TABS */}
       <div className="flex flex-wrap gap-2 border-b border-line pb-2">
         {[
           { id: "MODERATION", label: "Event Moderation & Safety" },
+          { id: "PAYMENTS", label: `Payment Verifications (${pendingVerificationOrders.length})` },
           { id: "VENUE_MARKETPLACE", label: "Venues, Vendors & Disputes" },
           { id: "AUDIT", label: "System Audit Logs" },
           { id: "NOTIFICATIONS", label: "Email & Notification Queue" },
@@ -533,6 +591,117 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
               </div>
             ))}
           </div>
+        </Card>
+      )}
+
+      {/* TAB: PAYMENT VERIFICATIONS */}
+      {activeTab === "PAYMENTS" && (
+        <Card className="p-5 shadow-card space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-bold text-ink">
+                Payment Verification Queue
+              </h2>
+              <p className="text-xs text-ink-muted">
+                Verify MFS / Gateway TrxID proofs submitted by attendees. Approving mints cryptographic QR tickets immediately.
+              </p>
+            </div>
+            <Badge tone={pendingVerificationOrders.length > 0 ? "warning" : "success"}>
+              {pendingVerificationOrders.length} Pending Review
+            </Badge>
+          </div>
+
+          {pendingVerificationOrders.length === 0 ? (
+            <div className="rounded-btn border border-line bg-canvas-alt p-8 text-center space-y-2">
+              <CheckCircle2 className="size-8 text-success mx-auto" />
+              <p className="text-sm font-bold text-ink">All payments are verified</p>
+              <p className="text-xs text-ink-muted">
+                No orders are currently waiting for payment proof verification.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-line text-[11px] uppercase tracking-wider text-ink-muted">
+                    <th className="py-2 pr-3">Order &amp; Event</th>
+                    <th className="py-2 pr-3">Attendee</th>
+                    <th className="py-2 pr-3">Payment Proof</th>
+                    <th className="py-2 pr-3">Amount</th>
+                    <th className="py-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {pendingVerificationOrders.map((order) => {
+                    const ev = db.events.find((e) => e.id === order.event_id);
+                    const buyer = order.buyer_user_id
+                      ? db.profiles.find((p) => p.id === order.buyer_user_id)
+                      : undefined;
+                    const isBusy = verifyingOrderId === order.id;
+                    return (
+                      <tr key={order.id} className="hover:bg-canvas-alt/60">
+                        <td className="py-3 pr-3 align-top">
+                          <p className="font-mono font-bold text-ink">{order.id}</p>
+                          <p className="text-[11px] text-ink-muted">
+                            {ev?.title || order.event_id}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-3 align-top">
+                          <p className="font-semibold text-ink">
+                            {buyer?.display_name || order.attendee_name || order.buyer_user_id || "Guest"}
+                          </p>
+                          <p className="text-[11px] text-ink-muted">
+                            {buyer?.email || order.attendee_email || ""}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-3 align-top space-y-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <Badge tone="brand" className="text-[10px]">
+                              {order.payment_provider || "MFS"}
+                            </Badge>
+                            <span className="font-mono font-bold text-ink">
+                              {order.payment_reference || "—"}
+                            </span>
+                          </div>
+                          {order.sender_number && (
+                            <p className="text-[11px] text-ink-muted">
+                              From: {order.sender_number}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-3 pr-3 align-top font-bold text-ink">
+                          {formatBDT(order.total_minor)}
+                        </td>
+                        <td className="py-3 text-right align-top">
+                          <div className="inline-flex items-center gap-2">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              disabled={isBusy}
+                              onClick={() => handleVerifyOrder(order.id, true)}
+                            >
+                              <Check className="size-3.5 mr-1" />
+                              Accept &amp; Verify
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isBusy}
+                              onClick={() => handleVerifyOrder(order.id, false)}
+                              className="text-danger border-danger/30 hover:bg-danger/10"
+                            >
+                              <Ban className="size-3.5 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       )}
 

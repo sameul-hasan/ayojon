@@ -22,7 +22,7 @@ export type EventVisibility = "PUBLIC" | "UNLISTED" | "PRIVATE";
 export type PackageCode = "BASIC" | "PROMOTED" | "PLUS" | "PREMIUM" | "FEATURED_ADDON";
 
 export type OrderType = "TICKET" | "PACKAGE" | "PROMOTION" | "VENUE_BOOKING_DEPOSIT";
-export type OrderStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "AWAITING_VERIFICATION" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
 
 export type PaymentProvider = "SSLCOMMERZ_SANDBOX" | "BKASH_SANDBOX" | "NAGAD_SANDBOX";
 export type PaymentStatus = "INITIATED" | "VERIFIED" | "FAILED" | "REFUNDED";
@@ -220,6 +220,13 @@ export interface Order {
   attendee_phone?: string;
   institute_or_company?: string;
   campaign_code?: string;
+  payment_provider?: string;
+  payment_reference?: string;
+  sender_number?: string;
+  payment_submitted_at?: string;
+  verified_by_user_id?: string;
+  verified_at?: string;
+  rejection_reason?: string;
   created_at: string;
 }
 

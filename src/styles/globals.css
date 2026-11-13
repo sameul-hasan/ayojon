@@ -994,6 +994,9 @@
   .min-h-\[36px\] {
     min-height: 36px;
   }
+  .min-h-\[60vh\] {
+    min-height: 60vh;
+  }
   .min-h-\[300px\] {
     min-height: 300px;
   }
@@ -1101,9 +1104,6 @@
   }
   .max-w-\[200px\] {
     max-width: 200px;
-  }
-  .max-w-\[220px\] {
-    max-width: 220px;
   }
   .max-w-\[240px\] {
     max-width: 240px;
@@ -1400,6 +1400,9 @@
       border-color: var(--color-slate-200);
     }
   }
+  .self-start {
+    align-self: flex-start;
+  }
   .truncate {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1562,6 +1565,12 @@
   }
   .border-danger {
     border-color: var(--color-danger);
+  }
+  .border-danger\/30 {
+    border-color: color-mix(in srgb, #dc2626 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-danger) 30%, transparent);
+    }
   }
   .border-emerald-200 {
     border-color: var(--color-emerald-200);
@@ -1893,6 +1902,12 @@
       background-color: color-mix(in oklab, var(--color-canvas-alt) 30%, transparent);
     }
   }
+  .bg-canvas-alt\/40 {
+    background-color: color-mix(in srgb, #f5f0ff 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-canvas-alt) 40%, transparent);
+    }
+  }
   .bg-canvas-alt\/50 {
     background-color: color-mix(in srgb, #f5f0ff 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1985,6 +2000,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-emerald-500) 20%, transparent);
     }
+  }
+  .bg-emerald-600 {
+    background-color: var(--color-emerald-600);
   }
   .bg-emerald-600\/90 {
     background-color: color-mix(in srgb, oklch(59.6% 0.145 163.225) 90%, transparent);
@@ -2880,6 +2898,9 @@
   .text-right {
     text-align: right;
   }
+  .align-top {
+    vertical-align: top;
+  }
   .font-mono {
     font-family: var(--font-mono);
   }
@@ -3006,6 +3027,9 @@
   }
   .text-amber-800 {
     color: var(--color-amber-800);
+  }
+  .text-amber-900 {
+    color: var(--color-amber-900);
   }
   .text-amber-950 {
     color: var(--color-amber-950);
@@ -3720,10 +3744,27 @@
       }
     }
   }
+  .hover\:bg-danger\/10 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: color-mix(in srgb, #dc2626 10%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-danger) 10%, transparent);
+        }
+      }
+    }
+  }
   .hover\:bg-emerald-100 {
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-emerald-100);
+      }
+    }
+  }
+  .hover\:bg-emerald-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-emerald-700);
       }
     }
   }
@@ -4223,6 +4264,11 @@
   .sm\:gap-6 {
     @media (width >= 40rem) {
       gap: calc(var(--spacing) * 6);
+    }
+  }
+  .sm\:self-center {
+    @media (width >= 40rem) {
+      align-self: center;
     }
   }
   .sm\:rounded-modal {

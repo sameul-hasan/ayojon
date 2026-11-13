@@ -283,8 +283,7 @@ export function isSuperAdmin(
     pRole === "super_admin" ||
     pRole === "superadmin" ||
     email === "superadmin@ayojon.select" ||
-    email === "superadmin@aayojon.bd" ||
-    email === "bfos.info@gmail.com"
+    email === "superadmin@aayojon.bd"
   );
 }
 
