@@ -46,8 +46,6 @@ const FOOTER_SECTIONS = [
   {
     title: "Legal & Trust",
     links: [
-      { label: "Design System", href: "/design" },
-      { label: "Platform Roles & RBAC", href: "/admin" },
       { label: "Attendee Wallet", href: "/wallet" },
       { label: "Gate Verification", href: "/scanner" },
     ],

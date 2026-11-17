@@ -5,6 +5,8 @@ import type {
   Order,
   OrderItem,
   Registration,
+  RoleApplication,
+  RoleApplicationTarget,
   RoleDefinition,
   TicketRecord,
   TicketType,
@@ -28,6 +30,7 @@ import {
   saveVenueRequestToFirestore,
   saveQuotationToFirestore,
   saveVenueBookingToFirestore,
+  syncUserProfileToFirestore,
 } from "./firebase/firestore";
 
 let cachedDb: DatabaseState | null = null;
@@ -101,6 +104,18 @@ export async function fetchDatabaseState(): Promise<DatabaseState> {
         }
       } catch {
         // Ignore
+      }
+
+      if (cachedDb) {
+        const localApps = loadLocalRoleApplications();
+        if (localApps.length > 0) {
+          const map = new Map<string, RoleApplication>();
+          for (const a of cachedDb.role_applications || []) map.set(a.id, a);
+          for (const a of localApps) map.set(a.id, a);
+          cachedDb.role_applications = Array.from(map.values()).sort((a, b) =>
+            b.created_at.localeCompare(a.created_at)
+          );
+        }
       }
 
       dbFetchPromise = null;
@@ -487,6 +502,30 @@ export async function dispatchStateAction(
       });
       cachedDb = res.db;
       resultData = { success: true, data: { ...res.db }, result: res.order };
+    } else if (action === "SUBMIT_ROLE_APPLICATION") {
+      const p = payload as any;
+      const res = await clientSubmitRoleApplication({
+        userId: p.userId || actorUserId || "",
+        applicantName: p.applicantName || "",
+        applicantEmail: p.applicantEmail || "",
+        applicantPhone: p.applicantPhone,
+        requestedRole: p.requestedRole,
+        organizationName: p.organizationName || "",
+        justification: p.justification || "",
+        portfolioOrIdRef: p.portfolioOrIdRef,
+      });
+      cachedDb = res.db;
+      resultData = { success: true, data: { ...res.db }, result: res.application };
+    } else if (action === "REVIEW_ROLE_APPLICATION") {
+      const p = payload as any;
+      const res = await clientReviewRoleApplication({
+        applicationId: p.applicationId,
+        actorUserId: actorUserId || "usr-admin-salman",
+        approve: p.approve !== false,
+        reviewNote: p.reviewNote,
+      });
+      cachedDb = res.db;
+      resultData = { success: true, data: { ...res.db }, result: res.application };
     }
   } catch (err: any) {
     console.warn("[Firestore] Action sync notice:", err?.message);
@@ -985,15 +1024,34 @@ export async function clientSubmitPaymentProof(input: {
     return order;
   }
   const cleanTrx = input.trxId.trim().toUpperCase();
-  if (cleanTrx.length < 4) {
-    throw new Error("Please enter a valid Transaction ID (TrxID).");
+  if (!/^[A-Z0-9]{6,24}$/.test(cleanTrx)) {
+    throw new Error("Transaction ID (TrxID) must be 6–24 alphanumeric characters.");
+  }
+
+  const duplicateTrx = db.orders.find(
+    (o) =>
+      o.id !== order.id &&
+      o.payment_reference === cleanTrx &&
+      o.status !== "FAILED" &&
+      o.status !== "CANCELLED"
+  );
+  if (duplicateTrx) {
+    throw new Error(`Transaction ID ${cleanTrx} has already been submitted for another order.`);
+  }
+
+  const cleanSender = input.senderNumber?.trim() || "";
+  if (
+    (input.provider === "BKASH_SANDBOX" || input.provider === "NAGAD_SANDBOX") &&
+    !/^(\+?88)?01[3-9]\d{8}$/.test(cleanSender)
+  ) {
+    throw new Error("Please enter a valid Bangladeshi mobile number (01XXXXXXXXX).");
   }
 
   const now = new Date().toISOString();
   order.status = "AWAITING_VERIFICATION";
   order.payment_provider = input.provider;
   order.payment_reference = cleanTrx;
-  order.sender_number = input.senderNumber?.trim() || "";
+  order.sender_number = cleanSender;
   order.payment_submitted_at = now;
 
   const event = db.events.find((e) => e.id === order.event_id);
@@ -1131,4 +1189,238 @@ export async function clientVerifyOrderPayment(input: {
   cachedDb = db;
   await saveOrderToFirestore(order);
   return { order, db };
+}
+
+const ROLE_APPLICATIONS_STORAGE_KEY = "aayojon_role_applications_v1";
+const ALLOWED_ROLE_APPLICATION_TARGETS: RoleApplicationTarget[] = [
+  "ORGANIZER_OWNER",
+  "VENUE_OWNER",
+  "VENDOR",
+  "SPONSOR",
+  "CHECKIN_STAFF",
+];
+
+function loadLocalRoleApplications(): RoleApplication[] {
+  if (typeof window === "undefined" || !window.localStorage) return [];
+  try {
+    const raw = window.localStorage.getItem(ROLE_APPLICATIONS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as RoleApplication[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalRoleApplications(apps: RoleApplication[]): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(ROLE_APPLICATIONS_STORAGE_KEY, JSON.stringify(apps));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export async function clientGetRoleApplications(): Promise<RoleApplication[]> {
+  const db = await fetchDatabaseState();
+  const localApps = loadLocalRoleApplications();
+  const existing = db.role_applications || [];
+  const mergedMap = new Map<string, RoleApplication>();
+  for (const app of existing) mergedMap.set(app.id, app);
+  for (const app of localApps) mergedMap.set(app.id, app);
+  const merged = Array.from(mergedMap.values()).sort((a, b) =>
+    b.created_at.localeCompare(a.created_at)
+  );
+  db.role_applications = merged;
+  return merged;
+}
+
+export async function clientSubmitRoleApplication(input: {
+  userId: string;
+  applicantName: string;
+  applicantEmail: string;
+  applicantPhone?: string;
+  requestedRole: RoleApplicationTarget;
+  organizationName: string;
+  justification: string;
+  portfolioOrIdRef?: string;
+}): Promise<{ application: RoleApplication; db: DatabaseState }> {
+  if (!input.userId) {
+    throw new Error("You must be signed in to submit a role application.");
+  }
+  if (!ALLOWED_ROLE_APPLICATION_TARGETS.includes(input.requestedRole)) {
+    throw new Error("Invalid or restricted target role requested.");
+  }
+  if (!input.organizationName.trim() || !input.justification.trim()) {
+    throw new Error("Organization/business name and verification details are required.");
+  }
+
+  const db = await fetchDatabaseState();
+  const currentApps = await clientGetRoleApplications();
+
+  const alreadyPending = currentApps.find(
+    (a) =>
+      a.user_id === input.userId &&
+      a.requested_role === input.requestedRole &&
+      a.status === "PENDING"
+  );
+  if (alreadyPending) {
+    throw new Error(
+      `You already have a pending application for ${input.requestedRole}. Please wait for Admin verification.`
+    );
+  }
+
+  const now = new Date().toISOString();
+  const application: RoleApplication = {
+    id: `rapp-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+    user_id: input.userId,
+    applicant_name: input.applicantName.trim() || input.applicantEmail,
+    applicant_email: input.applicantEmail.trim(),
+    applicant_phone: input.applicantPhone?.trim() || undefined,
+    requested_role: input.requestedRole,
+    organization_name: input.organizationName.trim(),
+    justification: input.justification.trim(),
+    portfolio_or_id_ref: input.portfolioOrIdRef?.trim() || undefined,
+    status: "PENDING",
+    created_at: now,
+  };
+
+  const nextApps = [application, ...currentApps];
+  db.role_applications = nextApps;
+  saveLocalRoleApplications(nextApps);
+
+  // Notify Platform Admins
+  const admins = db.profiles.filter(
+    (p) => p.platform_role === "ADMIN" || p.platform_role === "SUPER_ADMIN"
+  );
+  db.notifications = db.notifications || [];
+  for (const admin of admins) {
+    db.notifications.unshift({
+      id: `notif-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+      user_id: admin.id,
+      destination: admin.email,
+      channel: "EMAIL",
+      template: "ROLE_APPLICATION_SUBMITTED",
+      subject: `Verify role application: ${application.applicant_name} applied for ${application.requested_role}`,
+      status: "QUEUED",
+      retry_count: 0,
+      idempotency_key: `notif-rapp-${application.id}-${admin.id}`,
+      sent_at: null,
+      created_at: now,
+    });
+  }
+
+  db.audit_logs = db.audit_logs || [];
+  db.audit_logs.unshift({
+    id: `aud-${Date.now().toString(36)}`,
+    actor_id: input.userId,
+    actor_name: application.applicant_name,
+    actor_role: "ATTENDEE",
+    action: "ROLE_APPLICATION_SUBMITTED",
+    resource_type: "role_applications",
+    resource_id: application.id,
+    metadata: {
+      requestedRole: application.requested_role,
+      organizationName: application.organization_name,
+    },
+    created_at: now,
+  });
+
+  cachedDb = db;
+  return { application, db };
+}
+
+export async function clientReviewRoleApplication(input: {
+  applicationId: string;
+  actorUserId: string;
+  approve: boolean;
+  reviewNote?: string;
+}): Promise<{ application: RoleApplication; db: DatabaseState }> {
+  const db = await fetchDatabaseState();
+  const apps = await clientGetRoleApplications();
+  const app = apps.find((a) => a.id === input.applicationId);
+  if (!app) {
+    throw new Error("Role application not found.");
+  }
+
+  const actor = db.profiles.find((p) => p.id === input.actorUserId);
+  const isAdmin =
+    actor?.platform_role === "ADMIN" ||
+    actor?.platform_role === "SUPER_ADMIN" ||
+    input.actorUserId === "usr-admin-salman" ||
+    input.actorUserId === "usr-superadmin";
+
+  if (!isAdmin) {
+    throw new Error("Only Platform Admins can verify and approve role applications.");
+  }
+
+  const now = new Date().toISOString();
+  app.status = input.approve ? "APPROVED" : "REJECTED";
+  app.reviewed_by_user_id = input.actorUserId;
+  app.reviewed_at = now;
+  app.review_note = input.reviewNote?.trim() || undefined;
+
+  if (input.approve) {
+    let profile = db.profiles.find((p) => p.id === app.user_id);
+    if (!profile) {
+      profile = {
+        id: app.user_id,
+        email: app.applicant_email,
+        display_name: app.applicant_name,
+        phone: app.applicant_phone || "",
+        platform_role: app.requested_role,
+        organization_label: app.organization_name,
+        status: "ACTIVE",
+        mfa_enabled: false,
+        interests: [],
+        preferred_city: "Dhaka",
+        created_at: now,
+      };
+      db.profiles.push(profile);
+    } else {
+      profile.platform_role = app.requested_role;
+      if (app.organization_name) {
+        profile.organization_label = app.organization_name;
+      }
+    }
+
+    await syncUserProfileToFirestore(profile);
+  }
+
+  db.notifications = db.notifications || [];
+  db.notifications.unshift({
+    id: `notif-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+    user_id: app.user_id,
+    destination: app.applicant_email,
+    channel: "EMAIL",
+    template: input.approve ? "ROLE_APPLICATION_APPROVED" : "ROLE_APPLICATION_REJECTED",
+    subject: input.approve
+      ? `Approved! Your ${app.requested_role} position is now active on Aayojon.`
+      : `Update on your ${app.requested_role} application on Aayojon.`,
+    status: "QUEUED",
+    retry_count: 0,
+    idempotency_key: `notif-rapp-rev-${app.id}`,
+    sent_at: null,
+    created_at: now,
+  });
+
+  db.audit_logs = db.audit_logs || [];
+  db.audit_logs.unshift({
+    id: `aud-${Date.now().toString(36)}`,
+    actor_id: input.actorUserId,
+    actor_name: actor?.display_name || "Platform Admin",
+    actor_role: actor?.platform_role || "ADMIN",
+    action: input.approve ? "ROLE_APPLICATION_APPROVED" : "ROLE_APPLICATION_REJECTED",
+    resource_type: "role_applications",
+    resource_id: app.id,
+    metadata: {
+      applicantUserId: app.user_id,
+      requestedRole: app.requested_role,
+      reviewNote: app.review_note || "",
+    },
+    created_at: now,
+  });
+
+  db.role_applications = apps;
+  saveLocalRoleApplications(apps);
+  cachedDb = db;
+  return { application: app, db };
 }

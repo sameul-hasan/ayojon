@@ -664,6 +664,30 @@ export interface AIAssistantSession {
   updated_at: string;
 }
 
+export type RoleApplicationTarget =
+  | "ORGANIZER_OWNER"
+  | "VENUE_OWNER"
+  | "VENDOR"
+  | "SPONSOR"
+  | "CHECKIN_STAFF";
+
+export interface RoleApplication {
+  id: string;
+  user_id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_phone?: string;
+  requested_role: RoleApplicationTarget;
+  organization_name: string;
+  justification: string;
+  portfolio_or_id_ref?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  reviewed_by_user_id?: string;
+  reviewed_at?: string;
+  review_note?: string;
+  created_at: string;
+}
+
 export interface DatabaseState {
   profiles: Profile[];
   organizations: Organization[];
@@ -699,5 +723,6 @@ export interface DatabaseState {
   venue_bookings: VenueBooking[];
   ai_sessions: AIAssistantSession[];
   roles: RoleDefinition[];
+  role_applications?: RoleApplication[];
 }
 

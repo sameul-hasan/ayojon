@@ -299,9 +299,21 @@ export function CheckoutFlow({
   const submitPaymentProof = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!orderId || submittingProof) return;
+    if (!authUser) {
+      setError("Please sign in to submit payment verification.");
+      return;
+    }
     const cleanTrx = trxId.trim().toUpperCase();
-    if (cleanTrx.length < 4) {
-      setError("Please enter a valid Transaction ID (TrxID) of at least 4 characters.");
+    if (!/^[A-Z0-9]{6,24}$/.test(cleanTrx)) {
+      setError("Transaction ID (TrxID) must be 6–24 alphanumeric characters (e.g. BKA9X2M7Q4).");
+      return;
+    }
+    const effectivePhone = (senderPhone || form.phone).trim();
+    if (
+      (selectedProvider === "BKASH_SANDBOX" || selectedProvider === "NAGAD_SANDBOX") &&
+      !PHONE_RE.test(effectivePhone)
+    ) {
+      setError("Please enter a valid Bangladeshi sender mobile number (e.g. 017XXXXXXXX).");
       return;
     }
     setError(null);
@@ -311,7 +323,7 @@ export function CheckoutFlow({
         orderId,
         provider: selectedProvider,
         trxId: cleanTrx,
-        senderNumber: senderPhone.trim() || form.phone.trim(),
+        senderNumber: effectivePhone,
       });
       setOrder({
         id: updated.id,
@@ -925,7 +937,7 @@ export function CheckoutFlow({
                       />
                       <div>
                         <p className="text-sm font-bold text-ink">bKash</p>
-                        <p className="text-xs text-ink-muted">Direct Mobile Financial Service (Sandbox)</p>
+                        <p className="text-xs text-ink-muted">Direct Mobile Financial Service</p>
                       </div>
                     </div>
                     <span className="rounded-md bg-pink-100 px-2.5 py-1 text-xs font-bold text-pink-700">bKash</span>
@@ -951,7 +963,7 @@ export function CheckoutFlow({
                       />
                       <div>
                         <p className="text-sm font-bold text-ink">Nagad</p>
-                        <p className="text-xs text-ink-muted">Post Office Digital Financial Service (Sandbox)</p>
+                        <p className="text-xs text-ink-muted">Post Office Digital Financial Service</p>
                       </div>
                     </div>
                     <span className="rounded-md bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700">Nagad</span>
@@ -1170,26 +1182,17 @@ export function CheckoutFlow({
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label htmlFor="trx-id-input" className="block text-xs font-bold text-ink">
-                          Transaction ID (TrxID) <span className="text-danger">*</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setTrxId(`TRX${Math.random().toString(36).slice(2, 8).toUpperCase()}`)
-                          }
-                          className="text-[11px] font-semibold text-brand-600 hover:underline"
-                        >
-                          Fill Demo TrxID
-                        </button>
-                      </div>
+                      <label htmlFor="trx-id-input" className="block text-xs font-bold text-ink mb-1">
+                        Transaction ID (TrxID) <span className="text-danger">*</span>
+                      </label>
                       <input
                         id="trx-id-input"
                         type="text"
                         required
+                        minLength={6}
+                        maxLength={24}
                         value={trxId}
-                        onChange={(e) => setTrxId(e.target.value)}
+                        onChange={(e) => setTrxId(e.target.value.toUpperCase())}
                         placeholder="e.g. BKA9X2M7Q4"
                         className="h-10 w-full rounded-btn border border-line bg-surface px-3 font-mono text-sm uppercase text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none"
                       />

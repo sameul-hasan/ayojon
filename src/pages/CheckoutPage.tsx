@@ -6,6 +6,7 @@ import { Link } from "@/components/ui/Link";
 import { Ticket, ArrowLeft, Loader2 } from "lucide-react";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { CheckoutFlow } from "@/components/event/CheckoutFlow";
 import { useEventDetail } from "@/lib/client-api";
 
@@ -63,29 +64,31 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-ink">
-      <PublicNavbar />
+    <ProtectedRoute>
+      <div className="min-h-screen flex flex-col bg-canvas text-ink">
+        <PublicNavbar />
 
-      <main className="flex-1">
-        <CheckoutFlow
-          event={{
-            id: event.id,
-            slug: event.slug,
-            title: event.title,
-            startsAt: event.startsAt,
-            venueName: event.venueName || (event.isOnline ? "Online Live Stream" : "Dhaka, Bangladesh"),
-            city: event.city || "Dhaka",
-            isOnline: event.isOnline,
-          }}
-          tickets={event.tickets}
-          initialTicketId={ticketId}
-          initialQty={qty}
-          ended={event.hasEnded || false}
-        />
-      </main>
+        <main className="flex-1">
+          <CheckoutFlow
+            event={{
+              id: event.id,
+              slug: event.slug,
+              title: event.title,
+              startsAt: event.startsAt,
+              venueName: event.venueName || (event.isOnline ? "Online Live Stream" : "Dhaka, Bangladesh"),
+              city: event.city || "Dhaka",
+              isOnline: event.isOnline,
+            }}
+            tickets={event.tickets}
+            initialTicketId={ticketId}
+            initialQty={qty}
+            ended={event.hasEnded || false}
+          />
+        </main>
 
-      <PublicFooter />
-    </div>
+        <PublicFooter />
+      </div>
+    </ProtectedRoute>
   );
 }
 

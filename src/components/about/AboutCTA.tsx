@@ -1,39 +1,52 @@
 import React from "react";
 import Link from "@/components/ui/Link";
-import { ArrowRight, Compass, Sparkles, Mail, MapPin } from "lucide-react";
+import { Compass, Sparkles, Mail, MapPin } from "lucide-react";
+import { useAuth } from "@/lib/firebase/auth-context";
 
 export function AboutCTA() {
+  const { currentUser } = useAuth();
+  const canOrganize =
+    currentUser?.role === "organizer" ||
+    currentUser?.role === "admin" ||
+    currentUser?.role === "super_admin";
+  const secondaryHref = canOrganize ? "/organizer" : currentUser ? "/profile" : "/login";
+  const secondaryLabel = canOrganize
+    ? "Open Organizer Studio"
+    : currentUser
+    ? "Apply to Organize"
+    : "Sign In / Join";
+
   return (
-    <section className="relative overflow-hidden bg-brand-900 py-16 sm:py-20 text-white">
+    <section className="relative overflow-hidden border-y border-line bg-gradient-to-br from-brand-50 via-surface to-purple-50/60 py-16 sm:py-20 text-ink">
       {/* Decorative ambient gradients */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-20 top-0 size-80 rounded-full bg-violet/20 blur-3xl" />
-        <div className="absolute right-0 bottom-0 size-96 rounded-full bg-pink/20 blur-3xl" />
+        <div className="absolute -left-20 top-0 size-80 rounded-full bg-violet/15 blur-3xl" />
+        <div className="absolute right-0 bottom-0 size-96 rounded-full bg-pink/15 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl max-w-3xl mx-auto leading-tight">
+        <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl max-w-3xl mx-auto leading-tight text-ink">
           Ready to Host or Attend Your Next Event?
         </h2>
 
-        <p className="mx-auto mt-4 max-w-xl text-base text-brand-100 sm:text-lg">
-          Join thousands of attendees and event organizers across Bangladesh on Aayojon.
+        <p className="mx-auto mt-4 max-w-xl text-base text-ink-muted sm:text-lg">
+          Join thousands of attendees and verified event organizers across Bangladesh on Aayojon.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/events"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-white px-6 text-sm font-semibold text-brand-900 hover:bg-brand-50 shadow-md transition"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-btn bg-brand-600 px-6 text-sm font-semibold text-white hover:bg-brand-700 shadow-md transition"
           >
-            <Compass className="size-4 text-brand-700" />
+            <Compass className="size-4 text-white" />
             <span>Explore Events</span>
           </Link>
           <Link
-            href="/organizer"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-btn border border-brand-400/40 bg-brand-800/80 px-6 text-sm font-semibold text-white hover:bg-brand-700 transition"
+            href={secondaryHref}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-btn border border-line bg-surface px-6 text-sm font-semibold text-ink hover:bg-canvas-alt shadow-xs transition"
           >
-            <Sparkles className="size-4 text-pink" />
-            <span>Start Organizing</span>
+            <Sparkles className="size-4 text-brand-600" />
+            <span>{secondaryLabel}</span>
           </Link>
         </div>
       </div>

@@ -128,10 +128,63 @@ export async function hashPassword(password: string): Promise<string> {
 // Local Offline Credential Store (for Development & Testing)
 // ---------------------------------------------------------------------------
 
+const LOCAL_USERS_STORAGE_KEY = "aayojon_local_auth_users_v1";
 const userStore: Map<string, StoredUserCredential> = new Map();
 
-function initUserStore(): void {
+function persistUserStore(): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    const entries = Array.from(userStore.entries());
+    window.localStorage.setItem(LOCAL_USERS_STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    // Ignore storage quota / private mode errors
+  }
+}
+
+function initUserStore(clearPersisted = false): void {
   userStore.clear();
+  if (typeof window === "undefined" || !window.localStorage) return;
+  if (clearPersisted) {
+    try {
+      window.localStorage.removeItem(LOCAL_USERS_STORAGE_KEY);
+    } catch {}
+    return;
+  }
+  try {
+    const raw = window.localStorage.getItem(LOCAL_USERS_STORAGE_KEY);
+    if (raw) {
+      const entries = JSON.parse(raw) as Array<[string, StoredUserCredential]>;
+      for (const [k, v] of entries) {
+        if (k && v) userStore.set(k, v);
+      }
+    }
+  } catch {
+    // Ignore malformed cache
+  }
+}
+
+function formatFirebaseAuthMessage(code: string, rawMessage?: string): string {
+  switch (code) {
+    case "auth/operation-not-allowed":
+    case "auth/configuration-not-found":
+      return "Email/Password sign-in is not enabled in Firebase Console (Authentication > Sign-in method > Email/Password).";
+    case "auth/email-already-in-use":
+      return "An account with this email address already exists. Please sign in instead.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/weak-password":
+      return "Password should be at least 6 characters.";
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "Invalid email or password. Please check your credentials and try again.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please wait a moment and try again.";
+    case "auth/network-request-failed":
+      return "Network error while contacting authentication server. Please check your connection.";
+    default:
+      return rawMessage || `Authentication error (${code}).`;
+  }
 }
 
 initUserStore();
@@ -325,7 +378,7 @@ export async function createUserWithEmailAndPassword(
     );
   }
 
-  const assignedRole = (role as any) || "attendee";
+  const assignedRole = "attendee" as const;
 
   // If real Firebase Auth is configured, delegate directly to Google Firebase:
   if (authInstance._sdkAuth) {
@@ -340,7 +393,15 @@ export async function createUserWithEmailAndPassword(
       notifyListeners(user);
       return { user };
     } catch (err: any) {
-      throw new FirebaseAuthError(err?.code || "auth/unknown", err?.message);
+      const code = err?.code || "auth/unknown";
+      // If Email/Password sign-in is disabled in Firebase Console, fall back to persisted local credential store
+      if (code === "auth/operation-not-allowed" || code === "auth/configuration-not-found") {
+        console.warn(
+          "[Firebase] Email/Password provider is disabled in Firebase Console for this project — falling back to local credential store."
+        );
+      } else {
+        throw new FirebaseAuthError(code, formatFirebaseAuthMessage(code, err?.message));
+      }
     }
   }
 
@@ -368,6 +429,7 @@ export async function createUserWithEmailAndPassword(
   };
 
   userStore.set(normalizedEmail, stored);
+  persistUserStore();
   const user = storedToFirebaseUser(stored);
   authInstance.currentUser = user;
   notifyListeners(user);
@@ -413,7 +475,26 @@ export async function signInWithEmailAndPassword(
       notifyListeners(user);
       return { user };
     } catch (err: any) {
-      throw new FirebaseAuthError(err?.code || "auth/wrong-password", err?.message);
+      const code = err?.code || "auth/wrong-password";
+      const normalizedEmail = email.toLowerCase().trim();
+      const localFallback = userStore.get(normalizedEmail);
+      // If account was created in local fallback store (e.g. when Email/Password provider is disabled in Firebase Console), verify against it
+      if (
+        localFallback &&
+        (code === "auth/operation-not-allowed" ||
+          code === "auth/configuration-not-found" ||
+          code === "auth/invalid-credential" ||
+          code === "auth/user-not-found")
+      ) {
+        const candidateHash = await hashPassword(pass);
+        if (localFallback.passwordHash === candidateHash) {
+          const user = storedToFirebaseUser(localFallback);
+          authInstance.currentUser = user;
+          notifyListeners(user);
+          return { user };
+        }
+      }
+      throw new FirebaseAuthError(code, formatFirebaseAuthMessage(code, err?.message));
     }
   }
 
@@ -538,6 +619,7 @@ export async function updateProfile(
     if (stored) {
       if (profile.displayName !== undefined) stored.displayName = profile.displayName;
       if (profile.photoURL !== undefined) stored.photoURL = profile.photoURL;
+      persistUserStore();
     }
   }
 }
@@ -567,7 +649,7 @@ export function isMockAuth(): boolean {
 }
 
 export function resetFirebaseClient(): void {
-  initUserStore();
+  initUserStore(true);
   if (cachedAuth) {
     cachedAuth.currentUser = null;
   }

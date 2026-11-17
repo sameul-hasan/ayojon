@@ -451,21 +451,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Firestore optional
             }
 
-            // Determine role from live DB profile or fallback
+            // Determine role from live DB profile (authoritative) or fallback
             let savedRole: UserRole = liveProfile?.platform_role
               ? toUserRole(liveProfile.platform_role)
               : toUserRole(fbUser.role);
 
-            try {
-              const saved = localStorage.getItem(SESSION_STORAGE_KEY);
-              if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.uid === fbUser.uid && parsed.role) {
-                  savedRole = parsed.role;
+            if (!liveProfile?.platform_role) {
+              try {
+                const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  if (parsed.uid === fbUser.uid && parsed.role) {
+                    savedRole = parsed.role;
+                  }
                 }
+              } catch {
+                // Ignore parse errors
               }
-            } catch {
-              // Ignore parse errors
             }
 
             const normEmail = (fbUser.email || "").toLowerCase();
@@ -678,7 +680,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       validateEmail(email);
       validatePassword(pass);
 
-      const assignedRole = toUserRole(role || "attendee");
+      // All new accounts start strictly as Attendee; higher roles require separate application + Admin approval
+      const assignedRole: UserRole = "attendee";
       const authInstance = getFirebaseAuth();
 
       const cred = await createUserWithEmailAndPassword(
@@ -732,8 +735,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (updates: Partial<Profile>): Promise<void> => {
       if (!currentUser) return;
 
-      const newRole = updates.platform_role ? toUserRole(updates.platform_role) : currentUser.role;
-      const newPlatformRole = updates.platform_role ? toPlatformRole(updates.platform_role) : currentUser.platform_role;
+      const isPrivilegedAdmin =
+        currentUser.role === "admin" || currentUser.role === "super_admin";
+      const newRole =
+        isPrivilegedAdmin && updates.platform_role
+          ? toUserRole(updates.platform_role)
+          : currentUser.role;
+      const newPlatformRole =
+        isPrivilegedAdmin && updates.platform_role
+          ? toPlatformRole(updates.platform_role)
+          : currentUser.platform_role;
 
       const updatedUser: AuthUser = {
         ...currentUser,

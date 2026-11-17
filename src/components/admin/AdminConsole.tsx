@@ -111,10 +111,11 @@ export interface AdminConsoleProps {
 
 export function AdminConsole({ db, onAction }: AdminConsoleProps) {
   const [activeTab, setActiveTab] = useState<
-    "MODERATION" | "PAYMENTS" | "AUDIT" | "NOTIFICATIONS" | "QA_SPECS" | "VENUE_MARKETPLACE"
+    "MODERATION" | "PAYMENTS" | "ROLE_APPLICATIONS" | "AUDIT" | "NOTIFICATIONS" | "QA_SPECS" | "VENUE_MARKETPLACE"
   >("MODERATION");
   const [adminNotice, setAdminNotice] = useState<string | null>(null);
   const [verifyingOrderId, setVerifyingOrderId] = useState<string | null>(null);
+  const [reviewingAppId, setReviewingAppId] = useState<string | null>(null);
 
   const handleModerate = async (
     eventId: string,
@@ -176,6 +177,38 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
       setVerifyingOrderId(null);
     }
   };
+
+  const handleReviewRoleApplication = async (applicationId: string, approve: boolean) => {
+    setReviewingAppId(applicationId);
+    try {
+      await onAction(
+        "REVIEW_ROLE_APPLICATION",
+        {
+          applicationId,
+          approve,
+          reviewNote: approve
+            ? "Verified and approved by Platform Admin"
+            : "Insufficient verification details; please re-apply with valid credentials.",
+        },
+        "usr-admin-salman"
+      );
+      setAdminNotice(
+        approve
+          ? `Role application ${applicationId} approved and position granted.`
+          : `Role application ${applicationId} rejected.`
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Review failed";
+      setAdminNotice(`Failed to review application ${applicationId}: ${msg}`);
+    } finally {
+      setReviewingAppId(null);
+    }
+  };
+
+  const roleApplications = db.role_applications || [];
+  const pendingRoleApplications = roleApplications.filter(
+    (a) => a.status === "PENDING"
+  );
 
   const pendingVerificationOrders = db.orders.filter(
     (o) => o.status === "AWAITING_VERIFICATION"
@@ -281,11 +314,37 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
         </div>
       )}
 
+      {/* PENDING ROLE APPLICATIONS ALERT */}
+      {pendingRoleApplications.length > 0 && (
+        <div className="rounded-card border border-brand-200 bg-brand-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <Users className="size-5 text-brand-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-ink">
+                {pendingRoleApplications.length} role upgrade application{pendingRoleApplications.length > 1 ? "s" : ""} awaiting Admin verification
+              </p>
+              <p className="text-xs text-ink-muted">
+                Attendees have applied for Organizer, Venue Partner, Vendor, Sponsor, or Staff positions.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setActiveTab("ROLE_APPLICATIONS")}
+            className="shrink-0"
+          >
+            Verify Applications ({pendingRoleApplications.length})
+          </Button>
+        </div>
+      )}
+
       {/* SUB-NAVIGATION TABS */}
       <div className="flex flex-wrap gap-2 border-b border-line pb-2">
         {[
           { id: "MODERATION", label: "Event Moderation & Safety" },
           { id: "PAYMENTS", label: `Payment Verifications (${pendingVerificationOrders.length})` },
+          { id: "ROLE_APPLICATIONS", label: `Role Applications (${pendingRoleApplications.length})` },
           { id: "VENUE_MARKETPLACE", label: "Venues, Vendors & Disputes" },
           { id: "AUDIT", label: "System Audit Logs" },
           { id: "NOTIFICATIONS", label: "Email & Notification Queue" },
@@ -694,6 +753,117 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
                               Reject
                             </Button>
                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* TAB: ROLE APPLICATIONS */}
+      {activeTab === "ROLE_APPLICATIONS" && (
+        <Card className="p-5 shadow-card space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-bold text-ink">
+                Role Upgrade &amp; Partner Verification Queue
+              </h2>
+              <p className="text-xs text-ink-muted">
+                All new accounts start as Attendee. Verify and approve Organizer, Venue Partner, Vendor, Sponsor, and Staff applications here.
+              </p>
+            </div>
+            <Badge tone={pendingRoleApplications.length > 0 ? "warning" : "success"}>
+              {pendingRoleApplications.length} Pending Review
+            </Badge>
+          </div>
+
+          {roleApplications.length === 0 ? (
+            <div className="rounded-btn border border-line bg-canvas-alt p-8 text-center space-y-2">
+              <CheckCircle2 className="size-8 text-success mx-auto" />
+              <p className="text-sm font-bold text-ink">No role applications yet</p>
+              <p className="text-xs text-ink-muted">
+                Applications submitted by Attendees from their Profile page will appear here for Admin verification.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-line text-[11px] uppercase tracking-wider text-ink-muted">
+                    <th className="py-2 pr-3">Applicant</th>
+                    <th className="py-2 pr-3">Requested Position</th>
+                    <th className="py-2 pr-3">Organization &amp; Verification</th>
+                    <th className="py-2 pr-3">Status</th>
+                    <th className="py-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {roleApplications.map((app) => {
+                    const isBusy = reviewingAppId === app.id;
+                    return (
+                      <tr key={app.id} className="hover:bg-canvas-alt/60">
+                        <td className="py-3 pr-3 align-top">
+                          <p className="font-semibold text-ink">{app.applicant_name}</p>
+                          <p className="text-[11px] text-ink-muted">{app.applicant_email}</p>
+                          {app.applicant_phone && (
+                            <p className="text-[11px] text-ink-muted">{app.applicant_phone}</p>
+                          )}
+                        </td>
+                        <td className="py-3 pr-3 align-top">
+                          <Badge tone="brand" className="text-[10px]">
+                            {app.requested_role}
+                          </Badge>
+                        </td>
+                        <td className="py-3 pr-3 align-top max-w-xs space-y-0.5">
+                          <p className="font-semibold text-ink">{app.organization_name}</p>
+                          <p className="text-[11px] text-ink-muted">{app.justification}</p>
+                        </td>
+                        <td className="py-3 pr-3 align-top">
+                          <Badge
+                            tone={
+                              app.status === "APPROVED"
+                                ? "success"
+                                : app.status === "REJECTED"
+                                ? "danger"
+                                : "warning"
+                            }
+                            className="text-[10px]"
+                          >
+                            {app.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 text-right align-top">
+                          {app.status === "PENDING" ? (
+                            <div className="inline-flex items-center gap-2">
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                disabled={isBusy}
+                                onClick={() => handleReviewRoleApplication(app.id, true)}
+                              >
+                                <Check className="size-3.5 mr-1" />
+                                Approve Role
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isBusy}
+                                onClick={() => handleReviewRoleApplication(app.id, false)}
+                                className="text-danger border-danger/30 hover:bg-danger/10"
+                              >
+                                <Ban className="size-3.5 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-ink-muted">
+                              Reviewed
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );

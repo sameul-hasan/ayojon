@@ -7,11 +7,11 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertCircle,
-  Building2,
   Ticket,
-  Calendar,
-  Handshake,
-  Sparkles,
+  Eye,
+  EyeOff,
+  QrCode,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth-context";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
@@ -48,7 +48,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState("attendee");
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -84,8 +84,8 @@ export function LoginPage() {
         await signInWithEmail(email, password);
         // Navigation handled by currentUser useEffect using the resolved user role
       } else {
-        await signUpWithEmail(email, password, name, role);
-        navigate(returnUrl || getRoleDestination(role));
+        await signUpWithEmail(email, password, name, "attendee");
+        navigate(returnUrl || "/wallet");
       }
     } catch (err: any) {
       setErrorMsg(err?.message || "Authentication failed. Please verify credentials.");
@@ -98,53 +98,112 @@ export function LoginPage() {
     <div className="min-h-screen flex flex-col bg-canvas text-ink">
       <PublicNavbar />
 
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md bg-surface border border-line rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
-          <div className="text-center space-y-2">
-            <div className="flex justify-center mb-1">
-              <Logo size="md" showText={false} />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-ink">
-              {mode === "signin" ? "Welcome back to Aayojon" : "Join Aayojon Bangladesh"}
-            </h1>
-            <p className="text-xs text-ink-muted">
-              {mode === "signin"
-                ? "Sign in to manage bookings, tickets, and event operations"
-                : "Create an account to discover, organize, or sponsor events"}
-            </p>
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
+        <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* LEFT ENGAGING BRAND SHOWCASE (Desktop only, light brand theme) */}
+          <div className="hidden lg:flex lg:col-span-6 rounded-3xl border border-line bg-gradient-to-br from-brand-50 via-surface to-purple-50/70 text-ink p-10 flex-col justify-between shadow-card relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 size-64 rounded-full bg-violet/15 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-pink/15 blur-3xl pointer-events-none" />
 
-            {/* Mode Toggle Buttons */}
-            <div className="grid grid-cols-2 gap-1 rounded-btn bg-canvas-alt p-1 border border-line mt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("signin");
-                  setErrorMsg(null);
-                }}
-                className={`py-1.5 text-xs font-semibold rounded-btn transition ${
-                  mode === "signin"
-                    ? "bg-surface text-ink shadow-xs"
-                    : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("signup");
-                  setErrorMsg(null);
-                }}
-                className={`py-1.5 text-xs font-semibold rounded-btn transition ${
-                  mode === "signup"
-                    ? "bg-surface text-ink shadow-xs"
-                    : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                Create Account
-              </button>
+            <div className="relative space-y-6">
+              <div className="space-y-3">
+                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight text-ink">
+                  {mode === "signin"
+                    ? "Your next unforgettable event starts here."
+                    : "One account for every live experience in Bangladesh."}
+                </h2>
+                <p className="text-sm text-ink-muted leading-relaxed">
+                  Discover concerts, tech summits, and workshops across Bangladesh. Manage instant QR passes, or apply from your Profile to host events, list venues, and partner with brands.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                {[
+                  {
+                    icon: QrCode,
+                    title: "Cryptographic QR Ticket Wallet",
+                    desc: "Instant digital passes with offline gate verification and transfer protection.",
+                  },
+                  {
+                    icon: CheckCircle2,
+                    title: "Verified bKash, Nagad & Card Checkout",
+                    desc: "Protected payment proof verification before ticket minting.",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    title: "Admin-Verified Partner Roles",
+                    desc: "Start as an Attendee, then apply in Profile for Organizer, Venue, Vendor, or Sponsor access.",
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.title}
+                      className="flex items-start gap-3 rounded-2xl border border-line bg-surface/90 p-3.5 shadow-2xs"
+                    >
+                      <div className="size-9 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center shrink-0">
+                        <Icon className="size-4 text-brand-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-ink">{item.title}</p>
+                        <p className="text-[11px] text-ink-muted leading-relaxed mt-0.5">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+
+          {/* RIGHT AUTHENTICATION CARD */}
+          <div className="lg:col-span-6 w-full max-w-md mx-auto lg:max-w-none bg-surface border border-line rounded-3xl p-6 sm:p-8 shadow-card flex flex-col justify-center space-y-6">
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-1">
+                <Logo size="md" showText={false} />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-ink">
+                {mode === "signin" ? "Welcome back to Aayojon" : "Join Aayojon Bangladesh"}
+              </h1>
+              <p className="text-xs text-ink-muted">
+                {mode === "signin"
+                  ? "Sign in to access your ticket wallet, bookings, and workspaces"
+                  : "Create your Attendee account to discover events and book tickets"}
+              </p>
+
+              {/* Mode Toggle Buttons */}
+              <div className="grid grid-cols-2 gap-1 rounded-btn bg-canvas-alt p-1 border border-line mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signin");
+                    setErrorMsg(null);
+                  }}
+                  className={`py-2 text-xs font-semibold rounded-btn transition cursor-pointer ${
+                    mode === "signin"
+                      ? "bg-surface text-ink shadow-xs"
+                      : "text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signup");
+                    setErrorMsg(null);
+                  }}
+                  className={`py-2 text-xs font-semibold rounded-btn transition cursor-pointer ${
+                    mode === "signup"
+                      ? "bg-surface text-ink shadow-xs"
+                      : "text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
 
           {/* Google Sign-In Button */}
           <button
@@ -227,47 +286,32 @@ export function LoginPage() {
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3 top-2.5 size-4 text-ink-muted" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   placeholder="Minimum 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-10 w-full rounded-btn border border-line bg-canvas-alt pl-9 pr-3 text-xs text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none"
+                  className="h-10 w-full rounded-btn border border-line bg-canvas-alt pl-9 pr-10 text-xs text-ink placeholder:text-ink-muted focus:border-brand-600 focus:outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2.5 top-2.5 text-ink-muted hover:text-ink transition cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
             </div>
 
             {mode === "signup" && (
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1">Select Account Type / Role</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {[
-                    { id: "attendee", label: "Attendee", icon: Ticket, desc: "Buy tickets & join" },
-                    { id: "organizer", label: "Organizer", icon: Calendar, desc: "Host events" },
-                    { id: "venue_owner", label: "Venue Partner", icon: Building2, desc: "List venues" },
-                    { id: "sponsor", label: "Sponsor", icon: Handshake, desc: "Brand placement" },
-                  ].map((r) => {
-                    const Icon = r.icon;
-                    const isSelected = role === r.id;
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setRole(r.id)}
-                        className={`text-left p-2.5 rounded-btn border transition flex items-center gap-2.5 ${
-                          isSelected
-                            ? "border-brand-600 bg-brand-50/60 text-brand-700"
-                            : "border-line bg-canvas-alt text-ink hover:border-line-strong"
-                        }`}
-                      >
-                        <Icon className={`size-4 shrink-0 ${isSelected ? "text-brand-600" : "text-ink-muted"}`} />
-                        <div>
-                          <div className="text-xs font-semibold leading-tight">{r.label}</div>
-                          <div className="text-[10px] text-ink-muted">{r.desc}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
+              <div className="rounded-btn border border-brand-200 bg-brand-50/60 p-3 flex items-start gap-2.5 text-xs text-ink">
+                <Ticket className="size-4 text-brand-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-ink">Standard Attendee Account</p>
+                  <p className="text-[11px] text-ink-muted leading-relaxed">
+                    All new accounts start as <strong>Attendee</strong>. Need Organizer, Venue Partner, Vendor, Sponsor, or Staff access? Apply separately from your <strong>Profile</strong> after signing in for Admin verification.
+                  </p>
                 </div>
               </div>
             )}
@@ -281,12 +325,6 @@ export function LoginPage() {
               <ArrowRight className="size-4" />
             </button>
           </form>
-
-          <div className="pt-2 border-t border-line text-center">
-            <p className="text-[11px] text-ink-muted flex items-center justify-center gap-1">
-              <ShieldCheck className="size-3.5 text-brand-600" />
-              <span>Secured by Firebase Authentication & RBAC</span>
-            </p>
           </div>
         </div>
       </main>

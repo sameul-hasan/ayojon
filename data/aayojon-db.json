@@ -1694,7 +1694,7 @@
       "price_minor": 120000,
       "currency": "BDT",
       "capacity": 200,
-      "sold_count": 110,
+      "sold_count": 111,
       "sales_start": "2026-11-06T00:00:00Z",
       "sales_end": "2026-12-01T23:59:59Z"
     },
@@ -1772,6 +1772,23 @@
     }
   ],
   "orders": [
+    {
+      "id": "ord-e901eb16",
+      "buyer_user_id": "usr-attendee-rafiq",
+      "event_id": "evt-bangladesh-startup-summit",
+      "order_type": "TICKET",
+      "status": "PAID",
+      "subtotal_minor": 120000,
+      "fee_minor": 3000,
+      "total_minor": 123000,
+      "currency": "BDT",
+      "idempotency_key": "ui-ord-evt-bangladesh-startup-summit-tt-startup-founder-1-sameul.barishal@gmail.com-109a0dbd-1d14-4f29-a3ef-6bdade8cb56d",
+      "attendee_name": "egrdgfhjkdfg",
+      "attendee_email": "sameul.barishal@gmail.com",
+      "attendee_phone": "+8801707654740",
+      "institute_or_company": "Matirkotha",
+      "created_at": "2026-11-17T15:39:25.578Z"
+    },
     {
       "id": "ord-ba16565d",
       "buyer_user_id": "usr-attendee-rafiq",
@@ -1935,9 +1952,31 @@
       "quantity": 1,
       "unit_price_minor": 50000,
       "line_total_minor": 50000
+    },
+    {
+      "id": "oi-bbaf8cf3",
+      "order_id": "ord-e901eb16",
+      "ticket_type_id": "tt-startup-founder",
+      "package_id": null,
+      "description": "Early-Stage Founder Pass",
+      "quantity": 1,
+      "unit_price_minor": 120000,
+      "line_total_minor": 120000
     }
   ],
   "payments": [
+    {
+      "id": "pay-1e247dea",
+      "order_id": "ord-e901eb16",
+      "provider": "BKASH_SANDBOX",
+      "provider_reference": "BKASH_SANDBOX-REF-C64801",
+      "webhook_event_id": "wh-sbx-dd1ebcf0",
+      "amount_minor": 123000,
+      "currency": "BDT",
+      "status": "VERIFIED",
+      "verified_at": "2026-11-17T15:39:49.003Z",
+      "created_at": "2026-11-17T15:39:49.003Z"
+    },
     {
       "id": "pay-ffe04201",
       "order_id": "ord-ba16565d",
@@ -2012,6 +2051,20 @@
     }
   ],
   "registrations": [
+    {
+      "id": "reg-cdc966cd",
+      "event_id": "evt-bangladesh-startup-summit",
+      "user_id": "usr-attendee-rafiq",
+      "order_id": "ord-e901eb16",
+      "ticket_type_id": "tt-startup-founder",
+      "attendee_name": "egrdgfhjkdfg",
+      "attendee_email": "sameul.barishal@gmail.com",
+      "attendee_phone": "+8801707654740",
+      "institute_or_company": "Matirkotha",
+      "marketing_consent": true,
+      "status": "CONFIRMED",
+      "created_at": "2026-11-17T15:39:49.003Z"
+    },
     {
       "id": "reg-4f68297a",
       "event_id": "evt-dhaka-ai-summit",
@@ -2114,6 +2167,19 @@
     }
   ],
   "tickets": [
+    {
+      "id": "tkt-15e8dc66",
+      "registration_id": "reg-cdc966cd",
+      "event_id": "evt-bangladesh-startup-summit",
+      "ticket_type_id": "tt-startup-founder",
+      "attendee_name": "egrdgfhjkdfg",
+      "attendee_email": "sameul.barishal@gmail.com",
+      "ticket_type_name": "Early-Stage Founder Pass",
+      "qr_token": "AAYOJON-TKT-EVT-BANGLADESH-STARTUP-SUMMIT-9334CBDFCDA5",
+      "token_hash": "6a4f82812e687b60f2087d108e33b07151c2258f5f76c2458bc8a01526db33ec",
+      "status": "VALID",
+      "issued_at": "2026-11-17T15:39:49.003Z"
+    },
     {
       "id": "tkt-c67868b5",
       "registration_id": "reg-4f68297a",
@@ -2262,6 +2328,19 @@
   ],
   "notifications": [
     {
+      "id": "notif-00d76d3e",
+      "user_id": "usr-attendee-rafiq",
+      "destination": "sameul.barishal@gmail.com",
+      "channel": "EMAIL",
+      "template": "TICKET_ISSUED_CONFIRMATION",
+      "subject": "Your QR Ticket for Bangladesh Venture Capital & Startup Conclave 2026",
+      "status": "SENT",
+      "retry_count": 0,
+      "idempotency_key": "notif-ord-ord-e901eb16",
+      "sent_at": "2026-11-17T15:39:49.003Z",
+      "created_at": "2026-11-17T15:39:49.003Z"
+    },
+    {
       "id": "notif-26554d33",
       "user_id": "usr-attendee-rafiq",
       "destination": "tanvir@gmail.com",
@@ -2398,6 +2477,31 @@
     }
   ],
   "analytics_events": [
+    {
+      "id": "ae-f8b26db4",
+      "event_name": "payment_succeeded",
+      "event_id": "evt-bangladesh-startup-summit",
+      "order_id": "ord-e901eb16",
+      "session_id": "webhook-callback",
+      "properties": {
+        "provider": "BKASH_SANDBOX",
+        "amount_minor": 123000,
+        "currency": "BDT"
+      },
+      "timestamp": "2026-11-17T15:39:49.003Z"
+    },
+    {
+      "id": "ae-c87eec26",
+      "event_name": "checkout_started",
+      "event_id": "evt-bangladesh-startup-summit",
+      "order_id": "ord-e901eb16",
+      "session_id": "server-session",
+      "properties": {
+        "currency": "BDT",
+        "total_minor": 123000
+      },
+      "timestamp": "2026-11-17T15:39:25.578Z"
+    },
     {
       "id": "ae-a5032e12",
       "event_name": "payment_succeeded",

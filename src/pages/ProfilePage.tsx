@@ -5,8 +5,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { useAuth, type UserRole, toPlatformRole } from "@/lib/firebase/auth-context";
+import { useAuth } from "@/lib/firebase/auth-context";
 import { usePermissions } from "@/hooks/usePermissions";
+import { dispatchStateAction, clientGetRoleApplications } from "@/lib/client-api";
+import type { RoleApplication, RoleApplicationTarget } from "@/lib/types";
 import {
   User,
   Mail,
@@ -71,7 +73,14 @@ export function ProfilePage() {
   const [preferredCity, setPreferredCity] = useState("Dhaka");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("attendee");
+
+  // Role application state
+  const [roleApps, setRoleApps] = useState<RoleApplication[]>([]);
+  const [applyTargetRole, setApplyTargetRole] = useState<RoleApplicationTarget>("ORGANIZER_OWNER");
+  const [applyOrgName, setApplyOrgName] = useState("");
+  const [applyJustification, setApplyJustification] = useState("");
+  const [applySubmitting, setApplySubmitting] = useState(false);
+  const [applyMessage, setApplyMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // UI state
   const [isSaving, setIsSaving] = useState(false);
@@ -87,7 +96,12 @@ export function ProfilePage() {
       setPreferredCity(currentUser.preferred_city || "Dhaka");
       setAvatarUrl(currentUser.photoURL || currentUser.avatar_url || "");
       setInterests(currentUser.interests || ["Technology", "Startups"]);
-      setSelectedRole(currentUser.role || "attendee");
+      setApplyOrgName(currentUser.organization_label || "");
+      clientGetRoleApplications()
+        .then((apps) => {
+          setRoleApps(apps.filter((a) => a.user_id === currentUser.uid));
+        })
+        .catch(() => {});
     }
   }, [currentUser]);
 
@@ -113,7 +127,6 @@ export function ProfilePage() {
         preferred_city: preferredCity,
         avatar_url: avatarUrl.trim() || undefined,
         interests,
-        platform_role: toPlatformRole(selectedRole),
       });
 
       setSaveSuccess(true);
@@ -122,6 +135,43 @@ export function ProfilePage() {
       setErrorMessage(err?.message || "Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleApplyForRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setApplySubmitting(true);
+    setApplyMessage(null);
+    try {
+      const res = (await dispatchStateAction(
+        "SUBMIT_ROLE_APPLICATION",
+        {
+          userId: currentUser.uid,
+          applicantName: displayName || currentUser.displayName || currentUser.email,
+          applicantEmail: currentUser.email,
+          applicantPhone: phone,
+          requestedRole: applyTargetRole,
+          organizationName: applyOrgName,
+          justification: applyJustification,
+        },
+        currentUser.uid
+      )) as { result?: RoleApplication };
+      if (res?.result) {
+        setRoleApps((prev) => [res.result!, ...prev]);
+      }
+      setApplyJustification("");
+      setApplyMessage({
+        type: "success",
+        text: "Application submitted! Platform Admins have been notified to verify and approve your requested position.",
+      });
+    } catch (err: any) {
+      setApplyMessage({
+        type: "error",
+        text: err?.message || "Could not submit role application.",
+      });
+    } finally {
+      setApplySubmitting(false);
     }
   };
 
@@ -446,107 +496,20 @@ export function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Account Role & Workspace Access */}
+                  {/* Account Role Summary (Read-Only) */}
                   <div className="pt-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-                        Account Role & Workspace Access
-                      </label>
-                      <span className="text-[11px] font-semibold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200">
-                        Current: {currentRoleInfo.label}
+                    <div className="flex items-center justify-between rounded-2xl border border-line bg-canvas-alt p-4">
+                      <div>
+                        <p className="text-xs font-bold text-ink uppercase tracking-wider">
+                          Verified Account Role
+                        </p>
+                        <p className="text-[11px] text-ink-muted mt-0.5">
+                          Higher authority roles (Organizer, Venue Partner, Vendor, Sponsor, Staff) require Admin verification.
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-brand-700 bg-brand-50 px-3 py-1 rounded-full border border-brand-200 shrink-0">
+                        {currentRoleInfo.label}
                       </span>
-                    </div>
-                    <p className="text-xs text-ink-muted mb-3">
-                      Select your primary role. Upgrading your role grants direct access to dedicated workspace studios and publisher tools.
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {[
-                        {
-                          id: "attendee" as UserRole,
-                          title: "Event Attendee",
-                          badge: "Public Access",
-                          desc: "Explore public events, buy tickets, and manage passes in your ticket wallet.",
-                          icon: Ticket,
-                        },
-                        {
-                          id: "organizer" as UserRole,
-                          title: "Event Organizer",
-                          badge: "Studio Access",
-                          desc: "Unlock Organizer Studio (/organizer) to create events, configure ticket tiers, and view real-time sales.",
-                          icon: Calendar,
-                        },
-                        {
-                          id: "venue_owner" as UserRole,
-                          title: "Venue Provider",
-                          badge: "Provider Workspace",
-                          desc: "List halls, convention centers & venues, accept booking inquiries, and respond to quotes (/provider).",
-                          icon: Store,
-                        },
-                        {
-                          id: "vendor" as UserRole,
-                          title: "Service Vendor",
-                          badge: "Vendor Workspace",
-                          desc: "Offer catering, AV sound, stage, photography, or security services to event organizers.",
-                          icon: Briefcase,
-                        },
-                        {
-                          id: "sponsor" as UserRole,
-                          title: "Corporate Sponsor",
-                          badge: "Sponsor Hub",
-                          desc: "Browse sponsorship opportunities, submit brand activation proposals, and track partnerships.",
-                          icon: Sparkles,
-                        },
-                      ].map((item) => {
-                        const isSelected = selectedRole === item.id;
-                        const Icon = item.icon;
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => setSelectedRole(item.id)}
-                            className={cn(
-                              "cursor-pointer rounded-2xl border p-3.5 transition-all text-left relative",
-                              isSelected
-                                ? "border-brand-600 bg-brand-50/40 shadow-xs ring-1 ring-brand-500/20"
-                                : "border-line bg-canvas-alt hover:border-brand-300 hover:bg-surface"
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={cn(
-                                    "size-8 rounded-xl flex items-center justify-center border",
-                                    isSelected
-                                      ? "bg-brand-600 text-white border-brand-700"
-                                      : "bg-surface text-ink-muted border-line"
-                                  )}
-                                >
-                                  <Icon className="size-4" />
-                                </div>
-                                <div>
-                                  <h4 className="text-xs font-bold text-ink">{item.title}</h4>
-                                  <span className="text-[10px] font-semibold text-brand-700">
-                                    {item.badge}
-                                  </span>
-                                </div>
-                              </div>
-                              <div
-                                className={cn(
-                                  "size-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5",
-                                  isSelected
-                                    ? "border-brand-600 bg-brand-600 text-white"
-                                    : "border-line bg-surface"
-                                )}
-                              >
-                                {isSelected && <Check className="size-2.5 stroke-[3]" />}
-                              </div>
-                            </div>
-                            <p className="text-[11px] text-ink-muted mt-2 leading-relaxed">
-                              {item.desc}
-                            </p>
-                          </div>
-                        );
-                      })}
                     </div>
                   </div>
 
@@ -571,6 +534,164 @@ export function ProfilePage() {
                     </button>
                   </div>
                 </form>
+              </div>
+
+              {/* ROLE APPLICATION CARD (SEPARATE FROM PROFILE SAVE) */}
+              <div className="rounded-3xl border border-line bg-surface p-6 sm:p-8 shadow-card space-y-5">
+                <div className="border-b border-line pb-4">
+                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <ShieldCheck className="size-5 text-brand-600" />
+                    <span>Apply for Organizer or Partner Position</span>
+                  </h2>
+                  <p className="text-xs text-ink-muted mt-1">
+                    Higher authority roles cannot be self-assigned. Submit an application below and a Platform Admin will verify and approve your position.
+                  </p>
+                </div>
+
+                {applyMessage && (
+                  <div
+                    className={cn(
+                      "rounded-xl border p-3 text-xs font-medium flex items-center gap-2",
+                      applyMessage.type === "success"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                        : "border-red-200 bg-red-50 text-red-700"
+                    )}
+                  >
+                    {applyMessage.type === "success" ? (
+                      <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <AlertCircle className="size-4 text-red-600 shrink-0" />
+                    )}
+                    <span>{applyMessage.text}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleApplyForRole} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-2">
+                      Select Account Type / Role to Apply For
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                      {[
+                        { id: "ORGANIZER_OWNER" as RoleApplicationTarget, label: "Organizer", icon: Calendar, desc: "Host events & sell tickets" },
+                        { id: "VENUE_OWNER" as RoleApplicationTarget, label: "Venue Partner", icon: Store, desc: "List halls & venues" },
+                        { id: "VENDOR" as RoleApplicationTarget, label: "Service Vendor", icon: Briefcase, desc: "AV, catering & stage" },
+                        { id: "SPONSOR" as RoleApplicationTarget, label: "Sponsor", icon: Sparkles, desc: "Brand placement" },
+                        { id: "CHECKIN_STAFF" as RoleApplicationTarget, label: "Gate Staff", icon: ShieldCheck, desc: "QR gate check-in" },
+                      ].map((r) => {
+                        const Icon = r.icon;
+                        const isSelected = applyTargetRole === r.id;
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setApplyTargetRole(r.id)}
+                            className={cn(
+                              "text-left p-3 rounded-2xl border transition flex items-center gap-2.5 cursor-pointer",
+                              isSelected
+                                ? "border-brand-600 bg-brand-50/60 text-brand-700 ring-1 ring-brand-500/20"
+                                : "border-line bg-canvas-alt text-ink hover:border-brand-300"
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                "size-8 rounded-xl flex items-center justify-center border shrink-0",
+                                isSelected
+                                  ? "bg-brand-600 text-white border-brand-700"
+                                  : "bg-surface text-ink-muted border-line"
+                              )}
+                            >
+                              <Icon className="size-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold leading-tight">{r.label}</div>
+                              <div className="text-[10px] text-ink-muted truncate">{r.desc}</div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1.5">
+                      Organization / Brand / Venue Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={applyOrgName}
+                      onChange={(e) => setApplyOrgName(e.target.value)}
+                      placeholder="e.g. Dhaka Tech Events"
+                      className="w-full rounded-btn border border-line bg-canvas-alt px-3 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-ink uppercase tracking-wider mb-1.5">
+                      Verification Details &amp; Justification
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={applyJustification}
+                      onChange={(e) => setApplyJustification(e.target.value)}
+                      placeholder="Describe your organization, past events or venue/vendor credentials, website or trade license reference for Admin verification..."
+                      className="w-full rounded-btn border border-line bg-canvas-alt px-3 py-2.5 text-sm text-ink focus:border-brand-600 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={applySubmitting}
+                      className="inline-flex items-center gap-2 rounded-btn bg-ink hover:bg-ink/90 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition disabled:opacity-50"
+                    >
+                      <span>{applySubmitting ? "Submitting..." : "Submit Application for Admin Verification"}</span>
+                      <ArrowRight className="size-3.5" />
+                    </button>
+                  </div>
+                </form>
+
+                {roleApps.length > 0 && (
+                  <div className="pt-4 border-t border-line space-y-2.5">
+                    <h3 className="text-xs font-bold text-ink uppercase tracking-wider">
+                      Your Role Applications
+                    </h3>
+                    {roleApps.map((app) => (
+                      <div
+                        key={app.id}
+                        className="rounded-xl border border-line bg-canvas-alt p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                      >
+                        <div>
+                          <p className="font-bold text-ink">
+                            {app.requested_role} — {app.organization_name}
+                          </p>
+                          <p className="text-[11px] text-ink-muted line-clamp-1">
+                            {app.justification}
+                          </p>
+                          {app.review_note && (
+                            <p className="text-[11px] text-ink mt-0.5">
+                              Admin Note: {app.review_note}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={cn(
+                            "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 self-start sm:self-center",
+                            app.status === "APPROVED"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : app.status === "REJECTED"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-amber-100 text-amber-800"
+                          )}
+                        >
+                          {app.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
