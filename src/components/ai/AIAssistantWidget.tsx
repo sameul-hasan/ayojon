@@ -394,46 +394,57 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
   }
 
   return (
-    <div className={`flex flex-col ${standalone ? "h-[750px]" : "h-full"} bg-surface rounded-card border border-line shadow-card overflow-hidden`}>
+    <div
+      className={`flex flex-col ${
+        standalone
+          ? "h-[calc(100dvh-10.5rem)] min-h-[480px] max-h-[760px]"
+          : "h-full min-h-[420px]"
+      } bg-surface rounded-card border border-line shadow-card overflow-hidden`}
+    >
       {/* HEADER */}
-      <div className="flex items-center justify-between border-b border-line bg-canvas-alt px-5 py-3.5">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm">
+      <div className="flex items-center justify-between gap-2 border-b border-line bg-canvas-alt px-3.5 sm:px-5 py-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm">
             <Sparkles className="size-4" />
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-ink flex items-center gap-1.5">
-              <span>Aayojon AI Planning Assistant</span>
-              <span className="rounded-full bg-violet/20 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
-                Bangladesh Market
+          <div className="min-w-0">
+            <h2 className="text-xs sm:text-sm font-bold text-ink flex items-center gap-1.5 flex-wrap">
+              <span className="truncate">Aayojon AI Assistant</span>
+              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700 shrink-0">
+                Live DB RAG
               </span>
             </h2>
-            <p className="text-[11px] text-ink-muted">Venue discovery, budget breakdowns, and instant RFQ synthesis</p>
+            <p className="text-[11px] text-ink-muted truncate">
+              Venue discovery, budget splits &amp; auto-dispatched RFQs
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setMessages(INITIAL_MESSAGES)}
-            className="text-xs h-7 gap-1"
+            className="text-xs h-8 px-2.5 sm:px-3 gap-1"
+            aria-label="Reset Chat"
           >
-            <RefreshCw className="size-3" /> Reset Chat
+            <RefreshCw className="size-3.5" />
+            <span className="hidden sm:inline">Reset Chat</span>
           </Button>
         </div>
       </div>
 
       {/* QUICK PRESET CHIPS */}
-      <div className="border-b border-line bg-canvas/60 px-4 py-2 flex items-center gap-1.5 overflow-x-auto text-xs no-scrollbar">
+      <div className="border-b border-line bg-canvas/60 px-3 sm:px-4 py-2 flex items-center gap-1.5 overflow-x-auto touch-pan-x text-xs no-scrollbar">
         <span className="text-[11px] font-semibold text-ink-muted shrink-0 mr-1 flex items-center gap-1">
-          <Zap className="size-3 text-brand-600" /> Quick Prompts:
+          <Zap className="size-3 text-brand-600" /> Prompts:
         </span>
         {PRESET_PROMPTS.map((p, idx) => (
           <button
             key={idx}
+            type="button"
             onClick={() => handleSend(p.query)}
-            className="whitespace-nowrap rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-muted hover:border-brand-300 hover:text-brand-700 hover:bg-canvas-alt transition"
+            className="whitespace-nowrap rounded-full border border-line bg-surface px-3 py-1.5 text-[11px] font-medium text-ink-muted hover:border-brand-300 hover:text-brand-700 hover:bg-canvas-alt active:scale-95 transition cursor-pointer"
           >
             {p.label}
           </button>
@@ -441,30 +452,30 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       </div>
 
       {/* CHAT MESSAGES SCROLL AREA */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex gap-3 max-w-[85%] ${
+            className={`flex gap-2 sm:gap-3 max-w-[96%] sm:max-w-[85%] ${
               msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
             }`}
           >
             <div
-              className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+              className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold mt-0.5 ${
                 msg.sender === "user"
                   ? "bg-brand-600 text-white"
                   : "bg-canvas-alt border border-line text-brand-700"
               }`}
             >
-              {msg.sender === "user" ? <User className="size-4" /> : <Bot className="size-4" />}
+              {msg.sender === "user" ? <User className="size-3.5 sm:size-4" /> : <Bot className="size-3.5 sm:size-4" />}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5 min-w-0 flex-1">
               <div
-                className={`rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${
+                className={`rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm leading-relaxed ${
                   msg.sender === "user"
-                    ? "bg-brand-600 text-white shadow-sm"
-                    : "bg-canvas-alt border border-line text-ink shadow-sm"
+                    ? "bg-brand-600 text-white shadow-sm rounded-tr-sm"
+                    : "bg-canvas-alt border border-line text-ink shadow-sm rounded-tl-sm"
                 }`}
               >
                 <div className="whitespace-pre-line prose-sm prose-p:my-1 prose-headings:font-bold prose-headings:text-ink">
@@ -481,17 +492,17 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
 
               {/* BUDGET BREAKDOWN CARD IF ATTACHED */}
               {msg.budgetBreakdown && (
-                <div className="rounded-card border border-brand-200 bg-brand-50/50 p-4 text-ink shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b border-brand-200 pb-2">
+                <div className="rounded-card border border-brand-200 bg-brand-50/50 p-3.5 sm:p-4 text-ink shadow-sm space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-200 pb-2">
                     <span className="font-bold text-xs flex items-center gap-1.5 text-brand-900">
-                      <Calculator className="size-3.5 text-brand-600" /> Recommended Budget Breakdown (Dhaka)
+                      <Calculator className="size-3.5 text-brand-600 shrink-0" /> Recommended Budget Breakdown
                     </span>
                     <span className="font-extrabold text-sm text-brand-700">
                       {formatBDT(msg.budgetBreakdown.total)}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     <div className="flex justify-between bg-surface p-2 rounded-btn border border-line">
                       <span className="text-ink-muted">Auditorium / Hall:</span>
                       <span className="font-semibold">{formatBDT(msg.budgetBreakdown.venue)}</span>
@@ -519,14 +530,14 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
 
               {/* STRUCTURED RFQ CARD IF ATTACHED */}
               {msg.structuredRfq && (
-                <div className="rounded-card border-2 border-brand-400 bg-surface p-4 shadow-md space-y-3">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="rounded-card border-2 border-brand-400 bg-surface p-3.5 sm:p-4 shadow-md space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <Badge tone={msg.savedToAccount ? "success" : "brand"}>
                       {msg.savedToAccount
                         ? `✓ Saved & Sent to ${msg.dispatchedCount || 0} Providers`
                         : "Synthesized RFQ Draft"}
                     </Badge>
-                    <span className="text-[11px] text-ink-muted font-mono">
+                    <span className="text-[11px] text-ink-muted font-mono truncate">
                       {msg.savedRfqId ? `Ref: ${msg.savedRfqId}` : "Sign in to auto-save"}
                     </span>
                   </div>
@@ -595,7 +606,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       </div>
 
       {/* INPUT FORM */}
-      <div className="border-t border-line bg-surface p-4">
+      <div className="border-t border-line bg-surface p-3 sm:p-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -607,22 +618,23 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about Dhaka venues, budget splits, AV needs, or negotiation..."
-            className="flex-1 rounded-btn border border-line bg-canvas-alt px-4 py-2.5 text-xs sm:text-sm text-ink placeholder:text-ink-muted focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="Describe your event, city, guests & budget..."
+            className="flex-1 min-w-0 h-11 rounded-btn border border-line bg-canvas-alt px-3.5 sm:px-4 text-base sm:text-sm text-ink placeholder:text-ink-muted focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <Button
             type="submit"
             variant="primary"
             disabled={!input.trim() || isTyping}
-            className="shrink-0 h-10 px-4 gap-1.5"
+            className="shrink-0 h-11 px-3.5 sm:px-4 gap-1.5"
+            aria-label="Send message"
           >
-            <Send className="size-3.5" />
+            <Send className="size-4 sm:size-3.5" />
             <span className="hidden sm:inline">Send</span>
           </Button>
         </form>
-        <div className="mt-2 flex items-center justify-between text-[11px] text-ink-muted">
-          <span>AI outputs are calibrated to real Bangladesh commercial and university venue rates.</span>
-          <span className="font-semibold text-brand-600">Aayojon AI 2.0</span>
+        <div className="mt-2 hidden sm:flex items-center justify-between text-[11px] text-ink-muted">
+          <span>Calibrated to live Aayojon venue &amp; vendor rates across Bangladesh.</span>
+          <span className="font-semibold text-brand-600">Aayojon AI</span>
         </div>
       </div>
     </div>

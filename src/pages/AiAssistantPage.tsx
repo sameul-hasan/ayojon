@@ -13,19 +13,19 @@ export function AiAssistantPage() {
       <div className="min-h-screen flex flex-col bg-canvas text-ink">
       <PublicNavbar activeHref="/ai-event-assistant" />
 
-      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
+      <main className="flex-1 py-4 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         {/* TOP HEADER */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] sm:text-xs font-semibold text-brand-700 mb-1.5">
               <Sparkles className="size-3.5" />
               <span>Smart Event Architect for Bangladesh</span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-              AI Event Planning & RFQ Assistant
+            <h1 className="text-xl font-bold tracking-tight text-ink sm:text-3xl">
+              AI Event Planning &amp; RFQ Assistant
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-ink-muted">
-              Plan guest logistics, compare Dhaka auditorium rental rates, calculate catering & sound splits, and generate formal quotations in seconds.
+            <p className="mt-1 text-xs sm:text-sm text-ink-muted hidden sm:block">
+              Plan guest logistics, compare venue rates, calculate catering &amp; sound splits, and dispatch RFQs directly to providers.
             </p>
           </div>
 
