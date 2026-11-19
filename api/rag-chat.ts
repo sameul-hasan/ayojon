@@ -186,13 +186,75 @@ function isGreetingOrChitchat(query: string): boolean {
   return clean.split(/\s+/).length <= 3 && !hasEventIntent;
 }
 
+function needsRagLookup(query: string): boolean {
+  return /(event|venue|hall|auditorium|rfq|budget|hackathon|concert|workshop|seminar|conference|wedding|party|demo|startup|catering|sound|lighting|stage|dhaka|chattogram|sylhet|rajshahi|khulna|price|cost|capacity|book|host|organize|vendor|provider|ticket|schedule)/i.test(
+    query
+  );
+}
+
+function wantsRfqSynthesis(query: string): boolean {
+  const hasAction = /(plan|organize|host|create|send|generate|draft|book|need a venue|looking for a venue|rfq|quotation|quote)/i.test(
+    query
+  );
+  const hasDetails = /\d{2,}/.test(query) || /(hackathon|conference|workshop|concert|demo day|wedding|gala|summit)/i.test(query);
+  return hasAction && hasDetails;
+}
+
+function isOffTopic(query: string): boolean {
+  return /(password|secret|admin key|api key|credit card|nid|ssn|hack|exploit|sql|python|javascript|homework|essay|bitcoin|crypto|medical|diagnosis)/i.test(
+    query
+  );
+}
+
 function buildFallbackRagResponse(query: string, retrieved: RagContextItem[]) {
-  if (isGreetingOrChitchat(query)) {
+  if (isOffTopic(query)) {
+    return {
+      source: "live-db-rag",
+      retrievedCount: 0,
+      replyText:
+        "I can only assist with **Aayojon events, venues, vendors, budgets, and RFQ planning** in Bangladesh. I cannot access private account data or answer unrelated topics.",
+      budgetBreakdown: undefined,
+      structuredRfq: undefined,
+    };
+  }
+
+  if (isGreetingOrChitchat(query) || !needsRagLookup(query)) {
+    return {
+      source: "live-db-rag",
+      retrievedCount: 0,
+      replyText:
+        "Hello! Welcome to **Aayojon AI**. Ask me anything about upcoming events, partner venues, vendor services, or tell me your **event type, city, guest count, and budget** to plan and send an RFQ.",
+      budgetBreakdown: undefined,
+      structuredRfq: undefined,
+    };
+  }
+
+  // If user is just asking about events or venues (without asking to plan/book/create RFQ), answer from RAG without creating an RFQ
+  if (!wantsRfqSynthesis(query)) {
+    const venueItems = retrieved.filter((r) => r.kind === "venue");
+    const eventItems = retrieved.filter((r) => r.kind === "event");
+    const lines: string[] = ["### Live Aayojon Catalog Results"];
+    if (venueItems.length > 0) {
+      lines.push("**Matching Venues:**");
+      venueItems.slice(0, 4).forEach((v) => {
+        lines.push(`- **${v.name}** (${v.city}) — ~৳${v.priceBdt.toLocaleString()} · Capacity ${v.capacity || "N/A"}`);
+      });
+    }
+    if (eventItems.length > 0) {
+      lines.push("**Upcoming Events:**");
+      eventItems.slice(0, 4).forEach((e) => {
+        lines.push(`- **${e.name}** (${e.city}) — ${e.summary}`);
+      });
+    }
+    if (venueItems.length === 0 && eventItems.length === 0) {
+      lines.push("No exact matches found in the live catalog right now. Try specifying a city like **Dhaka**, **Chattogram**, or **Sylhet**.");
+    } else {
+      lines.push("\nWant me to calculate a budget and send an RFQ? Just share your guest count and target date.");
+    }
     return {
       source: "live-db-rag",
       retrievedCount: retrieved.length,
-      replyText:
-        "Hello! Welcome to Aayojon AI. Tell me about the event you are planning — such as the **event type**, **city** (e.g. Dhaka, Chattogram, Sylhet), **expected guests**, and **target budget** — and I will recommend matching venues, break down costs, and prepare an RFQ for you.",
+      replyText: lines.join("\n"),
       budgetBreakdown: undefined,
       structuredRfq: undefined,
     };
@@ -272,28 +334,53 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: "Query is required" });
     }
 
+    if (isOffTopic(query)) {
+      return res.status(200).json({
+        source: "guardrail",
+        retrievedCount: 0,
+        replyText:
+          "I can only assist with **Aayojon events, venues, vendors, budgets, and RFQ planning** in Bangladesh. I cannot access private account data or answer unrelated topics.",
+      });
+    }
+
     const projectId =
       process.env.VITE_FIREBASE_PROJECT_ID ||
       process.env.FIREBASE_PROJECT_ID ||
       String(body.projectId || "");
 
-    const knowledgeBase = await loadLiveKnowledgeBase(projectId);
-    const retrieved = retrieveTopContext(query, knowledgeBase, 6);
+    // Only pull RAG context from DB when the query is about events, venues, vendors, or planning
+    const shouldUseRag = needsRagLookup(query);
+    const knowledgeBase = shouldUseRag ? await loadLiveKnowledgeBase(projectId) : [];
+    const retrieved = shouldUseRag ? retrieveTopContext(query, knowledgeBase, 6) : [];
     const fallback = buildFallbackRagResponse(query, retrieved);
+
+    // Strip internal IDs before passing retrieved catalog items to the LLM
+    const sanitizedPromptContext = retrieved.map(({ name, kind, city, priceBdt, capacity, summary }) => ({
+      kind,
+      name,
+      city,
+      priceBdt,
+      capacity,
+      summary,
+    }));
 
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
-      const systemPrompt = `You are the Aayojon Bangladesh Event & Venue RAG Assistant.
-Use ONLY the retrieved live database context below when recommending venues, vendors, and BDT pricing.
-Retrieved Live DB Context:
-${JSON.stringify(retrieved, null, 2)}
+      const systemPrompt = `You are Aayojon AI, a helpful conversational assistant for the Aayojon Bangladesh event & venue platform.
+${
+  shouldUseRag
+    ? `Retrieved Live Database Context (public events, venues & vendors):\n${JSON.stringify(sanitizedPromptContext, null, 2)}`
+    : "No database lookup was needed for this message."
+}
 
-Rules:
-1. If the user is just greeting you ("hi", "hello", etc.) or asking a general question without planning a specific event, respond helpfully and set "budgetBreakdown": null and "structuredRfq": null.
-2. Only populate "budgetBreakdown" and "structuredRfq" when the user describes an event they want to plan (with event type, guests, venue, or budget).
+Strict Rules:
+1. Act as a normal, friendly AI chat for Aayojon.
+2. NEVER access, invent, or reveal private user data, emails, phone numbers, passwords, or irrelevant off-topic information (e.g., coding, politics, medical/legal advice). If asked off-topic questions, politely redirect to Aayojon events, venues, and planning.
+3. For greetings, general chat, or simple catalog questions ("what venues are in Dhaka?", "what events are happening?"), answer naturally using the retrieved context and set "budgetBreakdown": null and "structuredRfq": null.
+4. ONLY populate "budgetBreakdown" and "structuredRfq" when the user explicitly asks to plan/organize/host an event or create/send an RFQ with event details.
 
 Return strict JSON with keys:
-- replyText (clean text or markdown string)
+- replyText (clean markdown string)
 - budgetBreakdown (null OR { venue, soundLighting, catering, stageFabrication, contingency, total } numbers in BDT)
 - structuredRfq (null OR { event_title, event_type, description, expected_guests, location_requirements: { city, preferred_areas, venue_category, indoor_outdoor, required_facilities }, budget: { total_budget_bdt, venue_only_budget_bdt, services_budget_bdt, flexible } })`;
 

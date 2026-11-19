@@ -392,9 +392,22 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
         responseText = `### Professional Educational / Non-Profit Negotiation Draft\n\nHere is a courteous, high-conversion negotiation message you can send directly in the RFQ clarification chat:\n\n> *"Assalamu Alaikum,\n>\n> Thank you for sharing the detailed quotation for your auditorium space. We deeply appreciate the professionalism and comprehensive facilities included in your proposal.\n>\n> Our upcoming summit is a non-profit academic initiative hosted by university students and faculty researchers. We have a disciplined institutional budget cap. Would it be possible to consider an educational partnership concession of 10% on the base hall rental (or alternatively waive the late-night technical overtime charge)?\n>\n> In return, we would be delighted to prominently feature your venue on our official event passes, stage backdrops, and Aayojon digital event program as our Official Venue Partner.\n>\n> Looking forward to your kind consideration.\n>\n> Warm regards,\n> Event Organizing Committee"*\n\nThis framework highlights mutual value without sounding aggressive.`;
       } else if (lower.includes("sound") || lower.includes("generator") || lower.includes("line item") || lower.includes("exclusion")) {
         responseText = `### Breakdown: Sound Systems & Generator Charges in Bangladesh\n\nWhen reviewing quotations from Dhaka venue owners and AV vendors, be mindful of these subtle line items:\n\n1. **Generator Standby vs. Fuel Consumption:**\n   - Most auditoriums provide the generator unit for free, but some bill diesel fuel separately if public power outage exceeds 2 continuous hours. Always confirm: *"Is fuel included in the base rate?"*\n2. **PA System vs. Line-Array Sound:**\n   - Standard speech PA (podium mics + 2 speakers) is sufficient for lectures.\n   - Live musical performances or high-energy conferences require a **dual line-array rig with subwoofers and sound engineers** (typically ৳25,000 - ৳50,000 extra).\n3. **Hall Curfew:**\n   - Standard booking slots are 8:00 AM to 10:00 PM. Overtime past 11:00 PM frequently incurs a ৳3,000 - ৳5,000 per hour staff surcharge.`;
+      } else if (
+        /(password|secret|admin key|api key|credit card|nid|ssn|hack|exploit|sql|python|javascript|homework|essay|bitcoin|crypto|medical|diagnosis)/i.test(
+          query
+        )
+      ) {
+        responseText =
+          "I can only assist with **Aayojon events, venues, vendors, budgets, and RFQ planning** in Bangladesh. I cannot access private account data or answer unrelated topics.";
       } else if (isGreetingOrChitchat(query)) {
         responseText =
           "Hello! Welcome to **Aayojon AI**.\n\nTell me about the event you are planning — such as the **event type**, **city** (Dhaka, Chattogram, Sylhet, etc.), **expected guests**, and **target budget** — and I will recommend matching venues, break down costs, and prepare an RFQ for you.";
+      } else if (
+        !/(plan|organize|host|create|send|generate|draft|book|rfq|quotation|quote)/i.test(query) ||
+        !(/\d{2,}/.test(query) || /(hackathon|conference|workshop|concert|demo day|wedding|gala|summit)/i.test(query))
+      ) {
+        responseText =
+          "I can help you explore **Aayojon events and partner venues** across Bangladesh.\n\nIf you'd like me to generate a budget breakdown and send an RFQ to matching providers, please share your **event type**, **city**, and **expected guest count** (for example: *Plan a 300-person tech conference in Dhaka*).";
       } else {
         const custom = synthesizeCustomRfq(query);
         structuredRfq = custom.rfq;
