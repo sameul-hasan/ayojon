@@ -153,7 +153,51 @@ function retrieveTopContext(query: string, items: RagContextItem[], topK = 6): R
     .map((s) => s.item);
 }
 
+function isGreetingOrChitchat(query: string): boolean {
+  const clean = query.toLowerCase().replace(/[^\w\s]/g, "").trim();
+  if (!clean) return true;
+  const greetings = [
+    "hi",
+    "hello",
+    "hey",
+    "hii",
+    "helo",
+    "assalamu alaikum",
+    "salam",
+    "good morning",
+    "good afternoon",
+    "good evening",
+    "how are you",
+    "whats up",
+    "sup",
+    "thanks",
+    "thank you",
+    "ok",
+    "okay",
+    "test",
+  ];
+  if (greetings.includes(clean)) return true;
+  // Very short message without event keywords or numbers
+  const hasEventIntent =
+    /\d{2,}/.test(clean) ||
+    /(event|venue|hall|auditorium|rfq|budget|hackathon|concert|workshop|seminar|conference|wedding|party|demo|startup|catering|sound|stage|dhaka|chattogram|sylhet|rajshahi|khulna|plan|book|host|organize)/i.test(
+      clean
+    );
+  return clean.split(/\s+/).length <= 3 && !hasEventIntent;
+}
+
 function buildFallbackRagResponse(query: string, retrieved: RagContextItem[]) {
+  if (isGreetingOrChitchat(query)) {
+    return {
+      source: "live-db-rag",
+      retrievedCount: retrieved.length,
+      replyText:
+        "Hello! Welcome to Aayojon AI. Tell me about the event you are planning — such as the **event type**, **city** (e.g. Dhaka, Chattogram, Sylhet), **expected guests**, and **target budget** — and I will recommend matching venues, break down costs, and prepare an RFQ for you.",
+      budgetBreakdown: undefined,
+      structuredRfq: undefined,
+    };
+  }
+
   const lower = query.toLowerCase();
   const guestMatch = query.match(/(\d{2,5})\s*(?:guests?|people|persons?|attendees?|pax)/i);
   const guests = guestMatch ? Math.min(5000, Math.max(20, parseInt(guestMatch[1], 10))) : 200;
@@ -244,40 +288,50 @@ Use ONLY the retrieved live database context below when recommending venues, ven
 Retrieved Live DB Context:
 ${JSON.stringify(retrieved, null, 2)}
 
+Rules:
+1. If the user is just greeting you ("hi", "hello", etc.) or asking a general question without planning a specific event, respond helpfully and set "budgetBreakdown": null and "structuredRfq": null.
+2. Only populate "budgetBreakdown" and "structuredRfq" when the user describes an event they want to plan (with event type, guests, venue, or budget).
+
 Return strict JSON with keys:
-- replyText (markdown string)
-- budgetBreakdown ({ venue, soundLighting, catering, stageFabrication, contingency, total } numbers in BDT)
-- structuredRfq ({ event_title, event_type, description, expected_guests, location_requirements: { city, preferred_areas, venue_category, indoor_outdoor, required_facilities }, budget: { total_budget_bdt, venue_only_budget_bdt, services_budget_bdt, flexible } })`;
+- replyText (clean text or markdown string)
+- budgetBreakdown (null OR { venue, soundLighting, catering, stageFabrication, contingency, total } numbers in BDT)
+- structuredRfq (null OR { event_title, event_type, description, expected_guests, location_requirements: { city, preferred_areas, venue_category, indoor_outdoor, required_facilities }, budget: { total_budget_bdt, venue_only_budget_bdt, services_budget_bdt, flexible } })`;
 
-      const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: "user", parts: [{ text: query }] }],
-            generationConfig: { responseMimeType: "application/json" },
-          }),
-        }
-      );
+      const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+      for (const model of models) {
+        const geminiResp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents: [{ role: "user", parts: [{ text: query }] }],
+              generationConfig: { responseMimeType: "application/json" },
+            }),
+          }
+        );
 
-      if (geminiResp.ok) {
-        const gJson = (await geminiResp.json()) as any;
-        const rawText = gJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (rawText) {
-          const parsed = JSON.parse(rawText);
-          return res.status(200).json({
-            source: "gemini-live-rag",
-            retrievedCount: retrieved.length,
-            replyText: parsed.replyText || fallback.replyText,
-            budgetBreakdown: parsed.budgetBreakdown || fallback.budgetBreakdown,
-            structuredRfq: {
-              ...fallback.structuredRfq,
-              ...(parsed.structuredRfq || {}),
-              target_provider_ids: fallback.structuredRfq.target_provider_ids,
-            },
-          });
+        if (geminiResp.ok) {
+          const gJson = (await geminiResp.json()) as any;
+          const rawText = gJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawText) {
+            const parsed = JSON.parse(rawText);
+            return res.status(200).json({
+              source: "gemini-live-rag",
+              model,
+              retrievedCount: retrieved.length,
+              replyText: parsed.replyText || fallback.replyText,
+              budgetBreakdown: parsed.budgetBreakdown || undefined,
+              structuredRfq: parsed.structuredRfq
+                ? {
+                    ...(fallback.structuredRfq || {}),
+                    ...parsed.structuredRfq,
+                    target_provider_ids: fallback.structuredRfq?.target_provider_ids || [],
+                  }
+                : undefined,
+            });
+          }
         }
       }
     }

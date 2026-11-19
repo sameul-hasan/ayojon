@@ -151,6 +151,97 @@ const INITIAL_MESSAGES: AIMessage[] = [
   },
 ];
 
+function isGreetingOrChitchat(query: string): boolean {
+  const clean = query.toLowerCase().replace(/[^\w\s]/g, "").trim();
+  if (!clean) return true;
+  const greetings = [
+    "hi",
+    "hello",
+    "hey",
+    "hii",
+    "helo",
+    "assalamu alaikum",
+    "salam",
+    "good morning",
+    "good afternoon",
+    "good evening",
+    "how are you",
+    "whats up",
+    "sup",
+    "thanks",
+    "thank you",
+    "ok",
+    "okay",
+    "test",
+  ];
+  if (greetings.includes(clean)) return true;
+  const hasEventIntent =
+    /\d{2,}/.test(clean) ||
+    /(event|venue|hall|auditorium|rfq|budget|hackathon|concert|workshop|seminar|conference|wedding|party|demo|startup|catering|sound|stage|dhaka|chattogram|sylhet|rajshahi|khulna|plan|book|host|organize)/i.test(
+      clean
+    );
+  return clean.split(/\s+/).length <= 3 && !hasEventIntent;
+}
+
+function renderInlineBold(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
+}
+
+function FormattedChatText({ text, isUser }: { text: string; isUser: boolean }) {
+  const lines = text.split("\n");
+  return (
+    <div className="space-y-1.5 leading-relaxed">
+      {lines.map((raw, idx) => {
+        const line = raw.trim();
+        if (!line) return <div key={idx} className="h-1" />;
+        if (line.startsWith("### ")) {
+          return (
+            <h4
+              key={idx}
+              className={`text-xs sm:text-sm font-extrabold tracking-tight pt-1 ${
+                isUser ? "text-white" : "text-ink"
+              }`}
+            >
+              {renderInlineBold(line.slice(4))}
+            </h4>
+          );
+        }
+        if (line.startsWith("- ") || line.startsWith("* ")) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1">
+              <span className={`mt-1.5 size-1.5 rounded-full shrink-0 ${isUser ? "bg-white/80" : "bg-brand-600"}`} />
+              <span>{renderInlineBold(line.slice(2))}</span>
+            </div>
+          );
+        }
+        if (line.startsWith("> ")) {
+          return (
+            <blockquote
+              key={idx}
+              className={`border-l-2 pl-3 italic ${
+                isUser ? "border-white/50 text-white/90" : "border-brand-400 text-ink-muted"
+              }`}
+            >
+              {renderInlineBold(line.slice(2).replace(/^\*|\*$/g, ""))}
+            </blockquote>
+          );
+        }
+        return <p key={idx}>{renderInlineBold(line)}</p>;
+      })}
+    </div>
+  );
+}
+
 interface AIAssistantWidgetProps {
   onTransferToRfq?: (rfq: Partial<VenueRequest>) => void;
   standalone?: boolean;
@@ -301,6 +392,9 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
         responseText = `### Professional Educational / Non-Profit Negotiation Draft\n\nHere is a courteous, high-conversion negotiation message you can send directly in the RFQ clarification chat:\n\n> *"Assalamu Alaikum,\n>\n> Thank you for sharing the detailed quotation for your auditorium space. We deeply appreciate the professionalism and comprehensive facilities included in your proposal.\n>\n> Our upcoming summit is a non-profit academic initiative hosted by university students and faculty researchers. We have a disciplined institutional budget cap. Would it be possible to consider an educational partnership concession of 10% on the base hall rental (or alternatively waive the late-night technical overtime charge)?\n>\n> In return, we would be delighted to prominently feature your venue on our official event passes, stage backdrops, and Aayojon digital event program as our Official Venue Partner.\n>\n> Looking forward to your kind consideration.\n>\n> Warm regards,\n> Event Organizing Committee"*\n\nThis framework highlights mutual value without sounding aggressive.`;
       } else if (lower.includes("sound") || lower.includes("generator") || lower.includes("line item") || lower.includes("exclusion")) {
         responseText = `### Breakdown: Sound Systems & Generator Charges in Bangladesh\n\nWhen reviewing quotations from Dhaka venue owners and AV vendors, be mindful of these subtle line items:\n\n1. **Generator Standby vs. Fuel Consumption:**\n   - Most auditoriums provide the generator unit for free, but some bill diesel fuel separately if public power outage exceeds 2 continuous hours. Always confirm: *"Is fuel included in the base rate?"*\n2. **PA System vs. Line-Array Sound:**\n   - Standard speech PA (podium mics + 2 speakers) is sufficient for lectures.\n   - Live musical performances or high-energy conferences require a **dual line-array rig with subwoofers and sound engineers** (typically ৳25,000 - ৳50,000 extra).\n3. **Hall Curfew:**\n   - Standard booking slots are 8:00 AM to 10:00 PM. Overtime past 11:00 PM frequently incurs a ৳3,000 - ৳5,000 per hour staff surcharge.`;
+      } else if (isGreetingOrChitchat(query)) {
+        responseText =
+          "Hello! Welcome to **Aayojon AI**.\n\nTell me about the event you are planning — such as the **event type**, **city** (Dhaka, Chattogram, Sylhet, etc.), **expected guests**, and **target budget** — and I will recommend matching venues, break down costs, and prepare an RFQ for you.";
       } else {
         const custom = synthesizeCustomRfq(query);
         structuredRfq = custom.rfq;
@@ -478,9 +572,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
                     : "bg-canvas-alt border border-line text-ink shadow-sm rounded-tl-sm"
                 }`}
               >
-                <div className="whitespace-pre-line prose-sm prose-p:my-1 prose-headings:font-bold prose-headings:text-ink">
-                  {msg.text}
-                </div>
+                <FormattedChatText text={msg.text} isUser={msg.sender === "user"} />
                 <div
                   className={`mt-1.5 text-[10px] text-right ${
                     msg.sender === "user" ? "text-brand-200" : "text-ink-muted"
