@@ -234,7 +234,7 @@ export function BookingConfirmationModal({
                   className="w-full rounded-btn border border-line bg-canvas-alt px-3 py-2 text-xs text-ink font-mono"
                 />
                 <span className="mt-1 block text-[10px] text-ink-muted">
-                  Test Sandbox: Demo payment verification will automatically succeed.
+                  Enter your bKash wallet number to authorize the 30% booking deposit.
                 </span>
               </div>
             )}

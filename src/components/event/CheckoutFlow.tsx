@@ -1215,15 +1215,6 @@ export function CheckoutFlow({
                   <Button variant="outline" size="sm" onClick={refreshNow} className="gap-1.5">
                     <RefreshCw className="size-3.5" /> Check Status
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    loading={verifyingSandbox}
-                    onClick={simulateSandboxPayment}
-                    className="gap-1.5 text-ink-muted"
-                  >
-                    Instant Sandbox Confirm
-                  </Button>
                 </div>
               </>
             )}

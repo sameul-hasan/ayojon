@@ -977,7 +977,7 @@ export function MarketplaceView({
 
                       <div className="pt-2 space-y-1.5">
                         <label className="block text-[11px] font-semibold text-ink">
-                          Bangladesh Sandbox Payment Gateway
+                          Bangladesh MFS &amp; Card Payment Gateway
                         </label>
                         <div className="grid grid-cols-3 gap-1.5">
                           {(

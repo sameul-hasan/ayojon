@@ -41,6 +41,27 @@ export function invalidateDbCache() {
   dbFetchPromise = null;
 }
 
+const VENUE_REQUESTS_STORAGE_KEY = "aayojon_venue_requests_v1";
+
+function loadLocalVenueRequests(): any[] {
+  if (typeof window === "undefined" || !window.localStorage) return [];
+  try {
+    const raw = window.localStorage.getItem(VENUE_REQUESTS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as any[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalVenueRequests(rfqs: any[]): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(VENUE_REQUESTS_STORAGE_KEY, JSON.stringify(rfqs));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
 export async function fetchDatabaseState(): Promise<DatabaseState> {
   if (cachedDb) return cachedDb;
   if (!dbFetchPromise) {
@@ -114,6 +135,15 @@ export async function fetchDatabaseState(): Promise<DatabaseState> {
           for (const a of localApps) map.set(a.id, a);
           cachedDb.role_applications = Array.from(map.values()).sort((a, b) =>
             b.created_at.localeCompare(a.created_at)
+          );
+        }
+        const localRfqs = loadLocalVenueRequests();
+        if (localRfqs.length > 0) {
+          const rfqMap = new Map<string, any>();
+          for (const r of cachedDb.venue_requests || []) rfqMap.set(r.id, r);
+          for (const r of localRfqs) rfqMap.set(r.id, r);
+          cachedDb.venue_requests = Array.from(rfqMap.values()).sort((a, b) =>
+            String(b.created_at || "").localeCompare(String(a.created_at || ""))
           );
         }
       }
@@ -355,6 +385,7 @@ export async function dispatchStateAction(
       };
       cachedDb.venue_requests = cachedDb.venue_requests || [];
       cachedDb.venue_requests = [newRfq, ...cachedDb.venue_requests.filter((r) => r.id !== rfqId)];
+      saveLocalVenueRequests(cachedDb.venue_requests);
       await saveVenueRequestToFirestore(newRfq);
       resultData = {
         success: true,

@@ -348,7 +348,6 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
           { id: "VENUE_MARKETPLACE", label: "Venues, Vendors & Disputes" },
           { id: "AUDIT", label: "System Audit Logs" },
           { id: "NOTIFICATIONS", label: "Email & Notification Queue" },
-          { id: "QA_SPECS", label: "Automated QA Test Matrix" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -872,32 +871,6 @@ export function AdminConsole({ db, onAction }: AdminConsoleProps) {
               </table>
             </div>
           )}
-        </Card>
-      )}
-
-      {/* TAB 4: QA SPECS */}
-      {activeTab === "QA_SPECS" && (
-        <Card className="p-5 shadow-card space-y-4">
-          <h2 className="text-base font-bold text-ink">Platform Verification Matrix (Tiers 1–4)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {QA_MATRIX.map((qa) => (
-              <div
-                key={qa.id}
-                className="rounded-btn border border-line bg-canvas-alt p-3 text-xs space-y-1"
-              >
-                <div className="flex items-center justify-between">
-                  <Badge tone="brand" className="font-mono text-[10px]">
-                    {qa.id}
-                  </Badge>
-                  <span className="text-success font-semibold text-[10px] flex items-center gap-1">
-                    <CheckCircle2 className="size-3" /> VERIFIED
-                  </span>
-                </div>
-                <p className="font-bold text-ink">{qa.scenario}</p>
-                <p className="text-ink-muted text-[11px]">{qa.expected}</p>
-              </div>
-            ))}
-          </div>
         </Card>
       )}
     </div>

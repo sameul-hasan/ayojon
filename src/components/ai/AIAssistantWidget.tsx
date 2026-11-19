@@ -27,6 +27,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { PARTNER_VENUES } from "@/lib/venues-catalog";
 import { formatBDT } from "@/lib/public-events-shared";
+import { useAuth } from "@/lib/firebase/auth-context";
+import { dispatchStateAction } from "@/lib/client-api";
 import type { VenueRequest } from "@/lib/types";
 
 export interface AIMessage {
@@ -34,6 +36,8 @@ export interface AIMessage {
   sender: "user" | "ai";
   text: string;
   structuredRfq?: Partial<VenueRequest>;
+  savedRfqId?: string;
+  savedToAccount?: boolean;
   budgetBreakdown?: {
     venue: number;
     soundLighting: number;
@@ -43,6 +47,75 @@ export interface AIMessage {
     total: number;
   };
   timestamp: string;
+}
+
+function defaultEventDateIso(daysAhead = 30): string {
+  const d = new Date(Date.now() + daysAhead * 86_400_000);
+  return d.toISOString().slice(0, 10);
+}
+
+function synthesizeCustomRfq(query: string): {
+  rfq: Partial<VenueRequest>;
+  budget: NonNullable<AIMessage["budgetBreakdown"]>;
+  city: string;
+  guests: number;
+} {
+  const lower = query.toLowerCase();
+  const guestMatch = query.match(/(\d{2,5})\s*(?:guests?|people|persons?|attendees?|pax|জন)/i);
+  const guests = guestMatch ? Math.min(5000, Math.max(20, parseInt(guestMatch[1], 10))) : 200;
+
+  const cities = ["Dhaka", "Chattogram", "Sylhet", "Rajshahi", "Khulna"];
+  const matchedCity = cities.find((c) => lower.includes(c.toLowerCase())) || "Dhaka";
+
+  const isConcert = /concert|music|festival|cultural|band|night/i.test(query);
+  const isWorkshop = /workshop|seminar|training|bootcamp|meetup/i.test(query);
+  const isWedding = /wedding|reception|holud|gala|dinner/i.test(query);
+
+  const eventType = isConcert
+    ? "Live Concert & Cultural Festival"
+    : isWorkshop
+    ? "Workshop & Seminar"
+    : isWedding
+    ? "Gala & Banquet Reception"
+    : "Corporate Conference & Summit";
+
+  const venue = Math.round(guests * (isConcert ? 350 : 280));
+  const soundLighting = isConcert ? 45000 : 18000;
+  const catering = Math.round(guests * (isWedding ? 650 : 350));
+  const stageFabrication = isConcert ? 30000 : 12000;
+  const subtotal = venue + soundLighting + catering + stageFabrication;
+  const contingency = Math.round(subtotal * 0.08);
+  const total = subtotal + contingency;
+
+  const rfq: Partial<VenueRequest> = {
+    event_title: `${matchedCity} ${eventType.split(" & ")[0]} (${guests} Guests)`,
+    event_type: eventType,
+    description: query.slice(0, 260),
+    event_date: defaultEventDateIso(30),
+    start_time: "09:00",
+    end_time: "21:00",
+    expected_guests: guests,
+    location_requirements: {
+      city: matchedCity,
+      preferred_areas: matchedCity === "Dhaka" ? ["Gulshan", "Banani", "Farmgate"] : [matchedCity],
+      venue_category: isConcert ? "CONVENTION_CENTER" : "AUDITORIUM",
+      indoor_outdoor: isConcert ? "ANY" : "INDOOR",
+      required_facilities: ["AC", "GENERATOR", "PARKING", "WIFI"],
+    },
+    budget: {
+      total_budget_bdt: total,
+      venue_only_budget_bdt: venue,
+      services_budget_bdt: soundLighting + catering + stageFabrication,
+      flexible: true,
+    },
+  };
+
+  return {
+    rfq,
+    budget: { venue, soundLighting, catering, stageFabrication, contingency, total },
+    city: matchedCity,
+    guests,
+  };
 }
 
 const PRESET_PROMPTS = [
@@ -84,6 +157,7 @@ interface AIAssistantWidgetProps {
 
 export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAssistantWidgetProps) {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [messages, setMessages] = useState<AIMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -112,7 +186,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
     if (!textToSend) setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const lower = query.toLowerCase();
       let responseText = "";
       let structuredRfq: Partial<VenueRequest> | undefined = undefined;
@@ -134,6 +208,9 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
           event_title: "Dhaka Tech Hackathon 2027",
           event_type: "Collegiate Hackathon & Expo",
           description: "36-hour collegiate developer hackathon with opening ceremony, keynote stages, and awards showcase.",
+          event_date: defaultEventDateIso(30),
+          start_time: "09:00",
+          end_time: "21:00",
           expected_guests: 400,
           location_requirements: {
             city: "Dhaka",
@@ -165,6 +242,9 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
           event_title: "Aayojon Seed Pitch & Demo Showcase",
           event_type: "Startup Investor Demo Day",
           description: "Curated investor demo day for 150 tech founders, angels, and VC representatives.",
+          event_date: defaultEventDateIso(21),
+          start_time: "15:00",
+          end_time: "21:00",
           expected_guests: 150,
           location_requirements: {
             city: "Dhaka",
@@ -185,7 +265,38 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       } else if (lower.includes("sound") || lower.includes("generator") || lower.includes("line item") || lower.includes("exclusion")) {
         responseText = `### Breakdown: Sound Systems & Generator Charges in Bangladesh\n\nWhen reviewing quotations from Dhaka venue owners and AV vendors, be mindful of these subtle line items:\n\n1. **Generator Standby vs. Fuel Consumption:**\n   - Most auditoriums provide the generator unit for free, but some bill diesel fuel separately if public power outage exceeds 2 continuous hours. Always confirm: *"Is fuel included in the base rate?"*\n2. **PA System vs. Line-Array Sound:**\n   - Standard speech PA (podium mics + 2 speakers) is sufficient for lectures.\n   - Live musical performances or high-energy conferences require a **dual line-array rig with subwoofers and sound engineers** (typically ৳25,000 - ৳50,000 extra).\n3. **Hall Curfew:**\n   - Standard booking slots are 8:00 AM to 10:00 PM. Overtime past 11:00 PM frequently incurs a ৳3,000 - ৳5,000 per hour staff surcharge.`;
       } else {
-        responseText = `Thank you for sharing your requirements! Based on your prompt, here are key planning guidelines for organizing events in Bangladesh:\n\n- **Seasonality & Traffic:** Always budget a 45-minute buffer for Dhaka traffic during weekdays, especially for venues in Farmgate, Tejgaon, or Mohakhali.\n- **Standby Generator:** Essential across all seasons. Ensure the contract includes uninterrupted 200kVA auto-switchover.\n- **Prayer Space:** Ensure the venue reserves dedicated prayer rooms for men and women.\n- **Payment Invariant:** Standard booking deposits in Bangladesh range between 30% and 50%, with the balance settled before gate opening.\n\nWould you like me to generate a tailored budget breakdown or pre-fill a formal RFQ for this?`;
+        const custom = synthesizeCustomRfq(query);
+        structuredRfq = custom.rfq;
+        budgetBreakdown = custom.budget;
+        responseText = `### Tailored Event & Venue Plan (${custom.city} · ${custom.guests} Guests)\n\nBased on your request, I have prepared a realistic Bangladesh market budget breakdown and synthesized a structured RFQ draft:\n\n- **Recommended Setup:** ${custom.rfq.event_type} in **${custom.city}** with AC, standby generator, Wi-Fi, and parking.\n- **Estimated Total Budget:** **${formatBDT(custom.budget.total)}** (including 8% logistical contingency).\n- **Payment Practice:** Standard venue booking deposits range between 30% and 50%, verified before gate opening.`;
+      }
+
+      let savedRfqId: string | undefined;
+      let savedToAccount = false;
+
+      if (structuredRfq && currentUser?.uid) {
+        try {
+          const rfqPayload = {
+            ...structuredRfq,
+            organizer_user_id: currentUser.uid,
+            additional_services: structuredRfq.additional_services || [],
+            target_provider_ids: structuredRfq.target_provider_ids || [],
+            attachments: structuredRfq.attachments || [],
+            status: "SUBMITTED",
+          };
+          const res = (await dispatchStateAction(
+            "SUBMIT_VENUE_RFQ",
+            rfqPayload,
+            currentUser.uid
+          )) as { result?: VenueRequest };
+          if (res?.result?.id) {
+            savedRfqId = res.result.id;
+            savedToAccount = true;
+            structuredRfq = res.result;
+          }
+        } catch (err) {
+          console.warn("[AI Assistant] Auto-save RFQ notice:", err);
+        }
       }
 
       const aiMsg: AIMessage = {
@@ -193,13 +304,15 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
         sender: "ai",
         text: responseText,
         structuredRfq,
+        savedRfqId,
+        savedToAccount,
         budgetBreakdown,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
       setMessages((prev) => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 850);
+    }, 650);
   };
 
   const handleApplyRfq = (rfqData?: Partial<VenueRequest>) => {
@@ -344,9 +457,13 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
               {/* STRUCTURED RFQ CARD IF ATTACHED */}
               {msg.structuredRfq && (
                 <div className="rounded-card border-2 border-brand-400 bg-surface p-4 shadow-md space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Badge tone="brand">Synthesized RFQ Draft</Badge>
-                    <span className="text-[11px] text-ink-muted">Ready to broadcast</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge tone={msg.savedToAccount ? "success" : "brand"}>
+                      {msg.savedToAccount ? "✓ Saved to Your Account" : "Synthesized RFQ Draft"}
+                    </Badge>
+                    <span className="text-[11px] text-ink-muted font-mono">
+                      {msg.savedRfqId ? `Ref: ${msg.savedRfqId}` : "Sign in to auto-save"}
+                    </span>
                   </div>
 
                   <div>
@@ -371,15 +488,25 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
                     </div>
                   </div>
 
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={() => handleApplyRfq(msg.structuredRfq)}
-                  >
-                    <span>Send RFQ to Venue Providers</span>
-                    <ArrowRight className="size-3.5" />
-                  </Button>
+                  {currentUser ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full gap-2"
+                      onClick={() => handleApplyRfq(msg.structuredRfq)}
+                    >
+                      <span>{msg.savedToAccount ? "Open Saved RFQ in Studio" : "Send RFQ to Venue Providers"}</span>
+                      <ArrowRight className="size-3.5" />
+                    </Button>
+                  ) : (
+                    <Link
+                      href="/login?returnUrl=/ai-event-assistant"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-btn bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition"
+                    >
+                      <span>Sign In to Auto-Save RFQ to Your Account</span>
+                      <ArrowRight className="size-3.5" />
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

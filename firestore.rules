@@ -236,8 +236,8 @@ service cloud.firestore {
     }
 
     function isNonAdminProfileCreateSafe(data) {
-      return (!('platform_role' in data) || !(data.platform_role in ['ADMIN', 'SUPER_ADMIN'])) &&
-             (!('role' in data) || !(data.role in ['admin', 'super_admin', 'ADMIN', 'SUPER_ADMIN'])) &&
+      return (!('platform_role' in data) || data.platform_role == 'ATTENDEE') &&
+             (!('role' in data) || data.role == 'attendee') &&
              (!('is_suspended' in data) || data.is_suspended == false) &&
              (!('status' in data) || data.status == 'ACTIVE');
     }
@@ -489,7 +489,8 @@ service cloud.firestore {
 
     match /venue_requests/{rfqId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isNotSuspended();
+      allow create: if isAuthenticated() && isNotSuspended() && request.resource.data.organizer_user_id == request.auth.uid;
+      allow update: if isAuthenticated() && isNotSuspended() && (resource.data.organizer_user_id == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
     }
 
@@ -522,6 +523,15 @@ service cloud.firestore {
     match /reports/{reportId} {
       allow create: if isAuthenticated();
       allow read, update, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // 11. Role Applications
+    // -------------------------------------------------------------------------
+    match /role_applications/{applicationId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isNotSuspended() && request.resource.data.user_id == request.auth.uid && request.resource.data.status == 'PENDING' && request.resource.data.requested_role in ['ORGANIZER_OWNER', 'VENUE_OWNER', 'VENDOR', 'SPONSOR', 'CHECKIN_STAFF'];
+      allow update, delete: if isAdmin();
     }
   }
 }
