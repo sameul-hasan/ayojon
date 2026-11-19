@@ -250,10 +250,61 @@ interface AIAssistantWidgetProps {
 export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAssistantWidgetProps) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const chatStorageKey = currentUser?.uid
+    ? `aayojon_ai_chat_history_${currentUser.uid}`
+    : null;
+
   const [messages, setMessages] = useState<AIMessage[]>(INITIAL_MESSAGES);
+  const [historyLoadedFor, setHistoryLoadedFor] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Restore saved chat history per user on mount/login
+  useEffect(() => {
+    if (!chatStorageKey) {
+      setMessages(INITIAL_MESSAGES);
+      setHistoryLoadedFor(null);
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(chatStorageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AIMessage[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        } else {
+          setMessages(INITIAL_MESSAGES);
+        }
+      } else {
+        setMessages(INITIAL_MESSAGES);
+      }
+    } catch {
+      setMessages(INITIAL_MESSAGES);
+    }
+    setHistoryLoadedFor(chatStorageKey);
+  }, [chatStorageKey]);
+
+  // Persist chat history whenever messages change
+  useEffect(() => {
+    if (!chatStorageKey || historyLoadedFor !== chatStorageKey) return;
+    try {
+      window.localStorage.setItem(chatStorageKey, JSON.stringify(messages.slice(-50)));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [messages, chatStorageKey, historyLoadedFor]);
+
+  const handleResetChat = () => {
+    setMessages(INITIAL_MESSAGES);
+    if (chatStorageKey) {
+      try {
+        window.localStorage.removeItem(chatStorageKey);
+      } catch {
+        // Ignore
+      }
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -531,7 +582,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setMessages(INITIAL_MESSAGES)}
+            onClick={handleResetChat}
             className="text-xs h-8 px-2.5 sm:px-3 gap-1"
             aria-label="Reset Chat"
           >
