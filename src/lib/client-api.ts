@@ -375,17 +375,68 @@ export async function dispatchStateAction(
       const p = payload as any;
       if (!cachedDb) cachedDb = createInitialSeed();
       const rfqId = p.id || `rfq-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      const now = new Date().toISOString();
+
+      // Auto-match Venue Providers & Service Vendors by city when target_provider_ids is empty
+      let targetProviderIds: string[] = Array.isArray(p.target_provider_ids)
+        ? p.target_provider_ids.filter(Boolean)
+        : [];
+
+      if (targetProviderIds.length === 0) {
+        const reqCity = String(p.location_requirements?.city || "Dhaka").toLowerCase();
+        const matchedVenues = (cachedDb.venue_profiles || []).filter(
+          (v) => v.city?.toLowerCase() === reqCity
+        );
+        const venuePool =
+          matchedVenues.length > 0 ? matchedVenues : (cachedDb.venue_profiles || []);
+        const matchedVendors = (cachedDb.vendor_services || []).filter((vs) =>
+          (vs.cities_served || []).some((c) => c.toLowerCase() === reqCity)
+        );
+        const vendorPool =
+          matchedVendors.length > 0 ? matchedVendors : (cachedDb.vendor_services || []);
+
+        const matchedIds = new Set<string>();
+        venuePool.slice(0, 3).forEach((v) => {
+          if (v.owner_user_id) matchedIds.add(v.owner_user_id);
+        });
+        vendorPool.slice(0, 2).forEach((vs) => {
+          if (vs.vendor_user_id) matchedIds.add(vs.vendor_user_id);
+        });
+        targetProviderIds = Array.from(matchedIds);
+      }
+
       const newRfq: any = {
         ...p,
         id: rfqId,
         organizer_user_id: p.organizer_user_id || actorUserId || "usr-org-current",
+        target_provider_ids: targetProviderIds,
         status: "SUBMITTED",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
       };
       cachedDb.venue_requests = cachedDb.venue_requests || [];
       cachedDb.venue_requests = [newRfq, ...cachedDb.venue_requests.filter((r) => r.id !== rfqId)];
       saveLocalVenueRequests(cachedDb.venue_requests);
+
+      // Dispatch notifications directly to matched Venue & Vendor providers
+      cachedDb.notifications = cachedDb.notifications || [];
+      for (const providerId of targetProviderIds) {
+        const prof = cachedDb.profiles.find((pr) => pr.id === providerId);
+        cachedDb.notifications.unshift({
+          id: `notif-${Date.now().toString(36)}-${browserRandomHex(2).toLowerCase()}`,
+          user_id: providerId,
+          destination: prof?.email || providerId,
+          channel: "EMAIL",
+          template: "NEW_RFQ_RECEIVED",
+          subject: `New RFQ (${rfqId}): ${newRfq.event_title || "Event Inquiry"} — Submit Quotation`,
+          status: "QUEUED",
+          retry_count: 0,
+          idempotency_key: `notif-rfq-${rfqId}-${providerId}`,
+          sent_at: null,
+          created_at: now,
+        });
+      }
+
       await saveVenueRequestToFirestore(newRfq);
       resultData = {
         success: true,

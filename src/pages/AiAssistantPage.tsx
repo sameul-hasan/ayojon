@@ -3,12 +3,14 @@ import { Link } from "@/components/ui/Link";
 import { Sparkles, ArrowLeft, Building2, LayoutDashboard, HelpCircle, Layers } from "lucide-react";
 import { PublicNavbar } from "@/components/layout/PublicNavbar";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AIAssistantWidget } from "@/components/ai/AIAssistantWidget";
 import { Button } from "@/components/ui/Button";
 
 export function AiAssistantPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-ink">
+    <ProtectedRoute>
+      <div className="min-h-screen flex flex-col bg-canvas text-ink">
       <PublicNavbar activeHref="/ai-event-assistant" />
 
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
@@ -48,7 +50,8 @@ export function AiAssistantPage() {
       </main>
 
       <PublicFooter />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
 

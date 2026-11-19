@@ -38,6 +38,7 @@ export interface AIMessage {
   structuredRfq?: Partial<VenueRequest>;
   savedRfqId?: string;
   savedToAccount?: boolean;
+  dispatchedCount?: number;
   budgetBreakdown?: {
     venue: number;
     soundLighting: number;
@@ -192,7 +193,43 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       let structuredRfq: Partial<VenueRequest> | undefined = undefined;
       let budgetBreakdown: AIMessage["budgetBreakdown"] | undefined = undefined;
 
-      if (lower.includes("hackathon") || lower.includes("400")) {
+      // 1. Try live-DB RAG endpoint (/api/rag-chat) first when deployed on Vercel
+      const isStaticGuide =
+        lower.includes("negotiation") ||
+        lower.includes("discount") ||
+        lower.includes("script") ||
+        lower.includes("sound") ||
+        lower.includes("generator") ||
+        lower.includes("line item") ||
+        lower.includes("exclusion");
+
+      if (!isStaticGuide) {
+        try {
+          const ragRes = await fetch("/api/rag-chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query,
+              projectId: (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || "",
+            }),
+          });
+          const ct = ragRes.headers.get("content-type") || "";
+          if (ragRes.ok && ct.includes("application/json")) {
+            const ragJson = await ragRes.json();
+            if (ragJson?.replyText) {
+              responseText = ragJson.replyText;
+              budgetBreakdown = ragJson.budgetBreakdown;
+              structuredRfq = ragJson.structuredRfq;
+            }
+          }
+        } catch {
+          // Local dev / static fallback continues below
+        }
+      }
+
+      if (responseText) {
+        // Already populated by /api/rag-chat
+      } else if (lower.includes("hackathon") || lower.includes("400")) {
         responseText = `### Strategic Plan: 400-Person Tech Hackathon\n\nFor a collegiate or developer hackathon with 400 innovators in Dhaka:\n\n1. **Recommended Venue:** **Krishibid Institution Bangladesh (KIB) Auditorium** (Farmgate) or **BUET ECE Auditorium** (Palashi). Both offer high power endurance, 200kVA generator backup, and high-speed bandwidth.\n2. **Acoustic & Tech:** An auditorium with dual greenrooms enables team rest zones and dedicated sponsor stalls in the lobby.\n3. **Dhaka Transit Note:** Farmgate offers central bus/metro connectivity for students travelling from NSU, BRAC, BUET, and DU.`;
 
         budgetBreakdown = {
@@ -273,6 +310,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
 
       let savedRfqId: string | undefined;
       let savedToAccount = false;
+      let dispatchedCount = 0;
 
       if (structuredRfq && currentUser?.uid) {
         try {
@@ -292,6 +330,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
           if (res?.result?.id) {
             savedRfqId = res.result.id;
             savedToAccount = true;
+            dispatchedCount = res.result.target_provider_ids?.length || 0;
             structuredRfq = res.result;
           }
         } catch (err) {
@@ -306,6 +345,7 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
         structuredRfq,
         savedRfqId,
         savedToAccount,
+        dispatchedCount,
         budgetBreakdown,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
@@ -329,6 +369,29 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
       navigate("/organizer?rfq=new");
     }
   };
+
+  if (!currentUser) {
+    return (
+      <div className="rounded-card border border-line bg-surface p-8 text-center shadow-card space-y-4">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand-50 border border-brand-200 text-brand-600">
+          <Sparkles className="size-6" />
+        </div>
+        <div className="space-y-1.5 max-w-md mx-auto">
+          <h3 className="text-lg font-bold text-ink">Sign In Required for AI Event Assistant</h3>
+          <p className="text-xs text-ink-muted leading-relaxed">
+            Sign in to chat with the AI Event Assistant, auto-save synthesized RFQs under your account, and dispatch them directly to matching Venue &amp; Vendor providers.
+          </p>
+        </div>
+        <Link
+          href="/login?returnUrl=/ai-event-assistant"
+          className="inline-flex items-center gap-2 rounded-btn bg-brand-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-brand-700 transition"
+        >
+          <span>Sign In to Continue</span>
+          <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col ${standalone ? "h-[750px]" : "h-full"} bg-surface rounded-card border border-line shadow-card overflow-hidden`}>
@@ -459,7 +522,9 @@ export function AIAssistantWidget({ onTransferToRfq, standalone = false }: AIAss
                 <div className="rounded-card border-2 border-brand-400 bg-surface p-4 shadow-md space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <Badge tone={msg.savedToAccount ? "success" : "brand"}>
-                      {msg.savedToAccount ? "✓ Saved to Your Account" : "Synthesized RFQ Draft"}
+                      {msg.savedToAccount
+                        ? `✓ Saved & Sent to ${msg.dispatchedCount || 0} Providers`
+                        : "Synthesized RFQ Draft"}
                     </Badge>
                     <span className="text-[11px] text-ink-muted font-mono">
                       {msg.savedRfqId ? `Ref: ${msg.savedRfqId}` : "Sign in to auto-save"}
